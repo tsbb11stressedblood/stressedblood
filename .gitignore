@@ -1,0 +1,8 @@
+# Compiled python shit #
+*.pyc
+
+# PyCharms lovely project folder #
+.idea/
+
+# OS created stuff #
+Thumbs.db

@@ -6,7 +6,7 @@ displays them. Also handles ROI selection of the image that is later passed on a
 classification steps.
 
 author: Christoph H.
-last modified: 4th October 2015
+last modified: 5th October 2015
 """
 
 from Tkinter import *
@@ -56,7 +56,7 @@ class GUI:
                 # img = cv2.imread(path + ".png")
                 # plt.figure().add_subplot(111).imshow(img)
                 # plt.title("Success! (?)")
-                # plt.show()
+                # plt.show() |# #|
 
                 # Use TKs PhotoImage to show the image (needed for selecting ROIs)
                 #resized = rgba_im.resize((300, 300), Image.ANTIALIAS)
@@ -65,16 +65,16 @@ class GUI:
                 #self.label1.image = self.im
                 self.label1.pack(fill=BOTH, expand=YES)
                 self.label1.bind('<Configure>', self.resize_image)
-                self.label1.bind('<B1-Motion>', self.select_ROI)
+                #self.label1.bind('<B1-Motion>', self.select_ROI)
         else:
             show_error("There was a problem loading the file.")
 
-    def select_ROI(self, event):
-        print("Mouse is at: " + str(event.x) + " " + str(event.y))
+    #def select_ROI(self, event):
+    #    print("Mouse is at: " + str(event.x) + " " + str(event.y))
 
-        bbox = (event.x, event.y)
+        #bbox = (event.x, event.y)
 
-        self.item = self.frame.create_rectangle(bbox, outline="yellow")
+        #self.item = self.frame.create_rectangle(bbox, outline="yellow")
 
     def resize_image(self, event):
 

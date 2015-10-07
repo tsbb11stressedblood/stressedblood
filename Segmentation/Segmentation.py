@@ -75,7 +75,8 @@ def segmentation( img ):
     return cell_list
 
 
-imgpath = 'smallbloodsmear.jpg'
+#imgpath = 'smallbloodsmear.jpg'
+imgpath = 'test.tif'
 img =  cv2.imread(imgpath)
 cell_list = segmentation(img)
 

@@ -29,7 +29,7 @@
         <entry file="file://$PROJECT_DIR$/Segmentation/Segmentation.py">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="70" column="0" selection-start-line="70" selection-start-column="0" selection-end-line="70" selection-end-column="0" />
+              <caret line="55" column="60" selection-start-line="55" selection-start-column="54" selection-end-line="55" selection-end-column="60" />
               <folding>
                 <element signature="e#191#209#0" expanded="true" />
               </folding>
@@ -40,8 +40,8 @@
       <file leaf-file-name="CellClass.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Segmentation/CellClass.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.9419795">
-              <caret line="48" column="33" selection-start-line="48" selection-start-column="33" selection-end-line="48" selection-end-column="33" />
+            <state vertical-scroll-proportion="0.8549488">
+              <caret line="46" column="41" selection-start-line="46" selection-start-column="41" selection-end-line="46" selection-end-column="41" />
               <folding />
             </state>
           </provider>
@@ -484,7 +484,7 @@
     <entry file="file://$PROJECT_DIR$/Segmentation/Segmentation.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="70" column="0" selection-start-line="70" selection-start-column="0" selection-end-line="70" selection-end-column="0" />
+          <caret line="55" column="60" selection-start-line="55" selection-start-column="54" selection-end-line="55" selection-end-column="60" />
           <folding>
             <element signature="e#191#209#0" expanded="true" />
           </folding>
@@ -493,8 +493,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Segmentation/CellClass.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.9419795">
-          <caret line="48" column="33" selection-start-line="48" selection-start-column="33" selection-end-line="48" selection-end-column="33" />
+        <state vertical-scroll-proportion="0.8549488">
+          <caret line="46" column="41" selection-start-line="46" selection-start-column="41" selection-end-line="46" selection-end-column="41" />
           <folding />
         </state>
       </provider>

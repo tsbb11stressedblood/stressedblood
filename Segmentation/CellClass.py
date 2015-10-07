@@ -26,17 +26,17 @@ class Cell:
             self.minor_axis = _shape_data[1][0]
         # Get the mean RBC size
         RBC_mean_area = 0
-        if len(cell_list) == 0:
-            # No previous RBCs, this one is the first
+        RBC_counter = 0
+        for object in cell_list:
+            if object.label == "RBC":
+                RBC_mean_area += object.area
+                RBC_counter += 1
+        if RBC_counter == 0:
+        # No RBC in the list yet
             RBC_mean_area = area
-        else:
-            RBC_counter = 0
-            for object in cell_list:
-               if object.label == "RBC":
-                    RBC_mean_area += object.area
-                    RBC_counter += 1
-
+        else: # Take the mean size of all RBC in the list
             RBC_mean_area = RBC_mean_area/RBC_counter
+
         #print self.area
         #print RBC_mean_area
         # Check if its an ellipse shape and is proper size

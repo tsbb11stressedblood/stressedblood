@@ -6,15 +6,16 @@ Date: 2015-10-06
 """
 
 class Cell:
-    def __init__(self, _shape_data, _x, _y, _w, _h):
+    def __init__(self, _shape_data, _x, _y, _w, _h, area, cell_list):
         # Should be set unknown at start
         self.label = "unknown"
         # Store data
-        x = _x
-        y = _y
-        w = _w
-        h = _h
-        __data = _shape_data
+        self.x = _x
+        self.y = _y
+        self.w = _w
+        self.h = _h
+        self._data = _shape_data
+        self.area = area
         # Given from segmentation, RBC->ellipse (stuff[1][0], stuff[1][1])
         if (_shape_data[1][0] > _shape_data[1][1]):
             self.major_axis = _shape_data[1][0]
@@ -23,8 +24,28 @@ class Cell:
         else:
             self.major_axis = _shape_data[1][1]
             self.minor_axis = _shape_data[1][0]
+        # Get the mean RBC size
+        RBC_mean_area = 0
+        if len(cell_list) == 0:
+            # No previous RBCs, this one is the first
+            RBC_mean_area = area
+        else:
+            RBC_counter = 0
+            for object in cell_list:
+               if object.label == "RBC":
+                    RBC_mean_area += object.area
+                    RBC_counter += 1
 
+            RBC_mean_area = RBC_mean_area/RBC_counter
+        #print self.area
+        #print RBC_mean_area
+        # Check if its an ellipse shape and is proper size
         if self.minor_axis/self.major_axis < 0.7:
+            if 0.6*RBC_mean_area < self.area < 1.4*RBC_mean_area:
                 self.label = "RBC"
+            else:
+                self.label = "Background"
+        else:
+            self.label = "Unknown"
 
 

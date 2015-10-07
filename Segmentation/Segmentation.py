@@ -51,20 +51,22 @@ def segmentation( img ):
     # Find countours and fit ellipses to the cells
     #dum = cv2.cvtColor(markers ,cv2.COLOR_BGR2GRAY)
     #markers[markers == -1] = 1
-    print(type(thresh))
-    print(type(markers))
-    dummyimg, contours, hierarchy = cv2.findContours(thresh, 1, 2)
+    #print(type(thresh))
+    #print(type(markers))
+    dummy_img, contours, hierarchy = cv2.findContours(thresh, 1, 2)
     cell_list = []
     ellipse_list = []
     for i,cnt in enumerate(contours):
         # Fit ellipses on marked objects in the thresh-image
         ellipse = cv2.fitEllipse(cnt)
         ellipse_list.append(ellipse)
+        # Determine cell area
+        area = cv2.contourArea(cnt)
         #Cut out region
         x,y,w,h = cv2.boundingRect(cnt)
         img = cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2)
-        #assign that shit: stuff[1][0], stuff[1][1]
-        cell_list.append(Cell( ellipse, x,y,w,h ))
+        # Construct cell in the cell_list
+        cell_list.append(Cell( ellipse, x,y,w,h, area, cell_list ))
         print cell_list[i].label
     #plot that shit
     for _ellipse in ellipse_list:

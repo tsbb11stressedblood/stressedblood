@@ -18,6 +18,7 @@ from PIL import ImageTk as itk
 from matplotlib import pyplot as plt
 import numpy
 import cv2
+from Segmentation import rbcseg
 
 
 # Class for handling all images that are viewable in the GUI.
@@ -130,9 +131,8 @@ class ViewableImage(Canvas):
                                           int(height_percent*ld[1]*ds)))
         roi = numpy.array(roi)
 
-        # Try to plot it with matplotlib
-        plt.imshow(roi)
-        plt.show()
+        # Call the segmentation (testing)
+        rbcseg.segmentation(roi)
 
 
 # Main class for handling GUI-related things

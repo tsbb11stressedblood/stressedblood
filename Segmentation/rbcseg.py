@@ -9,6 +9,7 @@ import cv2
 import matplotlib.pyplot as plt
 from CellClass import *
 
+
 # Segmentation function, call this one with an image or image region to run - NOT 100% DONE.
 def segmentation( img ):
     # image load and conversion to gray and then threshold it
@@ -76,9 +77,9 @@ def segmentation( img ):
 
 
 #imgpath = 'smallbloodsmear.jpg'
-imgpath = 'test.tif'
-img =  cv2.imread(imgpath)
-cell_list = segmentation(img)
+#imgpath = 'test.tif'
+#img =  cv2.imread(imgpath)
+#cell_list = segmentation(img)
 
 #stuff[1][1]
 

@@ -7,7 +7,8 @@ Date: 2015-10-06
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from CellClass import *
+from cell import *
+
 
 # Segmentation function, call this one with an image or image region to run
 def segmentation(ROI):
@@ -74,7 +75,9 @@ def segmentation(ROI):
      # markers = cv2.ellipse(img,_ellipse,(0,255,0),2)
     # Class the cell to RBC, background and unknown (possibly WBC!)
     cell_list = RBC_classification(cell_list,ax)
+    plt.show()
     return cell_list
+
 
 def RBC_classification(cell_list,ax):
     # Get the mean RBC size
@@ -94,17 +97,16 @@ def RBC_classification(cell_list,ax):
         else:
             cell.label = "Unknown"
 
-
     return cell_list
 
 # Test data, no need
-imgpath1 = 'smallbloodsmear.jpg'
-imgpath2 = 'test.tif'
-img =  cv2.imread(imgpath2)
-cell_list = segmentation(img)
+# imgpath1 = 'smallbloodsmear.jpg'
+# imgpath2 = 'test.tif'
+# img =  cv2.imread(imgpath2)
+# cell_list = segmentation(img)
 #print type(img)
 #stuff[1][1]
 #((97.40660095214844, 176.10752868652344), (24.298473358154297, 43.718692779541016), 73.73028564453125)
 
-plt.show()
-print("SEGMENTATION DONE")
+# plt.show()
+# print("SEGMENTATION DONE")

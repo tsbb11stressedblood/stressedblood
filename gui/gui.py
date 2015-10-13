@@ -29,8 +29,8 @@ class ViewableImage(Canvas):
         # Call the super constructor
         Canvas.__init__(self, master)
 
-        # Pack ourselves snuggly in master
-        self.pack(fill=BOTH, expand=True)
+        # Zoom or roi mode (defaults to roi)
+        self.mode = "zoom"
 
         # Setup the input file
         self.ndpi_file = _ndpi_file
@@ -42,15 +42,18 @@ class ViewableImage(Canvas):
         self.image_handle = None  # Used to delete and recreate images
         self.setup_image()
 
-        # Stuff for ROI selection
-        self.init_roi_pos = None
-        self.curr_roi_bbox = None
+        # Stuff for box selection
+        self.init_box_pos = None
+        self.curr_box_bbox = None
+        self.last_selection_region = None
+        self.zoom_level = 0     # How many times have we zoomed?
 
         # Bind some event happenings to appropriate methods
         self.bind('<Configure>', self.resize_image)
-        self.bind('<B1-Motion>', self.select_roi)
-        self.bind('<Button-1>', self.set_init_roi_pos)
-        self.bind('<ButtonRelease-1>', self.set_roi)
+        self.bind('<B1-Motion>', self.select_box)
+        self.bind('<Button-1>', self.set_init_box_pos)
+        self.bind('<ButtonRelease-1>', self.set_box)
+        self.bind('<Button-3>', self.reset_zoom)
 
     # Hanldes initial setup of the input image
     def setup_image(self):
@@ -74,16 +77,30 @@ class ViewableImage(Canvas):
 
     # Method that ensures automatic resize in case the windows is resized by the user
     def resize_image(self, event):
-        new_width = event.width
-        new_height = event.height
+        try:
+            new_width = event.width
+            new_height = event.height
+        except AttributeError:
+            #print "Attribute error in resize. Trying tuple variant. You are most probably in zoom mode so don't worry."
+            new_width = event[0]
+            new_height = event[1]
 
         self.master.update()  # Redraw screen so that the sizes are correct
-        factor = float(self.ndpi_file.level_dimensions[0][0])/float(self.winfo_width())
+        if self.last_selection_region is not None:
+            factor = float(self.last_selection_region[1][1])/float(self.winfo_width())
+        else:
+            factor = float(self.ndpi_file.level_dimensions[0][0])/float(self.winfo_width())
 
         self.current_level = self.ndpi_file.get_best_level_for_downsample(factor)
+        #print self.current_level
 
-        self.rgba_im = self.ndpi_file.read_region((0, 0), self.current_level,
-                                                  self.ndpi_file.level_dimensions[self.current_level])
+        # We have to make sure that we only show the zoomed-in area
+        if self.last_selection_region is not None and self.mode is "zoom":
+            self.rgba_im = self.ndpi_file.read_region(self.last_selection_region[0], 0,
+                                                      self.last_selection_region[1])
+        else:
+            self.rgba_im = self.ndpi_file.read_region((0, 0), self.current_level,
+                                                      self.ndpi_file.level_dimensions[self.current_level])
 
         self.rgba_im = self.rgba_im.resize((new_width, new_height))
 
@@ -91,31 +108,45 @@ class ViewableImage(Canvas):
         self.delete(self.image_handle)
         self.create_image(0, 0, image=self.im, anchor=NW)
 
-    def set_init_roi_pos(self, event):
-        self.init_roi_pos = (event.x, event.y)
+    def set_init_box_pos(self, event):
+        self.init_box_pos = (event.x, event.y)
 
-    def select_roi(self, event):
+    def select_box(self, event):
         bbox = (event.x, event.y)
-        self.curr_roi_bbox = (self.init_roi_pos, bbox)
-        self.delete("ROIselector")
-        self.create_rectangle(self.curr_roi_bbox, outline="yellow", tags="ROIselector")
+        self.curr_box_bbox = (self.init_box_pos, bbox)
+        self.delete("boxselector")
 
-    def set_roi(self, event):
-        # Get the ROI region at best possible resolution
+        # Depending on the mode, we get different colors on the box
+        if self.mode is "roi":
+            self.create_rectangle(self.curr_box_bbox, outline="yellow", tags="boxselector")
+        elif self.mode is "zoom":
+            self.create_rectangle(self.curr_box_bbox, outline="green", tags="boxselector")
+
+    def set_box(self, event):
+        # Get the region at best possible resolution
         # Grab these for ease of use
-        width = self.curr_roi_bbox[1][0]
-        height = self.curr_roi_bbox[1][1]
-        topx = self.curr_roi_bbox[0][0]
-        topy = self.curr_roi_bbox[0][1]
+        width = self.curr_box_bbox[1][0]
+        height = self.curr_box_bbox[1][1]
+        topx = self.curr_box_bbox[0][0]
+        topy = self.curr_box_bbox[0][1]
 
         # Get absolute pixel differences
-        width = width - topx
-        height = height - topy
+        width = abs(width - topx)
+        height = abs(height - topy)
 
-        # This is the downsampling factor for the current level where ROI was selected from
+        # This is the downsampling factor for the current level where the box was selected from
         ds = self.ndpi_file.level_downsamples[self.current_level]
-        # This is a tuple giving the pixel size of the entire image in level where ROI was selected
-        ld = self.ndpi_file.level_dimensions[self.current_level]
+
+        if self.zoom_level is 0:
+            # This is a tuple giving the pixel size of the entire image in level where the box was selected
+            ld = self.ndpi_file.level_dimensions[self.current_level]
+            x_offset = 0
+            y_offset = 0
+        else:
+            ld = self.last_selection_region[1]
+            x_offset = self.last_selection_region[0][0]
+            y_offset = self.last_selection_region[0][1]
+            ds = 1.0
 
         # Now convert into percent of total
         top_x_percent = float(topx)/self.winfo_width()
@@ -123,16 +154,38 @@ class ViewableImage(Canvas):
         width_percent = float(width)/self.winfo_width()
         height_percent = float(height)/self.winfo_height()
 
+        # We need to be able to access this region in the resize function
+        self.last_selection_region = [(int((top_x_percent*ld[0] + x_offset)*ds),
+                                       int((top_y_percent*ld[1] + y_offset)*ds)),
+                                      (int(width_percent*ld[0]*ds),
+                                       int(height_percent*ld[1]*ds))]
+
         # Multiply percentages of totals and transform to high res level
-        roi = self.ndpi_file.read_region((int(top_x_percent*ld[0]*ds),
-                                          int(top_y_percent*ld[1]*ds)),
+        box = self.ndpi_file.read_region((int((top_x_percent*ld[0] + x_offset)*ds),
+                                          int((top_y_percent*ld[1] + y_offset)*ds)),
                                          0,
                                          (int(width_percent*ld[0]*ds),
                                           int(height_percent*ld[1]*ds)))
-        roi = numpy.array(roi)
+        self.current_level = 0
+        # Now depending on the mode, do different things
+        if self.mode is "roi":
+            self.set_roi(box)
+        elif self.mode is "zoom":
+            self.zoom()
 
+    def set_roi(self, box):
+        roi = numpy.array(box)
         # Call the segmentation (testing)
         rbc_seg.segmentation(roi)
+
+    def zoom(self):
+        self.zoom_level += 1
+        self.resize_image((self.winfo_width(), self.winfo_height()))
+
+    def reset_zoom(self, event):
+        self.last_selection_region = None
+        self.zoom_level = 0
+        self.resize_image((self.winfo_width(), self.winfo_height()))
 
 
 # Main class for handling GUI-related things
@@ -170,6 +223,7 @@ class GUI:
                 if self.curr_image is not None:
                     self.curr_image.destroy()
                 self.curr_image = ViewableImage(self.frame, ndpi_file)
+                self.curr_image.pack(fill=BOTH, expand=True)
             else:
                 show_error("Only .ndpi-images can be handled!")
         else:

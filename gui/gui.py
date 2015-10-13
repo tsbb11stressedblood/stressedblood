@@ -198,12 +198,39 @@ class GUI:
         # Packing it means that we want to fit it snuggly to the master and to make it visible
         self.frame.pack(fill=BOTH, expand=YES)
 
-        # Next, we want a button where we can load an image
-        self.load_button = Button(self.frame, text="Load image", command=self.load_image)
-        self.load_button.pack()
+        # Button handles
+        self.load_button = None
+        self.zoom_button = None
+        self.roi_sel_button = None
 
         # This stores the current image on screen
         self.curr_image = None
+
+        # We need a panel with all the buttons
+        self.setup_panel()
+
+    def setup_panel(self):
+        # We want a button where we can load an image
+        self.load_button = Button(self.frame, text="Load image", command=self.load_image)
+        self.load_button.grid(row=1, column=0, pady=5, padx=5)
+        #self.load_button.pack()
+
+        # Zoom and ROI-selection radiobuttons
+        radio_group = Frame(self.frame) # Own frame for the radiobuttons
+        v = StringVar()
+        self.zoom_button = Radiobutton(radio_group, text="Zoom", variable=v, value="1", indicatoron=0)
+        self.roi_sel_button = Radiobutton(radio_group, text="ROI", variable=v, value="2", indicatoron=0)
+        self.zoom_button.grid(row=0, column=1)
+        self.roi_sel_button.grid(row=1, column=1)
+        radio_group.grid(row=1, column=1)
+        #self.zoom_button.pack()
+        #self.roi_sel_button.pack()
+
+        # This is to make sure that everything is fit to the frame when it expands
+        for x in range(4):
+            Grid.columnconfigure(self.frame, x, weight=1)
+        for y in range(2):
+            Grid.rowconfigure(self.frame, y, weight=1)
 
     def load_image(self):
         # Get the filepath
@@ -223,7 +250,8 @@ class GUI:
                 if self.curr_image is not None:
                     self.curr_image.destroy()
                 self.curr_image = ViewableImage(self.frame, ndpi_file)
-                self.curr_image.pack(fill=BOTH, expand=True)
+                self.curr_image.grid(row=0, columnspan=4, sticky=W+E+N+S)
+
             else:
                 show_error("Only .ndpi-images can be handled!")
         else:

@@ -47,13 +47,10 @@ def segmentation(ROI):
 
     img[markers == -1] = [255,0,0]
 
-    #
+    # Show the original img
     fig=plt.figure()
     ax = fig.add_subplot(111)
     plt.imshow(img, interpolation='nearest')
-    #print(type(thresh))
-    #print(type(markers))
-
 
     cell_list = []
     ellipse_list = []
@@ -64,14 +61,22 @@ def segmentation(ROI):
         dummy_img, contours, hierarchy = cv2.findContours(img2, 1, 2)
 
         # Fit ellipses on marked objects in the thresh-image
-        if len(contours)<10:
+        # First extract contour from the list contours
+        if len(contours)<1:
             continue
-        ellipse = cv2.fitEllipse(contours)
+        # Now make sure that the contour is larger than 30 pixels
+        if len(contours[0]) < 30:
+            continue
+        # If it is, take the contour and pass it on
+        contour = contours[0]
+
+        ellipse = cv2.fitEllipse(contour)
         ellipse_list.append(ellipse)
         # Determine cell area
-        area = cv2.contourArea(contours)
+        area = cv2.contourArea(contour)
+
         #Cut out region
-        x,y,w,h = cv2.boundingRect(contours)
+        x,y,w,h = cv2.boundingRect(contour)
         # Plots BB
         #img = cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2)
         # Construct cell in the cell_list
@@ -79,45 +84,59 @@ def segmentation(ROI):
 
 
 
-    #plot ellipses
+    # Loop to plot ellipses
     #for _ellipse in ellipse_list:
-     # markers = cv2.ellipse(img,_ellipse,(0,255,0),2)
+    # markers = cv2.ellipse(img,_ellipse,(0,255,0),2)
     # Class the cell to RBC, background and unknown (possibly WBC!)
-    cell_list = RBC_classification(cell_list,ax)
+    cell_list = RBC_classification(cell_list)
+    print_cell_labels(cell_list, ax)
 
-    # show all
-    plt.figure(8)
-    img3 = np.logical_or(markers==-1,markers==1)
-    plt.imshow(img3)
+    # show all binary images
+    #plt.figure(8)
+    #img3 = np.logical_or(markers==-1,markers==1)
+    #plt.imshow(img3)
 
-    plt.figure(9)
-    plt.imshow(thresh)
-
+   # plt.figure(9)
+    #plt.imshow(thresh)
+    print("SEGMENTATION DONE")
     plt.show()
+
     return cell_list
 
 
-def RBC_classification(cell_list,ax):
+def RBC_classification(cell_list):
     # Get the mean RBC size
     cell_areas = []
+    # Extract the median area which most prob. is single RBC area
     for object in cell_list:
         cell_areas.append(object.area)
-
     RBC_mean_area = np.median(cell_areas)
+    # For all cells or bunch of cells, check if they are ellipse-shaped and RBC-size
     for cell in cell_list:
         if cell.minor_axis/cell.major_axis < 0.7:
             if 0.6*RBC_mean_area < cell.area < 1.4*RBC_mean_area:
                 cell.label = "RBC"
-                ax.text(cell.x, cell.y, 'RBC', style='italic',
-                bbox={'facecolor':'red', 'alpha':0.5, 'pad':5})
             else:
                 cell.label = "Background"
         else:
-            cell.label = "Unknown"
+            cell.label = "U"
 
     return cell_list
 
-# Test data, no need
+def print_cell_labels(cell_list, ax):
+    for cell in cell_list:
+        if cell.label == "RBC":
+            ax.text(cell.x+cell.w/2, cell.y+cell.h/2, 'RBC', style='italic',
+            bbox={'facecolor':'red', 'alpha':0.5, 'pad':5})
+        if cell.label == "Background":
+            ax.text(cell.x+cell.w/2, cell.y+cell.h/2, 'BG', style='italic',
+            bbox={'facecolor':'red', 'alpha':0.5, 'pad':5})
+        if cell.label == "U":
+            ax.text(cell.x+cell.w/2, cell.y+cell.h/2, 'U', style='italic',
+            bbox={'facecolor':'red', 'alpha':0.5, 'pad':5})
+
+#'''''''''''''''''''''''''''''''''''''
+# Test data, move along!
 # imgpath1 = 'smallbloodsmear.jpg'
 # imgpath2 = 'test.tif'
 # img =  cv2.imread(imgpath2)
@@ -127,4 +146,3 @@ def RBC_classification(cell_list,ax):
 #((97.40660095214844, 176.10752868652344), (24.298473358154297, 43.718692779541016), 73.73028564453125)
 
 # plt.show()
-# print("SEGMENTATION DONE")

@@ -30,7 +30,7 @@ class ViewableImage(Canvas):
         Canvas.__init__(self, master)
 
         # Zoom or roi mode (defaults to roi)
-        self.mode = "zoom"
+        self.mode = "roi"
 
         # Setup the input file
         self.ndpi_file = _ndpi_file

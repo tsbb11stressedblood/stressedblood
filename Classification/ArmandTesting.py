@@ -13,10 +13,8 @@ from matplotlib import pyplot as plt
 import numpy as np
 import cv2
 import pylab
-<<<<<<< Updated upstream
-=======
 from Segmentation import rbc_seg
->>>>>>> Stashed changes
+
 
 
 def convert_to_hsv(rgba_image):
@@ -71,8 +69,6 @@ def LNE(rgba_image):
 
     return lne_image
 
-<<<<<<< Updated upstream
-
 WBCarray = np.load("WBC.npy")
 
 LNE = LNE(WBCarray)
@@ -81,13 +77,10 @@ edges = cv2.Canny(WBCarray,100,200)
 
 plt.imshow(edges)
 plt.colorbar()
-=======
 WBCarray = np.load("lymphocyte.npy")
 
-LNE = LNE(WBCarray)
 
 LNE_max = np.amax(LNE)*0.5
-print LNE_max
 LNE[LNE <= LNE_max] = -1;
 
 LNE[LNE > LNE_max] = 1;
@@ -114,6 +107,5 @@ plt.subplot(236)
 plt.imshow(hsv[:,:,2])
 
 
->>>>>>> Stashed changes
 plt.show()
 

@@ -22,6 +22,8 @@ HSV: Hue, Saturation, Value
 # http://en.wikipedia.org/wiki/HLS_color_space
 # http://en.wikipedia.org/wiki/HSV_color_space
 
+import numpy as np
+
 __all__ = ["rgb_to_yiq","yiq_to_rgb","rgb_to_hls","hls_to_rgb",
            "rgb_to_hsv","hsv_to_rgb"]
 
@@ -137,6 +139,29 @@ def rgb_to_hsv(rgb):
 
     hsv = [h,s,v]
     return hsv
+
+
+def convert_to_hsv(rgba_image):
+    """
+    Takes a RGBA image and return a HSVA image.
+    The out put is of type float [0 1]
+    :param rgba_image:
+    :return: hsv_image
+    """
+    # Preprocessing
+    shape_of_image = np.shape(rgba_image)
+    rgba_image = rgba_image.astype(float)/255
+    hsva = rgba_image
+
+    for row in range(0,shape_of_image[0]):
+        for column in range(0,shape_of_image[1]):
+            hsva[row,column,0:3] = rgb_to_hsv(rgba_image[row,column,0:3])
+
+
+    hsva = hsva
+
+    return hsva
+
 
 def hsv_to_rgb(h, s, v):
     if s == 0.0:

@@ -1,4 +1,5 @@
-""" Segmentation.py: The initial segmentation of cv2-images. Each Cell will be stored with its shapedata in the list cell_list
+""" Segmentation.py: The initial segmentation of cv2-images. Each Cell will be stored with its cell_img and other data
+ in the list cell_list
 
 Author: Marcus Fallqvist and Abdai Ahmed
 Date: 2015-10-06
@@ -12,13 +13,12 @@ from cell import *
 
 # Segmentation function, call this one with an image or image region to run
 def segmentation(ROI):
-    # image load and conversion to gray and then threshold it
+    # image init, and conversion to gray and then threshold it
     img = ROI[:, :, 0:3]
 
     gray = cv2.cvtColor(img ,cv2.COLOR_BGR2GRAY)
     ret, thresh = cv2.threshold(gray,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
 
-    # NOT USING WATERSHED ATM
     # noise removal with a 3x3 kernel
     kernel = np.ones((3,3),np.uint8)
     opening = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel, iterations = 2)
@@ -48,7 +48,7 @@ def segmentation(ROI):
     img[markers == -1] = [255,0,0]
 
     # Show the original img
-    fig=plt.figure()
+    fig = plt.figure()
     ax = fig.add_subplot(111)
     plt.imshow(img, interpolation='nearest')
 
@@ -77,28 +77,35 @@ def segmentation(ROI):
 
         #Cut out region
         x,y,w,h = cv2.boundingRect(contour)
+        cell_img = ROI[y:y+h,x:x+w, :]
+
         # Plots BB
         #img = cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2)
         # Construct cell in the cell_list
-        cell_list.append(Cell( ellipse, x,y,w,h, area, cell_list ))
+        cell_list.append(Cell( ellipse, x,y,w,h, area, cell_img, cell_list))
 
 
-
-    # Loop to plot ellipses
-    #for _ellipse in ellipse_list:
-    # markers = cv2.ellipse(img,_ellipse,(0,255,0),2)
     # Class the cell to RBC, background and unknown (possibly WBC!)
     cell_list = RBC_classification(cell_list)
+
+    # Print labels
     print_cell_labels(cell_list, ax)
-
+    # Return a list with only WBC
+    cell_list = wbc_cell_extraction(cell_list)
     # show all binary images
-    #plt.figure(8)
-    #img3 = np.logical_or(markers==-1,markers==1)
-    #plt.imshow(img3)
+    """ # WBC cell_list plots
+    fig = plt.figure(3)
+    ax = fig.add_subplot(221)
+    plt.imshow(cell_list[1].img, interpolation='nearest')
+    ax = fig.add_subplot(222)
+    plt.imshow(cell_list[2].img, interpolation='nearest')
+    ax = fig.add_subplot(223)
+    plt.imshow(cell_list[3].img, interpolation='nearest')
+    ax = fig.add_subplot(224)
+    plt.imshow(cell_list[4].img, interpolation='nearest')
+    """
 
-   # plt.figure(9)
-    #plt.imshow(thresh)
-    print("SEGMENTATION DONE")
+    print("Segmentation done")
     plt.show()
 
     return cell_list
@@ -113,7 +120,7 @@ def RBC_classification(cell_list):
     RBC_mean_area = np.median(cell_areas)
     # For all cells or bunch of cells, check if they are ellipse-shaped and RBC-size
     for cell in cell_list:
-        if cell.minor_axis/cell.major_axis < 0.7:
+        if cell.minor_axis/cell.major_axis < 0.8:
             if 0.6*RBC_mean_area < cell.area < 1.4*RBC_mean_area:
                 cell.label = "RBC"
             else:
@@ -135,6 +142,12 @@ def print_cell_labels(cell_list, ax):
             ax.text(cell.x+cell.w/2, cell.y+cell.h/2, 'U', style='italic',
             bbox={'facecolor':'red', 'alpha':0.5, 'pad':5})
 
+def wbc_cell_extraction(cell_list):
+    wbc_list = []
+    for cell in cell_list:
+        if cell.label == "U":
+            wbc_list.append(cell)
+    return wbc_list
 #'''''''''''''''''''''''''''''''''''''
 # Test data, move along!
 # imgpath1 = 'smallbloodsmear.jpg'

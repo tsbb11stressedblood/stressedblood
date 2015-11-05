@@ -83,8 +83,27 @@ def nuclues_fill(cellarray):  # Should take in only cell object
     cellarea = 1000.0 # Remove when putting in a cell object
     nucleus_area = np.count_nonzero(lne)
     fillratio = nucleus_area/cellarea
+    plt.figure(10)
+    plt.imshow(lne)
     print type(cellarea)
     return fillratio
+
+def erosion_test(cellarray):
+    hsv = convert_to_hsv(cellarray)
+    lne = hsv[:,:,1]
+    threshold = 0.75
+    lne[lne>threshold*np.amax(lne)] = 1
+    lne[lne<threshold*np.amax(lne)] = 0
+
+    kernel = np.ones((3,3), np.uint8)
+    erosion = cv2.erode(lne, kernel, iterations=2)
+    plt.figure(11)
+    plt.subplot(221)
+    plt.imshow(erosion)
+    plt.subplot(222)
+    plt.imshow(lne)
+
+
 
 '''
 WBCarray = np.load("WBC.npy")
@@ -95,7 +114,7 @@ edges = cv2.Canny(WBCarray,100,200)
 '''
 
 WBCarray = np.load("lymphocyte.npy")
-
+#erosion_test(WBCarray)
 #list = rbc_seg.segmentation(WBCarray)
 #Cell = 0
 cellx = 66 #list[Cell].x
@@ -103,13 +122,21 @@ celly = 14 #list[Cell].y
 cellw = 47 #list[Cell].w
 cellh = 39 #list[Cell].h
 cellarray = WBCarray[celly:(celly+cellh),cellx:(cellx+cellw),:]
+#cellarray = WBCarray;
 
 hsv = convert_to_hsv(cellarray)
 lne = hsv[:,:,1]
 lne_th = hsv[:,:,1].copy()      # Fucking deep copy
 
 
-print nuclues_fill(cellarray)
+#print nuclues_fill(cellarray)
+
+#imgray = cv2.cvtColor(cellarray, cv2.COLOR_BGR2GRAY)
+#ret, thresh = cv2.threshold(imgray, 127, 255, 0)
+#contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+#mask = np.zeros_like(thresh)
+#cv2.drawContours(mask, contours, 0, 255, -1)
+#out = np.zeros_like(thresh)
 
 
 plt.figure(2)

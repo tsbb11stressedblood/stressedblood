@@ -53,21 +53,24 @@ for i in range(0, 20):
     tmp = WBCarray[i]
     #plt.figure();
     plt.subplot(5,4,i+1)
-    plt.hist(tmp[:,:,1])
+    #plt.hist(tmp[:,:,0])
+    plt.imshow(tmp[:,:,0])
 plt.figure()
 
 for i in range(0, 20):
     tmp = WBCarray[i]
     #plt.figure();
     plt.subplot(5,4,i+1)
-    plt.hist(tmp[:,:,2])
+    #plt.hist(tmp[:,:,1])
+    plt.imshow(tmp[:,:,1])
 plt.figure()
 
 for i in range(0, 20):
     tmp = WBCarray[i]
     #plt.figure();
     plt.subplot(5,4,i+1)
-    plt.hist(tmp[:,:,0])
+    #plt.hist(tmp[:,:,2])
+    plt.imshow(tmp[:,:,2])
 
 #
 # plt.figure()

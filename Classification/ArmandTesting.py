@@ -69,43 +69,58 @@ def LNE(rgba_image):
 
     return lne_image
 
+def nuclues_fill(cellarray):  # Should take in only cell object
+    '''
+    Calculates the ratio of the nucleus. The input is the numpy array of one single cell
+    :param cellArray:
+    :return: fillratio
+    '''
+    hsv = convert_to_hsv(cellarray)
+    lne = hsv[:,:,1]
+    threshold = 0.75
+    lne[lne>threshold*np.amax(lne)] = 1
+    lne[lne<threshold*np.amax(lne)] = 0
+    cellarea = 1000.0 # Remove when putting in a cell object
+    nucleus_area = np.count_nonzero(lne)
+    fillratio = nucleus_area/cellarea
+    print type(cellarea)
+    return fillratio
+
+'''
 WBCarray = np.load("WBC.npy")
 
 LNE = LNE(WBCarray)
 
 edges = cv2.Canny(WBCarray,100,200)
+'''
 
-plt.imshow(edges)
-plt.colorbar()
 WBCarray = np.load("lymphocyte.npy")
 
+#list = rbc_seg.segmentation(WBCarray)
+#Cell = 0
+cellx = 66 #list[Cell].x
+celly = 14 #list[Cell].y
+cellw = 47 #list[Cell].w
+cellh = 39 #list[Cell].h
+cellarray = WBCarray[celly:(celly+cellh),cellx:(cellx+cellw),:]
 
-LNE_max = np.amax(LNE)*0.5
-LNE[LNE <= LNE_max] = -1;
-
-LNE[LNE > LNE_max] = 1;
-
-hsv = convert_to_hsv(WBCarray)
-edges = cv2.Canny(WBCarray,100,200)
-
-#plt.imshow(edges)
-plt.figure(1)
-
-
-plt.subplot(231)
-plt.imshow(WBCarray[:,:,0])
-plt.subplot(232)
-plt.imshow(WBCarray[:,:,1])
-plt.subplot(233)
-plt.imshow(WBCarray[:,:,2])
-
-plt.subplot(234)
-plt.imshow(hsv[:,:,0])
-plt.subplot(235)
-plt.imshow(hsv[:,:,1])
-plt.subplot(236)
-plt.imshow(hsv[:,:,2])
+hsv = convert_to_hsv(cellarray)
+lne = hsv[:,:,1]
+lne_th = hsv[:,:,1].copy()      # Fucking deep copy
 
 
+print nuclues_fill(cellarray)
+
+
+plt.figure(2)
+plt.subplot(221)
+plt.imshow(lne)
+plt.colorbar()
+plt.subplot(222)
+plt.imshow(lne_th)
+plt.colorbar()
+plt.subplot(223)
+plt.imshow(cellarray)
+plt.colorbar()
 plt.show()
 

@@ -85,7 +85,7 @@ def nuclues_fill(cellarray):  # Should take in only cell object
     fillratio = nucleus_area/cellarea
     plt.figure(10)
     plt.imshow(lne)
-    print type(cellarea)
+
     return fillratio
 
 def erosion_test(cellarray):
@@ -138,7 +138,7 @@ lne_th = hsv[:,:,1].copy()      # Fucking deep copy
 #cv2.drawContours(mask, contours, 0, 255, -1)
 #out = np.zeros_like(thresh)
 
-
+'''
 plt.figure(2)
 plt.subplot(221)
 plt.imshow(lne)
@@ -150,4 +150,4 @@ plt.subplot(223)
 plt.imshow(cellarray)
 plt.colorbar()
 plt.show()
-
+'''

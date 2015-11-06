@@ -6,17 +6,19 @@ Date: 2015-10-06
 """
 
 class Cell:
-    def __init__(self, _shape_data, _x, _y, _w, _h, area, cell_img, cell_list):
+    def __init__(self, _shape_data, _x, _y, _w, _h, _area,_marker, cell_img, cell_list):
         # Should be set unknown at start
         self.label = "unknown"
         self.img = cell_img
+
         # Store data
+        self.marker = _marker
         self.x = _x
         self.y = _y
         self.w = _w
         self.h = _h
         self._data = _shape_data
-        self.area = area
+        self.area = _area
         # Given from segmentation, RBC->ellipse (stuff[1][0], stuff[1][1])
         if (_shape_data[1][0] > _shape_data[1][1]):
             self.major_axis = _shape_data[1][0]

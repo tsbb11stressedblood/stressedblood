@@ -6,7 +6,7 @@ displays them. Also handles ROI selection of the image that is later passed on a
 classification steps.
 
 author: Christoph H.
-last modified: 7th October 2015
+last modified: 11th November 2015
 """
 
 from Tkinter import *
@@ -47,6 +47,10 @@ class ViewableImage(Canvas):
         self.curr_box_bbox = None
         self.last_selection_region = None
         self.zoom_level = 0     # How many times have we zoomed?
+
+        # Since we want multiple ROIs, save them in this list
+        self.roi_list = []
+        self.roi_counter = 0
 
         # Bind some event happenings to appropriate methods
         self.bind('<Configure>', self.resize_image)
@@ -109,7 +113,27 @@ class ViewableImage(Canvas):
         self.create_image(0, 0, image=self.im, anchor=NW)
 
     def set_init_box_pos(self, event):
-        self.init_box_pos = (event.x, event.y)
+        # If we are in clear mode, make sure that we handle it correctly.
+        if self.mode is "clear":
+            # Loop through roi_list and see if we clicked on one of them
+            for num, roi, bbox in self.roi_list:
+                if bbox[0][0] < event.x < bbox[1][0]:
+                    if bbox[0][1] < event.y < bbox[1][1]:
+                        # Found a ROI!
+                        self.delete("roi"+str(num))
+                        self.delete("boxselector")
+                        self.roi_list.remove((num, roi, bbox))
+                        break
+        else:
+            self.init_box_pos = (event.x, event.y)
+
+    # Member function for clearing all ROI
+    def clear_all_roi(self):
+        for num, roi, bbox in self.roi_list:
+            self.delete("roi"+str(num))
+        self.roi_list = []
+        self.roi_counter = 0
+        self.delete("boxselector")
 
     def select_box(self, event):
         bbox = (event.x, event.y)
@@ -175,8 +199,15 @@ class ViewableImage(Canvas):
 
     def set_roi(self, box):
         roi = numpy.array(box)
+        # Add the ROI to our list
+        self.roi_list.append((self.roi_counter, roi, self.curr_box_bbox))
+        # Keep drawing the ROIs
+        self.create_rectangle(self.curr_box_bbox, outline="red", tags="roi"+str(self.roi_counter))
+        self.roi_counter += 1
+        #self.create_text(self.curr_box_bbox[0][0], self.curr_box_bbox[0][1], text=str(len(self.roi_list)),
+        #                 anchor=SW, font=("Purisa", 16), tags="roi"+str(len(self.roi_list)))
         # Call the segmentation (testing)
-        rbc_seg.segmentation(roi)
+        #rbc_seg.segmentation(roi)
 
     def zoom(self):
         self.zoom_level += 1
@@ -202,6 +233,8 @@ class GUI:
         self.load_button = None
         self.zoom_button = None
         self.roi_sel_button = None
+        self.clear_roi_button = None
+        self.clear_all_roi_button = None
 
         # This stores the current image on screen
         self.curr_image = None
@@ -212,25 +245,55 @@ class GUI:
     def setup_panel(self):
         # We want a button where we can load an image
         self.load_button = Button(self.frame, text="Load image", command=self.load_image)
-        self.load_button.grid(row=1, column=0, pady=5, padx=5)
+        self.load_button.grid(row=1, column=0)
         #self.load_button.pack()
 
         # Zoom and ROI-selection radiobuttons
-        radio_group = Frame(self.frame) # Own frame for the radiobuttons
+        radio_group = Frame(self.frame)  # Own frame for the radiobuttons
         v = StringVar()
-        self.zoom_button = Radiobutton(radio_group, text="Zoom", variable=v, value="1", indicatoron=0)
-        self.roi_sel_button = Radiobutton(radio_group, text="ROI", variable=v, value="2", indicatoron=0)
-        self.zoom_button.grid(row=0, column=1)
-        self.roi_sel_button.grid(row=1, column=1)
+        self.zoom_button = Radiobutton(radio_group, text="Zoom", variable=v, value="zoom", indicatoron=0,
+                                       command=self.set_zoom_mode)
+        self.roi_sel_button = Radiobutton(radio_group, text="ROI", variable=v, value="roi", indicatoron=0,
+                                          command=self.set_roi_mode)
+        self.zoom_button.grid(row=0, column=0)
+        self.roi_sel_button.grid(row=0, column=1)
+
+        # Clear ROI button
+        self.clear_roi_button = Radiobutton(radio_group, text="Clear ROI", variable=v, value="clear",
+                                            indicatoron=0, command=self.set_clear_mode)
+        self.clear_roi_button.grid(row=0, column=2)
         radio_group.grid(row=1, column=1)
-        #self.zoom_button.pack()
-        #self.roi_sel_button.pack()
+
+        # Clear ALL Roi button
+        self.clear_all_roi_button = Button(self.frame, text="Clear all Roi", command=self.clear_all_roi)
+        self.clear_all_roi_button.grid(row=2, column=1)
 
         # This is to make sure that everything is fit to the frame when it expands
-        for x in range(4):
+        for x in range(1):
             Grid.columnconfigure(self.frame, x, weight=1)
-        for y in range(2):
+        for y in range(1):
             Grid.rowconfigure(self.frame, y, weight=1)
+
+    # Tell ViewableImage that we want to clear all ROIs
+    def clear_all_roi(self):
+        if self.curr_image is not None:
+            self.curr_image.clear_all_roi()
+
+    # Telling the viewableImage that we're in clear mode
+    def set_clear_mode(self):
+        if self.curr_image is not None:
+            self.curr_image.mode = "clear"
+
+    # Callback functions for the radiobuttons "zoom" and Roi"
+    def set_roi_mode(self):
+        # First check if we have a image
+        if self.curr_image is not None:
+            self.curr_image.mode = "roi"
+
+    # See above
+    def set_zoom_mode(self):
+        if self.curr_image is not None:
+            self.curr_image.mode = "zoom"
 
     def load_image(self):
         # Get the filepath

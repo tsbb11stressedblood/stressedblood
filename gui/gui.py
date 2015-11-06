@@ -47,6 +47,7 @@ class ViewableImage(Canvas):
         self.curr_box_bbox = None
         self.last_selection_region = None
         self.zoom_level = 0     # How many times have we zoomed?
+        self.zoom_region = []   # Region in level 0 coords that tells us where the zoom is, needed for transforming
 
         # Since we want multiple ROIs, save them in this list
         self.roi_list = []
@@ -190,7 +191,7 @@ class ViewableImage(Canvas):
                                          0,
                                          (int(width_percent*ld[0]*ds),
                                           int(height_percent*ld[1]*ds)))
-        self.current_level = 0
+        # self.current_level = 0
         # Now depending on the mode, do different things
         if self.mode is "roi":
             self.set_roi(box)
@@ -200,21 +201,62 @@ class ViewableImage(Canvas):
     def set_roi(self, box):
         roi = numpy.array(box)
         # Add the ROI to our list
-        self.roi_list.append((self.roi_counter, roi, self.curr_box_bbox))
+        self.roi_list.append((self.roi_counter, roi, self.last_selection_region))
         # Keep drawing the ROIs
-        self.create_rectangle(self.curr_box_bbox, outline="red", tags="roi"+str(self.roi_counter))
+        self.draw_rectangle(self.last_selection_region, "red", "roi"+str(self.roi_counter))
+        # self.create_rectangle(self.last_selection_region, outline="red", tags="roi"+str(self.roi_counter))
         self.roi_counter += 1
         #self.create_text(self.curr_box_bbox[0][0], self.curr_box_bbox[0][1], text=str(len(self.roi_list)),
         #                 anchor=SW, font=("Purisa", 16), tags="roi"+str(len(self.roi_list)))
         # Call the segmentation (testing)
         #rbc_seg.segmentation(roi)
 
+    def draw_rectangle(self, level_0_coords, outline, tag):
+        # We need to transform the level 0 coords to the current window
+        #factor = 1.0/self.ndpi_file.level_downsamples[self.current_level]
+        top_x = level_0_coords[0][0]
+        top_y = level_0_coords[0][1]
+        width = level_0_coords[1][0]
+        height = level_0_coords[1][1]
+
+        # Get the percentages
+        ld = self.ndpi_file.level_dimensions[0]
+        top_x_percent = top_x/ld[0]
+        top_y_percent = top_y/ld[1]
+        width_percent = width/ld[0]
+        height_percent = height/ld[1]
+
+        print self.current_level
+
+        box = [(top_x, top_y), (width, height)]
+        print level_0_coords
+        print box
+
+        self.create_rectangle(box, outline=outline, tags=tag)
+
     def zoom(self):
         self.zoom_level += 1
+        # Set the zoom_region in level 0 coords
+        x_percent = self.curr_box_bbox[0][0]/self.winfo_width()
+        y_percent = self.curr_box_bbox[0][1]/self.winfo_height()
+        width_percent = self.curr_box_bbox[1][0]/self.winfo_width()
+        height_percent = self.curr_box_bbox[1][1]/self.winfo_height()
+
+        level_0_dim = self.ndpi_file.level_dimensions[0]
+        x = x_percent*level_0_dim[0]
+        y = y_percent*level_0_dim[1]
+        width = width_percent*level_0_dim[0]
+        height = height_percent*level_0_dim[1]
+        self.zoom_region = [(x, y), (width, height)]
+        # We also need to make sure that the ROIs are (visually) transformed to the new zoom level
+        # Loop through the ROIs and draw rectangles at new locations
+        #for num, roi, bbox in self.roi_list:
+
         self.resize_image((self.winfo_width(), self.winfo_height()))
 
     def reset_zoom(self, event):
         self.last_selection_region = None
+        self.zoom_region = []
         self.zoom_level = 0
         self.resize_image((self.winfo_width(), self.winfo_height()))
 

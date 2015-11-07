@@ -239,20 +239,12 @@ class ViewableImage(Canvas):
         self.create_rectangle(box, outline=outline, tags=tag)
 
     def zoom(self):
-        self.zoom_level += 1
         # Set the zoom_region in level 0 coords
-        x_percent = float(self.curr_box_bbox[0][0])/self.winfo_width()
-        y_percent = float(self.curr_box_bbox[0][1])/self.winfo_height()
-        width_percent = float(self.curr_box_bbox[1][0])/self.winfo_width()
-        height_percent = float(self.curr_box_bbox[1][1])/self.winfo_height()
-
-        level_0_dim = self.ndpi_file.level_dimensions[0]
-        x = x_percent*level_0_dim[0]
-        y = y_percent*level_0_dim[1]
-        width = width_percent*level_0_dim[0]
-        height = height_percent*level_0_dim[1]
+        x, y = self.transform_to_level_zero(self.curr_box_bbox[0][0], self.curr_box_bbox[0][1])
+        width, height = self.transform_to_level_zero(self.curr_box_bbox[1][0], self.curr_box_bbox[1][1])
 
         self.zoom_region = [(x, y), (width-x, height-y)]
+        self.zoom_level += 1
 
         print "heading into resize"
         self.resize_image((self.winfo_width(), self.winfo_height()))

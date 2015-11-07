@@ -6,7 +6,7 @@ displays them. Also handles ROI selection of the image that is later passed on a
 classification steps.
 
 author: Christoph H.
-last modified: 11th November 2015
+last modified: 7th November 2015
 """
 
 from Tkinter import *
@@ -34,18 +34,18 @@ class ViewableImage(Canvas):
 
         # Setup the input file
         self.ndpi_file = _ndpi_file
-        self.im = None          # Actual PhotoImage object of the image
-        self.rgba_im = None     # This is needed as a kept reference so that we can resize image on user action
+        self.im = None              # Actual PhotoImage object of the image
+        self.rgba_im = None         # This is needed as a kept reference so that we can resize image on user action
 
         self.current_level = None   # Scale space level currently used for viewing (for handling zoom etc)
 
-        self.image_handle = None  # Used to delete and recreate images
+        self.image_handle = None    # Used to delete and recreate images
         self.setup_image()
 
         # Stuff for box selection
-        self.init_box_pos = None
-        self.curr_box_bbox = None
-        self.last_selection_region = None
+        self.init_box_pos = None            # In WINDOW coordinates
+        self.curr_box_bbox = None           # Also in current WINDOW coordinates
+        self.last_selection_region = None   # This is in level 0 coordinates
         self.zoom_level = 0     # How many times have we zoomed?
         self.zoom_region = []   # Region in level 0 coords that tells us where the zoom is, needed for transforming
 
@@ -116,10 +116,14 @@ class ViewableImage(Canvas):
     def set_init_box_pos(self, event):
         # If we are in clear mode, make sure that we handle it correctly.
         if self.mode is "clear":
+
+            # First transform the coordinates to level 0
+            (mouse_x, mouse_y) = self.transform_to_level_zero(event.x, event.y)
+
             # Loop through roi_list and see if we clicked on one of them
             for num, roi, bbox in self.roi_list:
-                if bbox[0][0] < event.x < bbox[1][0]:
-                    if bbox[0][1] < event.y < bbox[1][1]:
+                if bbox[0][0] < mouse_x < bbox[0][0]+bbox[1][0]:
+                    if bbox[0][1] < mouse_y < bbox[0][1]+bbox[1][1]:
                         # Found a ROI!
                         self.delete("roi"+str(num))
                         self.delete("boxselector")
@@ -127,6 +131,19 @@ class ViewableImage(Canvas):
                         break
         else:
             self.init_box_pos = (event.x, event.y)
+
+    # From window coordinates to level 0 coordinates
+    def transform_to_level_zero(self, x_coord, y_coord):
+
+        x_percent = float(x_coord)/self.winfo_width()
+        y_percent = float(y_coord)/self.winfo_height()
+
+        if self.zoom_level is 0:
+            ld = self.ndpi_file.level_dimensions[0]
+            return x_percent*ld[0], y_percent*ld[1]
+        else:
+            ld = self.zoom_region
+            return x_percent*ld[1][0]+ld[0][0], y_percent*ld[1][1]+ld[0][1]
 
     # Member function for clearing all ROI
     def clear_all_roi(self):
@@ -148,64 +165,44 @@ class ViewableImage(Canvas):
             self.create_rectangle(self.curr_box_bbox, outline="green", tags="boxselector")
 
     def set_box(self, event):
-        # Get the region at best possible resolution
-        # Grab these for ease of use
+        # This is executed when the user has dragged a selection box (either zoom or ROI) and he/she has now let go of
+        # the mouse. Our goal here is to get the level 0 coordinates of this box and then pass this box on depending
+        # on what we want to do.
         width = self.curr_box_bbox[1][0]
         height = self.curr_box_bbox[1][1]
         topx = self.curr_box_bbox[0][0]
         topy = self.curr_box_bbox[0][1]
 
+        l0_width, l0_height = self.transform_to_level_zero(width, height)
+        l0_topx, l0_topy = self.transform_to_level_zero(topx, topy)
+
         # Get absolute pixel differences
-        width = abs(width - topx)
-        height = abs(height - topy)
-
-        # This is the downsampling factor for the current level where the box was selected from
-        ds = self.ndpi_file.level_downsamples[self.current_level]
-
-        if self.zoom_level is 0:
-            # This is a tuple giving the pixel size of the entire image in level where the box was selected
-            ld = self.ndpi_file.level_dimensions[self.current_level]
-            x_offset = 0
-            y_offset = 0
-        else:
-            ld = self.last_selection_region[1]
-            x_offset = self.last_selection_region[0][0]
-            y_offset = self.last_selection_region[0][1]
-            ds = 1.0
-
-        # Now convert into percent of total
-        top_x_percent = float(topx)/self.winfo_width()
-        top_y_percent = float(topy)/self.winfo_height()
-        width_percent = float(width)/self.winfo_width()
-        height_percent = float(height)/self.winfo_height()
+        l0_width = abs(l0_width - l0_topx)
+        l0_height = abs(l0_height - l0_topy)
 
         # We need to be able to access this region in the resize function
-        self.last_selection_region = [(int((top_x_percent*ld[0] + x_offset)*ds),
-                                       int((top_y_percent*ld[1] + y_offset)*ds)),
-                                      (int(width_percent*ld[0]*ds),
-                                       int(height_percent*ld[1]*ds))]
+        self.last_selection_region = [(int(l0_topx), int(l0_topy)), (int(l0_width), int(l0_height))]
 
         # Multiply percentages of totals and transform to high res level
-        box = self.ndpi_file.read_region((int((top_x_percent*ld[0] + x_offset)*ds),
-                                          int((top_y_percent*ld[1] + y_offset)*ds)),
-                                         0,
-                                         (int(width_percent*ld[0]*ds),
-                                          int(height_percent*ld[1]*ds)))
-        # self.current_level = 0
+        box = self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height)))
+
         # Now depending on the mode, do different things
         if self.mode is "roi":
             self.set_roi(box)
         elif self.mode is "zoom":
+            print "set_box is done"
             self.zoom()
 
     def set_roi(self, box):
         roi = numpy.array(box)
+
         # Add the ROI to our list
         self.roi_list.append((self.roi_counter, roi, self.last_selection_region))
+
         # Keep drawing the ROIs
         self.draw_rectangle(self.last_selection_region, "red", "roi"+str(self.roi_counter))
-        # self.create_rectangle(self.last_selection_region, outline="red", tags="roi"+str(self.roi_counter))
         self.roi_counter += 1
+
         #self.create_text(self.curr_box_bbox[0][0], self.curr_box_bbox[0][1], text=str(len(self.roi_list)),
         #                 anchor=SW, font=("Purisa", 16), tags="roi"+str(len(self.roi_list)))
         # Call the segmentation (testing)
@@ -220,45 +217,58 @@ class ViewableImage(Canvas):
         height = level_0_coords[1][1]
 
         # Get the percentages
-        ld = self.ndpi_file.level_dimensions[0]
-        top_x_percent = top_x/ld[0]
-        top_y_percent = top_y/ld[1]
-        width_percent = width/ld[0]
-        height_percent = height/ld[1]
+        if self.zoom_level is 0:
+            ld = self.ndpi_file.level_dimensions[0]
+        else:
+            ld = self.zoom_region[1]
+            top_x = top_x - self.zoom_region[0][0]
+            top_y = top_y - self.zoom_region[0][1]
 
-        print self.current_level
+        top_x_percent = float(top_x)/ld[0]
+        top_y_percent = float(top_y)/ld[1]
+        width_percent = float(width)/ld[0]
+        height_percent = float(height)/ld[1]
 
-        box = [(top_x, top_y), (width, height)]
-        print level_0_coords
-        print box
+        top_x_view = top_x_percent*self.winfo_width()
+        top_y_view = top_y_percent*self.winfo_height()
+        width_view = width_percent*self.winfo_width()
+        height_view = height_percent*self.winfo_height()
+
+        box = [(top_x_view, top_y_view), (width_view+top_x_view, height_view+top_y_view)]
 
         self.create_rectangle(box, outline=outline, tags=tag)
 
     def zoom(self):
         self.zoom_level += 1
         # Set the zoom_region in level 0 coords
-        x_percent = self.curr_box_bbox[0][0]/self.winfo_width()
-        y_percent = self.curr_box_bbox[0][1]/self.winfo_height()
-        width_percent = self.curr_box_bbox[1][0]/self.winfo_width()
-        height_percent = self.curr_box_bbox[1][1]/self.winfo_height()
+        x_percent = float(self.curr_box_bbox[0][0])/self.winfo_width()
+        y_percent = float(self.curr_box_bbox[0][1])/self.winfo_height()
+        width_percent = float(self.curr_box_bbox[1][0])/self.winfo_width()
+        height_percent = float(self.curr_box_bbox[1][1])/self.winfo_height()
 
         level_0_dim = self.ndpi_file.level_dimensions[0]
         x = x_percent*level_0_dim[0]
         y = y_percent*level_0_dim[1]
         width = width_percent*level_0_dim[0]
         height = height_percent*level_0_dim[1]
-        self.zoom_region = [(x, y), (width, height)]
+
+        self.zoom_region = [(x, y), (width-x, height-y)]
+
+        print "heading into resize"
+        self.resize_image((self.winfo_width(), self.winfo_height()))
+
         # We also need to make sure that the ROIs are (visually) transformed to the new zoom level
         # Loop through the ROIs and draw rectangles at new locations
-        #for num, roi, bbox in self.roi_list:
-
-        self.resize_image((self.winfo_width(), self.winfo_height()))
+        for num, roi, bbox in self.roi_list:
+            self.draw_rectangle(bbox, "red", "roi"+str(num))
 
     def reset_zoom(self, event):
         self.last_selection_region = None
         self.zoom_region = []
         self.zoom_level = 0
         self.resize_image((self.winfo_width(), self.winfo_height()))
+        for num, roi, bbox in self.roi_list:
+            self.draw_rectangle(bbox, "red", "roi"+str(num))
 
 
 # Main class for handling GUI-related things

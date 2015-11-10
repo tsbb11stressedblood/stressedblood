@@ -192,6 +192,7 @@ class ViewableImage(Canvas):
         elif self.mode is "zoom":
             print "set_box is done"
             self.zoom()
+        self.delete("boxselector")
 
     def set_roi(self, box):
         roi = numpy.array(box)
@@ -262,6 +263,10 @@ class ViewableImage(Canvas):
         for num, roi, bbox in self.roi_list:
             self.draw_rectangle(bbox, "red", "roi"+str(num))
 
+    def run_roi(self):
+        # Just runs the latest ROI for now
+        rbc_seg.segmentation(self.roi_list[len(self.roi_list)-1][1])
+
 
 # Main class for handling GUI-related things
 class GUI:
@@ -279,6 +284,7 @@ class GUI:
         self.roi_sel_button = None
         self.clear_roi_button = None
         self.clear_all_roi_button = None
+        self.run_button = None
 
         # This stores the current image on screen
         self.curr_image = None
@@ -309,14 +315,22 @@ class GUI:
         radio_group.grid(row=1, column=1)
 
         # Clear ALL Roi button
-        self.clear_all_roi_button = Button(self.frame, text="Clear all Roi", command=self.clear_all_roi)
+        self.clear_all_roi_button = Button(self.frame, text="Clear all ROI", command=self.clear_all_roi)
         self.clear_all_roi_button.grid(row=2, column=1)
+
+        # RUN button
+        self.run_button = Button(self.frame, text="Run", command=self.run_roi)
+        self.run_button.grid(row=3, column=1)
 
         # This is to make sure that everything is fit to the frame when it expands
         for x in range(1):
             Grid.columnconfigure(self.frame, x, weight=1)
         for y in range(1):
             Grid.rowconfigure(self.frame, y, weight=1)
+
+    def run_roi(self):
+        if self.curr_image is not None:
+            self.curr_image.run_roi()
 
     # Tell ViewableImage that we want to clear all ROIs
     def clear_all_roi(self):

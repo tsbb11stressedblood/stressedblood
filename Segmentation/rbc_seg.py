@@ -21,14 +21,15 @@ def segmentation(ROI):
 
     # noise removal with a 3x3 kernel
     kernel = np.ones((3,3),np.uint8)
-    opening = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel, iterations = 2)
+    #opening = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel, iterations = 2)
+    opening = thresh
 
     # sure background area, more dilation with more iterations
     sure_bg = cv2.dilate(opening,kernel,iterations=2)
 
     # Finding sure foreground area, threshold might need changing: lower threshold-factor gives larger sure_fg
     dist_transform = cv2.distanceTransform(opening,cv2.DIST_L2,3)
-    ret, sure_fg = cv2.threshold(dist_transform,0.3*dist_transform.max(),255,0)
+    ret, sure_fg = cv2.threshold(dist_transform,0.3*dist_transform.max(),255,0) #0.3
 
     # Finding unknown region, borders of bg-fg
     sure_fg = np.uint8(sure_fg)
@@ -78,11 +79,12 @@ def segmentation(ROI):
         #Cut out region
         x,y,w,h = cv2.boundingRect(contour)
         cell_img = ROI[y:y+h,x:x+w, :]
-
+        marker = markers[y:y+h,x:x+w] == num
         # Plots BB
         #img = cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2)
         # Construct cell in the cell_list
-        cell_list.append(Cell( ellipse, x,y,w,h, area, cell_img, cell_list))
+        cell_list.append(Cell( ellipse, x,y,w,h, area, marker, cell_img, cell_list))
+        #print(type(contour))
 
 
     # Class the cell to RBC, background and unknown (possibly WBC!)
@@ -93,17 +95,17 @@ def segmentation(ROI):
     # Return a list with only WBC
     cell_list = wbc_cell_extraction(cell_list)
     # show all binary images
-    """ # WBC cell_list plots
-    fig = plt.figure(3)
-    ax = fig.add_subplot(221)
-    plt.imshow(cell_list[1].img, interpolation='nearest')
-    ax = fig.add_subplot(222)
-    plt.imshow(cell_list[2].img, interpolation='nearest')
-    ax = fig.add_subplot(223)
-    plt.imshow(cell_list[3].img, interpolation='nearest')
-    ax = fig.add_subplot(224)
-    plt.imshow(cell_list[4].img, interpolation='nearest')
-    """
+     # WBC cell_list plots
+    #fig = plt.figure(3)
+    #ax = fig.add_subplot(221)
+    #plt.imshow(cell_list[1].img, interpolation='nearest')
+    #ax = fig.add_subplot(222)
+    #plt.imshow(cell_list[1].marker, interpolation='nearest')
+    #ax = fig.add_subplot(223)
+    #plt.imshow(cell_list[3].img, interpolation='nearest')
+    #ax = fig.add_subplot(224)
+    #plt.imshow(cell_list[4].img, interpolation='nearest')
+
 
     print("Segmentation done")
     plt.show()
@@ -150,7 +152,7 @@ def wbc_cell_extraction(cell_list):
     return wbc_list
 #'''''''''''''''''''''''''''''''''''''
 # Test data, move along!
-# imgpath1 = 'smallbloodsmear.jpg'
+#imgpath1 = 'smallbloodsmear.jpg'
 # imgpath2 = 'test.tif'
 # img =  cv2.imread(imgpath2)
 # cell_list = segmentation(img)

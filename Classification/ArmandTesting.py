@@ -91,18 +91,22 @@ def nuclues_fill(cellarray):  # Should take in only cell object
 def erosion_test(cellarray):
     hsv = convert_to_hsv(cellarray)
     lne = hsv[:,:,1]
-    threshold = 0.75
+    threshold = 0.7
     lne[lne>threshold*np.amax(lne)] = 1
     lne[lne<threshold*np.amax(lne)] = 0
 
-    kernel = np.ones((3,3), np.uint8)
-    erosion = cv2.erode(lne, kernel, iterations=2)
+    kernel = np.ones((2,2), np.uint8)
+    erosion = cv2.erode(lne, kernel, iterations=3)
+
+    ret, markers = cv2.connectedComponents(np.uint8(erosion))
+    ret = ret-1
+    print markers, ret
+
     plt.figure(11)
     plt.subplot(221)
-    plt.imshow(erosion)
+    plt.imshow(markers)
     plt.subplot(222)
     plt.imshow(lne)
-
 
 
 '''
@@ -113,20 +117,100 @@ LNE = LNE(WBCarray)
 edges = cv2.Canny(WBCarray,100,200)
 '''
 
-WBCarray = np.load("lymphocyte.npy")
+WBCarray = np.load("white_1.npy")
 #erosion_test(WBCarray)
+
 #list = rbc_seg.segmentation(WBCarray)
 #Cell = 0
-cellx = 66 #list[Cell].x
-celly = 14 #list[Cell].y
-cellw = 47 #list[Cell].w
-cellh = 39 #list[Cell].h
-cellarray = WBCarray[celly:(celly+cellh),cellx:(cellx+cellw),:]
-#cellarray = WBCarray;
+#cellx = 66 #list[Cell].x
+#celly = 14 #list[Cell].y
+#cellw = 47 #list[Cell].w
+#cellh = 39 #list[Cell].h
+#cellarray = WBCarray[celly:(celly+cellh),cellx:(cellx+cellw),:]
+cellarray = WBCarray;
 
-hsv = convert_to_hsv(cellarray)
-lne = hsv[:,:,1]
-lne_th = hsv[:,:,1].copy()      # Fucking deep copy
+def get_mean_var(cellarray):
+    mean_array = []
+    var_array = []
+    hsv = convert_to_hsv(cellarray)
+    for i in range(0,3):
+        lne = hsv[:,:,i]
+        mean_array.append(np.mean(lne))
+        var_array.append(np.var(lne))
+
+    for i in range(0,3):
+        lne = cellarray[:,:,i]/255.0
+        mean_array.append(np.mean(lne))
+        var_array.append(np.var(lne))
+
+    return mean_array, var_array
+
+print get_mean_var(WBCarray)
+
+def get_energy(cellarray):
+    energy_array = []
+    hsv = convert_to_hsv(cellarray)
+    for i in range(0,3):
+        lne = hsv[:,:,i]
+        energy_array.append(np.sum(np.power(lne, 2))/np.size(cellarray))
+
+    for i in range(0,3):
+        lne = cellarray[:,:,i]/255.0
+        energy_array.append(np.sum(np.power(lne, 2))/np.size(cellarray))
+
+    return energy_array
+
+print get_energy(WBCarray)
+
+'''
+#plt.bar(bin_edges[:-1], hist, width = 0.05)
+plt.figure()
+for i in range(0, 20):
+    WBCarray = np.load("white_" + str(i + 1) + ".npy" )
+    WBC_hsv = convert_to_hsv(WBCarray)
+    color = ('b', 'g', 'r')
+    plt.subplot(5,4,i+1)
+    for j,col in enumerate(color):
+        WBC_h = WBC_hsv[:,:,j]
+        hist,bin_edges = np.histogram(WBC_h, 50)
+        plt.plot(hist, color= col)
+        #plt.xlim([0,256])
+
+plt.show()
+'''
+plt.figure()
+WBC_bw = cv2.cvtColor(WBCarray, cv2.COLOR_BGR2GRAY)
+plt.imshow(WBC_bw, cmap= 'Greys')
+plt.show()
+
+WBCarray = np.load("white_8.npy")
+plt.figure()
+for i in range(0, 20):
+    WBCarray = np.load("white_" + str(i + 1) + ".npy" )
+    WBC_bw = cv2.cvtColor(WBCarray, cv2.COLOR_BGR2GRAY)
+    plt.subplot(5,4,i+1)
+    hist,bin_edges = np.histogram(WBC_bw, 255)
+    plt.plot(hist)
+    plt.xlim([0,256])
+    plt.subplot(5,4,i+1)
+plt.show()
+
+'''
+WBCarray = np.load("white_8.npy")
+plt.figure()
+for i in range(0, 20):
+    WBCarray = np.load("white_" + str(i + 1) + ".npy" )
+    color = ('b', 'g', 'r')
+    plt.subplot(5,4,i+1)
+
+    for i,col in enumerate(color):
+        histr = cv2.calcHist([WBCarray], [i], None, [10], [0,256])
+        plt.plot(histr, color= col)
+        plt.xlim([0,10])
+    plt.subplot(5,4,i+1)
+plt.show()
+
+'''
 
 
 #print nuclues_fill(cellarray)
@@ -151,3 +235,8 @@ plt.imshow(cellarray)
 plt.colorbar()
 plt.show()
 '''
+
+WBC_array = np.load('white_1.npy')
+#list = rbc_seg.segmentation(WBC_array)
+#WBC_img = list[0].cell_img
+

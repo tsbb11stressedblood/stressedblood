@@ -6,14 +6,14 @@ Date: 2015-10-06
 """
 
 class Cell:
-    def __init__(self, _shape_data, _x, _y, _w, _h, _area,_marker, cell_img, cell_list):
+    def __init__(self, _shape_data, _x, _y, _w, _h, _area,_mask, cell_img):
         # Should be set unknown at start
         self.label = "unknown"
 
         self.img = cell_img
 
         # Store data
-        self.marker = _marker
+        self.mask = _mask
         self.x = _x
         self.y = _y
         self.w = _w

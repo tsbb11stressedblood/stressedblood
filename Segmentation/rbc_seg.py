@@ -16,56 +16,31 @@ def segmentation(ROI):
     # image init, and conversion to gray and then threshold it
     img = ROI[:, :, 0:3]
 
+    binary_list = []
     # Call watershed, returns img with markers of cells and data about those cells
     for i in range(2):
-        # NOT DONE! använd båda bilderna för att hitta nya objekt från den första! #EZ
+
         dist_transform_thresh = 0.7 - float(2.5*float(i)/10.)
         print(dist_transform_thresh)#0.7 default
         img, ret, markers = cell_watershed(img, dist_transform_thresh)
+        #temp = markers[markers > 2] = 2
+        binary_list.append(markers)
 
-        # Show the original img
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-        plt.imshow(img, interpolation='nearest')
-
+    # Show the original img
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    plt.imshow(img, interpolation='nearest')
+    """
+    diff = binary_list[0] - binary_list[1]
+    # diff[diff == 2] = 0
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    print(binary_list[0].shape)
+    plt.imshow(diff, interpolation='nearest')
+    """
 
     cell_list = []
-    ellipse_list = []
-
-    # For each connectedobject in markers
-    for num in range(2,ret):
-        img2 = np.array(num==markers, dtype=np.uint8)
-        dummy_img, contours, hierarchy = cv2.findContours(img2, 1, 2)
-
-        # Fit ellipses on marked objects in the thresh-image
-        # First extract contour from the list contours
-
-        if len(contours)<1:
-            continue
-        #if len(contours)>2:
-          #  print("Zuka blyat fler 2objekt i contours")
-           # print("contours len:" +str(len(contours)))
-        # Now make sure that the contour is larger than 30 pixels
-        if len(contours[0]) < 30:
-            continue
-        # If it is, take the contour and pass it on
-        contour = contours[0]
-
-        ellipse = cv2.fitEllipse(contour)
-        ellipse_list.append(ellipse)
-        # Determine cell area
-        area = cv2.contourArea(contour)
-
-        #Cut out region
-        x,y,w,h = cv2.boundingRect(contour)
-        cell_img = ROI[y:y+h,x:x+w, :]
-        marker = markers[y:y+h,x:x+w] == num
-        # Plots BB
-        #img = cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2)
-        # Construct cell in the cell_list
-        cell_list.append(Cell( ellipse, x,y,w,h, area, marker, cell_img, cell_list))
-
-
+    cell_list = modify_cell_list(ROI,ret,markers,cell_list)
 
     # Class the cell to RBC, background and unknown (possibly WBC!)
     cell_list = RBC_classification(cell_list)
@@ -140,6 +115,44 @@ def cell_watershed(img, dist_thresh = 0.7):
 
     return img, ret, markers
 
+
+def modify_cell_list(ROI,ret,markers,cell_list):
+    # For each connectedobject in markers
+    #cell_list = []
+    ellipse_list = []
+    for num in range(2,ret):
+        img2 = np.array(num==markers, dtype=np.uint8)
+        dummy_img, contours, hierarchy = cv2.findContours(img2, 1, 2)
+
+        # Fit ellipses on marked objects in the thresh-image
+        # First extract contour from the list contours
+
+        if len(contours)<1:
+            continue
+        #if len(contours)>2:
+          #  print("Zuka blyat fler 2objekt i contours")
+           # print("contours len:" +str(len(contours)))
+        # Now make sure that the contour is larger than 30 pixels
+        if len(contours[0]) < 30:
+            continue
+        # If it is, take the contour and pass it on
+        contour = contours[0]
+
+        ellipse = cv2.fitEllipse(contour)
+        ellipse_list.append(ellipse)
+        # Determine cell area
+        area = cv2.contourArea(contour)
+
+        #Cut out region
+        x,y,w,h = cv2.boundingRect(contour)
+        cell_img = ROI[y:y+h,x:x+w, :]
+        cell_mask = markers[y:y+h,x:x+w] == num
+        # Plots BB
+        #img = cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2)
+        # Construct cell in the cell_list
+        cell_list.append(Cell(ellipse, x,y,w,h, area, cell_mask, cell_img))
+    return cell_list
+
 def RBC_classification(cell_list):
     # Get the mean RBC size
     cell_areas = []
@@ -153,7 +166,7 @@ def RBC_classification(cell_list):
             if 0.6*RBC_mean_area < cell.area < 1.4*RBC_mean_area:
                 cell.label = "RBC"
             else:
-                cell.label = "Background"
+                cell.label = "U"
         else:
             cell.label = "U"
 

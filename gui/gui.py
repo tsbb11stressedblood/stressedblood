@@ -97,7 +97,7 @@ class ViewableImage(Canvas):
             factor = float(self.ndpi_file.level_dimensions[0][0])/float(self.winfo_width())
 
         self.current_level = self.ndpi_file.get_best_level_for_downsample(factor)
-        #print self.current_level
+        print self.current_level
 
         # We have to make sure that we only show the zoomed-in area
         if self.last_selection_region is not None and self.mode is "zoom":

@@ -16,20 +16,72 @@ def segmentation(ROI):
     # image init, and conversion to gray and then threshold it
     img = ROI[:, :, 0:3]
 
+    binary_list = []
+    # Call watershed, returns img with markers of cells and data about those cells
+    for i in range(2):
+
+        dist_transform_thresh = 0.7 - float(2.5*float(i)/10.)
+        print(dist_transform_thresh)#0.7 default
+        img, ret, markers = cell_watershed(img, dist_transform_thresh)
+        #temp = markers[markers > 2] = 2
+        binary_list.append(markers)
+
+    # Show the original img
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    plt.imshow(img, interpolation='nearest')
+    """
+    diff = binary_list[0] - binary_list[1]
+    # diff[diff == 2] = 0
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    print(binary_list[0].shape)
+    plt.imshow(diff, interpolation='nearest')
+    """
+
+    cell_list = []
+    cell_list = modify_cell_list(ROI,ret,markers,cell_list)
+
+    # Class the cell to RBC, background and unknown (possibly WBC!)
+    cell_list = RBC_classification(cell_list)
+    #print(len(cell_list))
+    # Print labels
+    print_cell_labels(cell_list, ax)
+    # Return a list with only WBC
+    cell_list = wbc_cell_extraction(cell_list)
+    # show all binary images
+     # WBC cell_list plots
+    #fig = plt.figure(3)
+    #ax = fig.add_subplot(221)
+    #plt.imshow(cell_list[0].img, interpolation='nearest')
+    #ax = fig.add_subplot(222)
+    #plt.imshow(cell_list[1].marker, interpolation='nearest')
+    #ax = fig.add_subplot(223)
+    #plt.imshow(cell_list[3].img, interpolation='nearest')
+    #ax = fig.add_subplot(224)
+    #plt.imshow(cell_list[4].img, interpolation='nearest')
+
+
+    print("Segmentation done")
+    plt.show()
+
+    return cell_list
+
+def cell_watershed(img, dist_thresh = 0.7):
     gray = cv2.cvtColor(img ,cv2.COLOR_BGR2GRAY)
     ret, thresh = cv2.threshold(gray,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
 
     # noise removal with a 3x3 kernel
     kernel = np.ones((3,3),np.uint8)
-    #opening = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel, iterations = 2)
-    opening = thresh
+    opening = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel, iterations = 2)
+    #opening = thresh
 
     # sure background area, more dilation with more iterations
-    sure_bg = cv2.dilate(opening,kernel,iterations=2)
+    sure_bg = cv2.dilate(opening,kernel,iterations = 2)
 
     # Finding sure foreground area, threshold might need changing: lower threshold-factor gives larger sure_fg
-    dist_transform = cv2.distanceTransform(opening,cv2.DIST_L2,3)
-    ret, sure_fg = cv2.threshold(dist_transform,0.3*dist_transform.max(),255,0) #0.3
+    dist_transform = cv2.distanceTransform(opening,cv2.DIST_L2,5)
+    ret, sure_fg = cv2.threshold(dist_transform,dist_thresh*dist_transform.max(),255,0) #0.7 default
 
     # Finding unknown region, borders of bg-fg
     sure_fg = np.uint8(sure_fg)
@@ -48,23 +100,38 @@ def segmentation(ROI):
 
     img[markers == -1] = [255,0,0]
 
-    # Show the original img
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    plt.imshow(img, interpolation='nearest')
+    # Plots for the luls
+    plt.figure()
+    plt.imshow(markers)
 
-    cell_list = []
-    ellipse_list = []
+    #plt.figure(123)
+    #plt.imshow(sure_bg)
 
+    #plt.figure(124)
+    #plt.imshow(sure_fg)
+
+    #plt.figure(126)
+    #plt.imshow(thresh)
+
+    return img, ret, markers
+
+
+def modify_cell_list(ROI,ret,markers,cell_list):
     # For each connectedobject in markers
+    #cell_list = []
+    ellipse_list = []
     for num in range(2,ret):
         img2 = np.array(num==markers, dtype=np.uint8)
         dummy_img, contours, hierarchy = cv2.findContours(img2, 1, 2)
 
         # Fit ellipses on marked objects in the thresh-image
         # First extract contour from the list contours
+
         if len(contours)<1:
             continue
+        #if len(contours)>2:
+          #  print("Zuka blyat fler 2objekt i contours")
+           # print("contours len:" +str(len(contours)))
         # Now make sure that the contour is larger than 30 pixels
         if len(contours[0]) < 30:
             continue
@@ -79,39 +146,12 @@ def segmentation(ROI):
         #Cut out region
         x,y,w,h = cv2.boundingRect(contour)
         cell_img = ROI[y:y+h,x:x+w, :]
-        marker = markers[y:y+h,x:x+w] == num
+        cell_mask = markers[y:y+h,x:x+w] == num
         # Plots BB
         #img = cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2)
         # Construct cell in the cell_list
-        cell_list.append(Cell( ellipse, x,y,w,h, area, marker, cell_img, cell_list))
-        #print(type(contour))
-
-
-    # Class the cell to RBC, background and unknown (possibly WBC!)
-    cell_list = RBC_classification(cell_list)
-
-    # Print labels
-    print_cell_labels(cell_list, ax)
-    # Return a list with only WBC
-    cell_list = wbc_cell_extraction(cell_list)
-    # show all binary images
-     # WBC cell_list plots
-    #fig = plt.figure(3)
-    #ax = fig.add_subplot(221)
-    #plt.imshow(cell_list[1].img, interpolation='nearest')
-    #ax = fig.add_subplot(222)
-    #plt.imshow(cell_list[1].marker, interpolation='nearest')
-    #ax = fig.add_subplot(223)
-    #plt.imshow(cell_list[3].img, interpolation='nearest')
-    #ax = fig.add_subplot(224)
-    #plt.imshow(cell_list[4].img, interpolation='nearest')
-
-
-    print("Segmentation done")
-    plt.show()
-
+        cell_list.append(Cell(ellipse, x,y,w,h, area, cell_mask, cell_img))
     return cell_list
-
 
 def RBC_classification(cell_list):
     # Get the mean RBC size
@@ -126,7 +166,7 @@ def RBC_classification(cell_list):
             if 0.6*RBC_mean_area < cell.area < 1.4*RBC_mean_area:
                 cell.label = "RBC"
             else:
-                cell.label = "Background"
+                cell.label = "U"
         else:
             cell.label = "U"
 

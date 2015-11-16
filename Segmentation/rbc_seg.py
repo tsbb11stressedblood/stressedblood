@@ -17,30 +17,37 @@ def segmentation(ROI):
     img = ROI[:, :, 0:3]
 
     binary_list = []
-    # Call watershed, returns img with markers of cells and data about those cells
-    for i in range(2):
-
-        dist_transform_thresh = 0.7 - float(2.5*float(i)/10.)
-        print(dist_transform_thresh)#0.7 default
-        img, ret, markers = cell_watershed(img, dist_transform_thresh)
-        #temp = markers[markers > 2] = 2
-        binary_list.append(markers)
+    cell_list = []
 
     # Show the original img
     fig = plt.figure()
     ax = fig.add_subplot(111)
     plt.imshow(img, interpolation='nearest')
-    """
-    diff = binary_list[0] - binary_list[1]
-    # diff[diff == 2] = 0
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    print(binary_list[0].shape)
-    plt.imshow(diff, interpolation='nearest')
-    """
 
-    cell_list = []
-    cell_list = modify_cell_list(ROI,ret,markers,cell_list)
+    # Call watershed, plots img with markers of cells
+    dist_transform_thresh = 0.7 # Finds fine cell borders but not all cells
+    # Watershed to find individual cells
+    img_fine, ret_fine, markers_fine = cell_watershed(img, dist_transform_thresh)
+    cell_list = modify_cell_list(ROI,ret_fine,markers_fine,cell_list)
+    cell_list = RBC_classification(cell_list)
+
+    # Run once again to fine the rest of the cells
+    dist_transform_thresh = 0.5 # rougher thresh
+    img_rough, ret_rough, markers_rough = cell_watershed(img, dist_transform_thresh)
+
+    # Find the cells which are new in the rough watershed-run
+    # Copy to not destroy any data in markers_rough
+    temp_rough = markers_rough.copy()
+    temp_rough = temp_rough - 1
+    markers_fine = markers_fine - 1
+    temp_rough[temp_rough > 1 ] = 1
+    markers_fine[markers_fine > 1 ] = 1
+    # Find which ones are the new cells
+    diff = temp_rough - markers_fine
+    # Find unique markers on these cells
+    diff_markers = diff*markers_rough
+    # Identify only those new cells
+    cell_list = modify_cell_list(ROI,ret_rough,diff_markers,cell_list)
 
     # Class the cell to RBC, background and unknown (possibly WBC!)
     cell_list = RBC_classification(cell_list)
@@ -49,6 +56,8 @@ def segmentation(ROI):
     print_cell_labels(cell_list, ax)
     # Return a list with only WBC
     cell_list = wbc_cell_extraction(cell_list)
+
+
     # show all binary images
      # WBC cell_list plots
     #fig = plt.figure(3)

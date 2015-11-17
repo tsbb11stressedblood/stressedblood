@@ -2,7 +2,8 @@ import numpy as np
 import cv2
 
 
-def im2c(im, w2c, color):
+# Returns float64! w2c.npy needs to be accessible from where it is called.
+def im2c(im, color):
     w2c = np.load("w2c.npy")
     color_values = [np.array([0., 0., 0.]), np.array([0., 0., 1.]), np.array([.5, .4, .25]), np.array([.5, .5, .5]),
                     np.array([0., 1., 0.]), np.array([1., .8, 0.]), np.array([1., .5, 1.]), np.array([1., 0., 1.]),

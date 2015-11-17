@@ -178,22 +178,69 @@ for i in range(0, 20):
 
 plt.show()
 '''
-plt.figure()
-WBC_bw = cv2.cvtColor(WBCarray, cv2.COLOR_BGR2GRAY)
-plt.imshow(WBC_bw, cmap= 'Greys')
-plt.show()
-
+'''
 WBCarray = np.load("white_8.npy")
 plt.figure()
 for i in range(0, 20):
     WBCarray = np.load("white_" + str(i + 1) + ".npy" )
     WBC_bw = cv2.cvtColor(WBCarray, cv2.COLOR_BGR2GRAY)
     plt.subplot(5,4,i+1)
-    hist,bin_edges = np.histogram(WBC_bw, 255)
+    hist,bin_edges = np.histogram(WBC_bw, 5)
+    print hist
     plt.plot(hist)
-    plt.xlim([0,256])
+    plt.xlim([0,5])
     plt.subplot(5,4,i+1)
 plt.show()
+'''
+
+WBCarray = np.load("white_8.npy")
+
+def bw_histogram(cellarray, bin):
+    cellarray_bw = cv2.cvtColor(cellarray, cv2.COLOR_BGR2GRAY)
+    hist,bin_edges = np.histogram(cellarray_bw, bin)
+    bin_index = np.argmax(hist)
+    bin_value = hist[bin_index]
+    im_size = float(np.size(cellarray_bw))
+    bin_perc = bin_value/im_size
+    return bin_perc, bin_index/float(bin)
+
+
+print bw_histogram(WBCarray, 30)
+
+def hsv_histogram(cellarray, bin):
+    cellarray_hsv = convert_to_hsv(cellarray)
+    im_size = float(np.size(cellarray_hsv))
+    perc_array = []
+    index_array = []
+    for i in range(0,3):
+        cellarray_h = cellarray_hsv[:,:,i]
+        hist,bin_edges = np.histogram(cellarray_h, bin)
+        bin_index = np.argmax(hist)
+        bin_value = hist[bin_index]
+        bin_perc = bin_value/im_size
+        perc_array.append(bin_perc)
+        index_array.append(bin_index/float(bin))
+    return index_array, perc_array
+
+def rgb_histogram(cellarray, bin):
+    im_size = float(np.size(cellarray))
+    perc_array = []
+    index_array = []
+    for i in range(0,3):
+        cellarray_h = cellarray[:,:,i]
+        hist,bin_edges = np.histogram(cellarray_h, bin)
+        bin_index = np.argmax(hist)
+        bin_value = hist[bin_index]
+        bin_perc = bin_value/im_size
+        perc_array.append(bin_perc)
+        index_array.append(bin_index/float(bin))
+    return index_array, perc_array
+
+print rgb_histogram(WBCarray, 30)
+
+print hsv_histogram(WBCarray, 30)
+
+
 
 '''
 WBCarray = np.load("white_8.npy")
@@ -234,9 +281,12 @@ plt.subplot(223)
 plt.imshow(cellarray)
 plt.colorbar()
 plt.show()
+
+
+WBC_array = np.load('simple_test.npy')
+list = rbc_seg.segmentation(WBC_array)
+WBC_img = list[0].img
+plt.figure()
+plt.imshow(WBC_img)
+plt.show()
 '''
-
-WBC_array = np.load('white_1.npy')
-#list = rbc_seg.segmentation(WBC_array)
-#WBC_img = list[0].cell_img
-

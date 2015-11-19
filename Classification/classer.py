@@ -42,14 +42,12 @@ def training(training_features, training_labels):
     :param training_labels:
     :return: trained_classifier
     '''
-
+    C = 1.0 # SVM regularization parameter
     #svc = svm.SVC(kernel='linear', C=C).fit(X, y)
-    #rbf_svc = svm.SVC(kernel='rbf', gamma=0.7, C=C).fit(X, y)
+    trained_classifier = svm.SVC(kernel='rbf', gamma=0.5, C=C).fit(training_features, training_labels)
     #poly_svc = svm.SVC(kernel='poly', degree=3, C=C).fit(X, y)
     #lin_svc = svm.LinearSVC(C=C).fit(X, y)
-
-    C = 1.0 # SVM regularization parameter
-    trained_classifier = svm.SVC(kernel='poly', degree=3, C=C).fit(training_features, training_labels)
+    #trained_classifier = svm.SVC(kernel='poly', degree=3, C=C).fit(training_features, training_labels)
 
     return trained_classifier
 

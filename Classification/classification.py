@@ -13,7 +13,6 @@ def feature_selection(whitecell):
     feature_array.append(whitecell.energy)
     hist1 = whitecell.histogram_features(10.0)
     #feature_array.append(hist1)
-    print(hist1[1])
     #feature_array.append([i for i in hist1])
     feature_array.append(hist1[1])
     feature_array.append(hist1[2])
@@ -40,7 +39,6 @@ def feature_selection(whitecell):
     feature_array.append(whitecell.area_ratio('bw', 0.7))
 
     #feature_array.append([i for i in hist2])
-    print feature_array
     return [item for sublist in feature_array for item in sublist]
     #return itertools.chain.from_iterable(feature_array)
 #WBC_array = np.load('white_1.npy')

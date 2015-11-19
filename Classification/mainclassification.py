@@ -21,15 +21,12 @@ for i in range(1, 21):
     WBC_data.append(wc_features)
 
 WBC_data= np.asarray(WBC_data)
-print np.shape(WBC_data)
 WBC_labels = np.array([0,1,2,0,1,3,2,0,1,0,0,0,3,3,0,2,1,3,1,1])
-#iris = datasets.load_iris()
-#X = iris.data[:, :2]  # we only take the first two features. We could
-                     # avoid this ugly slicing by using a two-dim dataset
+
 X = WBC_data
-X = cl.reduce_dimension(X, 2)
-#y = iris.target
+#X = cl.reduce_dimension(X, )
 y = WBC_labels
+
 trainer = cl.training(X,y)
 prediction = cl.classify_data(X,trainer)
 
@@ -37,7 +34,7 @@ confusion = metrics.confusion_matrix(y, prediction)
 
 print confusion
 
-
+'''
 # create a mesh to plot in
 h = .02  # step size in the mesh
 x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
@@ -63,3 +60,4 @@ plt.xlim(xx.min(), xx.max())
 plt.ylim(yy.min(), yy.max())
 plt.title('SVC with polynomial (degree 3) kernel')
 plt.show()
+'''

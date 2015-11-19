@@ -1,25 +1,27 @@
 from matplotlib import pyplot as plt
 import numpy as np
 import cv2
-import pylab
 from Segmentation import cell
 
 class WhiteCell:
-    def __init__(self, cell, _label):
+    def __init__(self, cell_nparray, _label):
         self.label =_label
-        self.bgr = cell.img/255.0
-        self.size = float(np.size(cell.img))
-        self.mask = cell.mask
-        self.hsv = cv2.cvtColor(cell.img, cv2.COLOR_BGR2HSV)
+        self.img = cell_nparray
+        self.bgr = self.img/255.0
+        #self.bgr = cell.img/255.0
+        #self.size = float(np.size(cell.img))
+        self.size = float(np.size(self.img))
+        #self.mask = cell.mask
+        #self.hsv = cv2.cvtColor(cell.img, cv2.COLOR_BGR2HSV)
+        self.hsv = cv2.cvtColor(self.img, cv2.COLOR_BGR2HSV)
         self.__convert_to_normalized_hsv()
-        self.bw = cv2.cvtColor(cell.img, cv2.COLOR_BGR2GRAY)/255.0
+        self.bw = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)/255.0
+        #self.bw = cv2.cvtColor(cell.img, cv2.COLOR_BGR2GRAY)/255.0
         self.mean = []
         self.var = []
         self.energy = []
         self.mean_var()
         self.get_energy()
-
-
 
     def __convert_to_normalized_hsv(self):
         """Normalizes the HSV channel"""
@@ -70,13 +72,14 @@ class WhiteCell:
         perc_in_bin = []
         bin_index = []
         nr_of_bins = []
+        dist = []
         for i in range(0,3):
             hist,_ = np.histogram(self.bgr[:,:,i], bins)
             largest_bin.append(np.argmax(hist)/bins)
             perc_in_bin.append(np.amax(hist)/self.size)
             bin_index.append(np.argmax(hist))
             nr_of_bins.append( (hist > np.amax(hist)*0.5).sum()/bins)
-        dist = (np.absolute(bin_index[0]-bin_index[1]) + np.absolute(bin_index[0]-bin_index[2]) + np.absolute(bin_index[1]-bin_index[2]))/bins
+        dist.append((np.absolute(bin_index[0]-bin_index[1]) + np.absolute(bin_index[0]-bin_index[2]) + np.absolute(bin_index[1]-bin_index[2]))/bins)
         for i in range(0,3):
             hist,_ = np.histogram(self.hsv[:,:,i], bins)
             largest_bin.append(np.argmax(hist)/bins)
@@ -88,7 +91,6 @@ class WhiteCell:
         perc_in_bin.append(np.amax(hist)/self.size)
         nr_of_bins.append( (hist > np.amax(hist)*0.5).sum()/bins)
         return largest_bin, perc_in_bin, dist, nr_of_bins
-
 
     def hist_dist_between_peaks(self, bins):
         """Calculates the distance between the three peaks in the histograms for the b-,g-,r-channel"""
@@ -119,7 +121,7 @@ class WhiteCell:
         channel_image[channel_image<threshold*np.amax(channel_image)] = 0
         area = np.count_nonzero(channel_image)
         ratio = area/self.size
-        return ratio
+        return [ratio]
 
     def number_of_nuclei(self):
         """Calculates the number of nuclei"""

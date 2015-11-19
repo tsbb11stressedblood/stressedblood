@@ -2,6 +2,7 @@ import classer as cl
 import cv2
 import pylab
 from whitecell import *
+from classification import *
 from Segmentation import rbc_seg
 import itertools
 from sklearn.decomposition import PCA
@@ -11,12 +12,24 @@ from sklearn import svm, datasets, metrics
 
 
 # import some data to play with
-iris = datasets.load_iris()
+WBC_data = []
+for i in range(1, 21):
+    WBC_array = np.load("white_" + str(i) + ".npy")
+    wc = WhiteCell(WBC_array, -1)
+    wc_features = feature_selection(wc)
+    #wc_features = np.asarray(wc_features)
+    WBC_data.append(wc_features)
+
+WBC_data= np.asarray(WBC_data)
+print np.shape(WBC_data)
+WBC_labels = np.array([0,1,2,0,1,3,2,0,1,0,0,0,3,3,0,2,1,3,1,1])
+#iris = datasets.load_iris()
 #X = iris.data[:, :2]  # we only take the first two features. We could
                      # avoid this ugly slicing by using a two-dim dataset
-X = cl.reduce_dimension(iris.data, 2)
-y = iris.target
-
+X = WBC_data
+X = cl.reduce_dimension(X, 2)
+#y = iris.target
+y = WBC_labels
 trainer = cl.training(X,y)
 prediction = cl.classify_data(X,trainer)
 

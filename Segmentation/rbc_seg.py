@@ -8,6 +8,7 @@ Date: 2015-10-06
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+from ColourNM import spacetransformer
 from cell import *
 
 
@@ -77,7 +78,13 @@ def segmentation(ROI):
     return cell_list
 
 def cell_watershed(img, dist_thresh = 0.7):
-    gray = cv2.cvtColor(img ,cv2.COLOR_BGR2GRAY)
+    #gray = cv2.cvtColor(img ,cv2.COLOR_BGR2GRAY)
+
+    color = 10#10 default 4 och 8 - stronk cellkarna
+    gray_transform = spacetransformer.im2c(img, color)
+    gray = np.array(gray_transform * 255, dtype=np.uint8)
+
+    #gray = cv2.cvtColor(gray ,cv2.COLOR_BGR2GRAY)
     ret, thresh = cv2.threshold(gray,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
 
     # noise removal with a 3x3 kernel
@@ -110,14 +117,14 @@ def cell_watershed(img, dist_thresh = 0.7):
     img[markers == -1] = [255,0,0]
 
     # Plots for the luls
-    plt.figure()
-    plt.imshow(markers)
+    #plt.figure(15)
+    #plt.imshow(markers)
 
     #plt.figure(123)
     #plt.imshow(sure_bg)
 
     #plt.figure(124)
-    #plt.imshow(sure_fg)
+    #plt.imshow(gray)
 
     #plt.figure(126)
     #plt.imshow(thresh)
@@ -142,7 +149,7 @@ def modify_cell_list(ROI,ret,markers,cell_list):
           #  print("Zuka blyat fler 2objekt i contours")
            # print("contours len:" +str(len(contours)))
         # Now make sure that the contour is larger than 30 pixels
-        if len(contours[0]) < 30:
+        if len(contours[0]) < 25:
             continue
         # If it is, take the contour and pass it on
         contour = contours[0]

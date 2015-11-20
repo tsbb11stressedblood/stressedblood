@@ -15,8 +15,6 @@ import cv2
 import pylab
 from Segmentation import rbc_seg
 
-
-
 def convert_to_hsv(rgba_image):
     """
     Takes a RGBA image and return a HSVA image.

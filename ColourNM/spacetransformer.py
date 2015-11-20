@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-
+from matplotlib import pyplot as plt
 
 # Returns float64! w2c.npy needs to be accessible from where it is called.
 def im2c(im, color):
@@ -22,3 +22,4 @@ def im2c(im, color):
     out = tmp.reshape(cols, rows)
     out = cv2.transpose(out)
     return out
+

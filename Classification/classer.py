@@ -48,9 +48,10 @@ def training(training_features, training_labels):
     #poly_svc = svm.SVC(kernel='poly', degree=3, C=C).fit(X, y)
     #lin_svc = svm.LinearSVC(C=C).fit(X, y)
 
-    C = 1.0 # SVM regularization parameter
-    trained_classifier = svm.SVC(kernel='poly', degree=3, C=C).fit(training_features, training_labels)
-
+    C = 1 # SVM regularization parameter
+    #trained_classifier = svm.SVC(kernel='poly', degree=3, C=C).fit(training_features, training_labels)
+    #trained_classifier = svm.SVC(kernel='rbf', gamma=0.7, C=C).fit(training_features, training_labels)
+    trained_classifier = svm.LinearSVC(C=C).fit(training_features, training_labels)
     return trained_classifier
 
 def classify_data(features,trained_classifier):

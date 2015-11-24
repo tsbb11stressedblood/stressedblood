@@ -10,12 +10,11 @@ def cell_watershed(img):
     """
     img = img[:,:,0:3]
     kernel = np.ones((3,3),np.uint8)
-    plt.figure("im")
-    plt.imshow(img)
+
 
     img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    plt.figure("HSV")
-    plt.imshow(img_hsv[:,:,2])
+    #plt.figure("HSV")
+    #plt.imshow(img_hsv[:,:,2])
 
     # Mask the background to get the whole cells
     color = 10
@@ -30,8 +29,8 @@ def cell_watershed(img):
     unknown_mask = cv2.erode(unknown_mask, kernel, iterations =1)
     unknown_mask = cv2.morphologyEx(unknown_mask,cv2.MORPH_CLOSE,kernel, iterations = 2)
 
-    plt.figure("whole cell")
-    plt.imshow(unknown_mask)
+    #plt.figure("whole cell")
+    #plt.imshow(unknown_mask)
     # Mask to get the nuclei
     color = 8
     gray = spacetransformer.im2c(img, color)
@@ -49,28 +48,28 @@ def cell_watershed(img):
     close = cv2.morphologyEx(gray,cv2.MORPH_CLOSE,kernel, iterations = 3)
     close[close == 255] = 0
 
-    plt.figure("nuclei")
-    plt.imshow(close)
+    #plt.figure("nuclei")
+    #plt.imshow(close)
     # Create the markers for the nuclei
     ret, markers_nuc = cv2.connectedComponents(close)
 
-    plt.figure("m")
-    plt.imshow(markers_nuc)
+    #plt.figure("m")
+    #plt.imshow(markers_nuc)
 
     # Add the markers for the nuclei with the mask for the whole cells
     markers = markers_nuc | unknown_mask
 
-    plt.figure("markers")
-    plt.imshow(markers_nuc)
+    #plt.figure("markers")
+    #plt.imshow(markers_nuc)
 
     # Perform watershed and mark the boarders on the image
     markers = cv2.watershed(img, markers)
     img[markers == -1] = [255,0,0]
 
-    plt.figure("res")
-    plt.imshow(img)
-    plt.show()
+    #plt.figure("res")
+    #plt.imshow(img)
+    #plt.show()
 
     return img, ret, markers
 
-cell_watershed(np.load("segmentation_test.npy"))
+#cell_watershed(np.load("segmentation_test.npy"))

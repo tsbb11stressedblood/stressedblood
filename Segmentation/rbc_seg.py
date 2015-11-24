@@ -14,6 +14,7 @@ import Klara_test
 
 
 # Segmentation function, call this one with an image or image region to run
+# Returns cell_list with all data stored in each cell
 def segmentation(ROI):
     # image init, and conversion to gray and then threshold it
     img = ROI[:, :, 0:3]
@@ -26,35 +27,18 @@ def segmentation(ROI):
     ax = fig.add_subplot(111)
     plt.imshow(img, interpolation='nearest')
 
-    # Call watershed, plots img with markers of cells
-    dist_transform_thresh = 0.7 # Finds fine cell borders but not all cells
     # Watershed to find individual cells
     #img_fine, ret_fine, markers_fine = cell_watershed(img, dist_transform_thresh)
     img_fine, ret_fine, markers_fine = Klara_test.cell_watershed(img)
     cell_list = modify_cell_list(ROI,ret_fine,markers_fine,cell_list)
     cell_list = RBC_classification(cell_list)
 
-    # Run once again to fine the rest of the cells
-    dist_transform_thresh = 0.5 # rougher thresh
-    img_rough, ret_rough, markers_rough = cell_watershed(img, dist_transform_thresh)
 
-    # Find the cells which are new in the rough watershed-run
-    # Copy to not destroy any data in markers_rough
-    temp_rough = markers_rough.copy()
-    temp_rough = temp_rough - 1
-    markers_fine = markers_fine - 1
-    temp_rough[temp_rough > 1 ] = 1
-    markers_fine[markers_fine > 1 ] = 1
-    # Find which ones are the new cells
-    diff = temp_rough - markers_fine
-    # Find unique markers on these cells
-    diff_markers = diff*markers_rough
-    # Identify only those new cells
-    cell_list = modify_cell_list(ROI,ret_rough,diff_markers,cell_list)
+    cell_list = modify_cell_list(ROI,ret_fine,markers_fine,cell_list)
 
     # Class the cell to RBC, background and unknown (possibly WBC!)
     cell_list = RBC_classification(cell_list)
-    #print(len(cell_list))
+
     # Print labels
     print_cell_labels(cell_list, ax)
     # Return a list with only WBC
@@ -146,23 +130,6 @@ def cell_watershed(img, dist_thresh = 0.7):
 
     img[markers == -1] = [255,0,0]
 
-    # Plots for the luls
-    #plt.figure(15)
-    #plt.imshow(markers)
-
-   # plt.figure(123)
-
-    #plt.imshow(close)
-
-    plt.figure(124)
-    #plt.imshow(gray)
-    plt.imshow(dist_transform)
-    #plt.figure(126)
-    #plt.imshow(thresh)
-
-    #plt.figure(127)
-    #plt.imshow(grayimg)
-    #plt.imshow(gray)
     return img, ret, markers
 
 
@@ -179,9 +146,7 @@ def modify_cell_list(ROI,ret,markers,cell_list):
 
         if len(contours)<1:
             continue
-        #if len(contours)>2:
-          #  print("Zuka blyat fler 2objekt i contours")
-           # print("contours len:" +str(len(contours)))
+
         # Now make sure that the contour is larger than 30 pixels
         if len(contours[0]) < 25:
             continue
@@ -240,14 +205,4 @@ def wbc_cell_extraction(cell_list):
         if cell.label == "U":
             wbc_list.append(cell)
     return wbc_list
-#'''''''''''''''''''''''''''''''''''''
-# Test data, move along!
-#imgpath1 = 'smallbloodsmear.jpg'
-# imgpath2 = 'test.tif'
-# img =  cv2.imread(imgpath2)
-# cell_list = segmentation(img)
-#print type(img)
-#stuff[1][1]
-#((97.40660095214844, 176.10752868652344), (24.298473358154297, 43.718692779541016), 73.73028564453125)
 
-# plt.show()

@@ -7,7 +7,7 @@ last modified: 7th November 2015
 
 from gui import *
 import numpy as np
-"""
+
 root = Tk()
 # First get the resolution of the screen
 x = root.winfo_screenwidth()
@@ -21,9 +21,8 @@ root.resizable(0, 0)
 app = GUI(root)
 root.mainloop()
 
-"""
 #imgpath1 = 'smallbloodsmear.jpg'
 # imgpath2 = 'test.tif'
 # img =  cv2.imread(imgpath2)
-img=np.load("C:\Users\Marcus\Desktop\TSBB11\stressedblood\Classification\simple_test.npy")
-rbc_seg.segmentation(img)
+#img=np.load("../Classification/simple_test.npy")
+#rbc_seg.segmentation(img)

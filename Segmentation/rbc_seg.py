@@ -10,6 +10,7 @@ import cv2
 import matplotlib.pyplot as plt
 from ColourNM import spacetransformer
 from cell import *
+import Klara_test
 
 
 # Segmentation function, call this one with an image or image region to run
@@ -21,14 +22,15 @@ def segmentation(ROI):
     cell_list = []
 
     # Show the original img
-    fig = plt.figure()
+    fig = plt.figure(1)
     ax = fig.add_subplot(111)
     plt.imshow(img, interpolation='nearest')
 
     # Call watershed, plots img with markers of cells
     dist_transform_thresh = 0.7 # Finds fine cell borders but not all cells
     # Watershed to find individual cells
-    img_fine, ret_fine, markers_fine = cell_watershed(img, dist_transform_thresh)
+    #img_fine, ret_fine, markers_fine = cell_watershed(img, dist_transform_thresh)
+    img_fine, ret_fine, markers_fine = Klara_test.cell_watershed(img)
     cell_list = modify_cell_list(ROI,ret_fine,markers_fine,cell_list)
     cell_list = RBC_classification(cell_list)
 
@@ -60,16 +62,16 @@ def segmentation(ROI):
 
 
     # show all binary images
-     # WBC cell_list plots
-    #fig = plt.figure(3)
-    #ax = fig.add_subplot(221)
-    #plt.imshow(cell_list[0].img, interpolation='nearest')
-    #ax = fig.add_subplot(222)
-    #plt.imshow(cell_list[1].marker, interpolation='nearest')
-    #ax = fig.add_subplot(223)
-    #plt.imshow(cell_list[3].img, interpolation='nearest')
-    #ax = fig.add_subplot(224)
-    #plt.imshow(cell_list[4].img, interpolation='nearest')
+    #WBC cell_list plots
+    # fig = plt.figure(3)
+    # ax = fig.add_subplot(221)
+    # plt.imshow(cell_list[0].img, interpolation='nearest')
+    # ax = fig.add_subplot(222)
+    # plt.imshow(cell_list[1].marker, interpolation='nearest')
+    # ax = fig.add_subplot(223)
+    # plt.imshow(cell_list[3].img, interpolation='nearest')
+    # ax = fig.add_subplot(224)
+    # plt.imshow(cell_list[4].img, interpolation='nearest')
 
 
     print("Segmentation done")
@@ -83,36 +85,64 @@ def cell_watershed(img, dist_thresh = 0.7):
     color = 10#10 default 4 och 8 - stronk cellkarna
     gray_transform = spacetransformer.im2c(img, color)
     gray = np.array(gray_transform * 255, dtype=np.uint8)
+    grayimg = gray.copy()
+    bg_mask = grayimg
+    bg_mask[gray>0.5*np.amax(gray)] = 0
+    bg_mask[gray<=0.5*np.amax(gray)] = 1
+    unknown_mask = gray.copy()
+    unknown_mask[gray<=0.5*np.amax(gray)] = 0
+    unknown_mask[gray>0.5*np.amax(gray)] = 1
+
+    plt.figure(1000)
+    plt.imshow(bg_mask)
+    #plt.show()
+    plt.figure(1001)
+    plt.imshow(unknown_mask)
+    kernel = np.ones((3,3),np.uint8)
+    color = 8#10 default 4 och 8 - stronk cellkarna
+    gray = spacetransformer.im2c(img, color)
+    gray = np.array(gray * 255, dtype=np.uint8)
+    gray[gray<.35*np.amax(gray)] = -1
+
+    gray = cv2.dilate(gray, kernel, iterations=1)
+
+    close = cv2.morphologyEx(gray,cv2.MORPH_CLOSE,kernel, iterations = 2)
+
 
     #gray = cv2.cvtColor(gray ,cv2.COLOR_BGR2GRAY)
     ret, thresh = cv2.threshold(gray,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
 
     # noise removal with a 3x3 kernel
-    kernel = np.ones((3,3),np.uint8)
+
     opening = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel, iterations = 2)
     #opening = thresh
 
     # sure background area, more dilation with more iterations
-    sure_bg = cv2.dilate(opening,kernel,iterations = 2)
+    sure_bg = bg_mask
+    # sure_bg = cv2.dilate(opening,kernel,iterations = 2)
 
     # Finding sure foreground area, threshold might need changing: lower threshold-factor gives larger sure_fg
-    dist_transform = cv2.distanceTransform(opening,cv2.DIST_L2,5)
+    dist_transform = cv2.distanceTransform(opening, cv2.DIST_L2, 5)
     ret, sure_fg = cv2.threshold(dist_transform,dist_thresh*dist_transform.max(),255,0) #0.7 default
 
     # Finding unknown region, borders of bg-fg
     sure_fg = np.uint8(sure_fg)
-    unknown = cv2.subtract(sure_bg,sure_fg)
-
+    #unknown = cv2.subtract(sure_bg,sure_fg)
+    unknown = unknown_mask
     # Marker labelling
     ret, markers = cv2.connectedComponents(sure_fg)
 
     # Add one to all labels so that sure background is not 0, but 1
     markers = markers+1
 
+    plt.figure(15)
+    plt.imshow(markers)
+    plt.show()
+
     # Now, mark the region of unknown with zero
     markers[unknown==255] = 0
-
-    markers = cv2.watershed(img,markers)
+    print markers.shape, np.amax(markers), np.amin(markers)
+    markers = cv2.watershed(img, markers)
 
     img[markers == -1] = [255,0,0]
 
@@ -120,15 +150,19 @@ def cell_watershed(img, dist_thresh = 0.7):
     #plt.figure(15)
     #plt.imshow(markers)
 
-    #plt.figure(123)
-    #plt.imshow(sure_bg)
+   # plt.figure(123)
 
-    #plt.figure(124)
+    #plt.imshow(close)
+
+    plt.figure(124)
     #plt.imshow(gray)
-
+    plt.imshow(dist_transform)
     #plt.figure(126)
     #plt.imshow(thresh)
 
+    #plt.figure(127)
+    #plt.imshow(grayimg)
+    #plt.imshow(gray)
     return img, ret, markers
 
 

@@ -266,6 +266,7 @@ class ViewableImage(Canvas):
     def run_roi(self):
         # Just runs the latest ROI for now
         rbc_seg.segmentation(self.roi_list[len(self.roi_list)-1][1])
+        #numpy.save("segmentation_test.npy",self.roi_list[len(self.roi_list)-1][1])
 
 
 # Main class for handling GUI-related things

@@ -9,6 +9,7 @@ from sklearn.decomposition import PCA
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import svm, datasets, metrics
+import pickle # Needed for saving the trainer to file
 
 
 # import some data to play with
@@ -30,7 +31,14 @@ X = WBC_data
 y = WBC_labels
 
 trainer = cl.training(X,y)
-prediction = cl.classify_data(X,trainer)
+
+with open("trainer.pik", "wb") as f:
+    pickle.dump(trainer, f)
+
+with open("trainer.pik", 'rb') as f:
+    trainerTest = pickle.load(f)
+
+prediction = cl.classify_data(X,trainerTest)
 confusion = metrics.confusion_matrix(y, prediction)
 
 print confusion

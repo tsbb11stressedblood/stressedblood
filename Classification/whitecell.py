@@ -6,11 +6,11 @@ from ColourNM import spacetransformer
 from Segmentation import cell
 
 class WhiteCell:
-    def __init__(self, cell_nparray, _label):
-        self.img = cell_nparray
+    def __init__(self, cell, _label):
+        self.img = cell.img
         self.size = float(np.size(self.img))
-        self.make_mask()
-        #self.mask = cell.mask
+        #self.make_mask()
+        self.mask = cell.mask
 
     def make_mask(self):
         mask = copy.copy(self.img)

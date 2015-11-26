@@ -19,6 +19,7 @@ from matplotlib import pyplot as plt
 import numpy
 import cv2
 from Segmentation import rbc_seg
+from Classification import classer
 
 
 # Class for handling all images that are viewable in the GUI.
@@ -184,9 +185,25 @@ class ViewableImage(Canvas):
         self.last_selection_region = [(int(l0_topx), int(l0_topy)), (int(l0_width), int(l0_height))]
 
         # Multiply percentages of totals and transform to high res level
-        box = self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height)))
+        # ------------------NEW----------------
+        # Check if the ROI is too big, in that case split it and put into list
 
-        # Now depending on the mode, do different things
+        box = []
+        if self.mode is "roi" and (l0_width > 1000 or l0_height > 1000):
+
+            new_width = float(l0_width)/5.0
+            new_height = float(l0_height)/5.0
+            for i in range(5):
+                new_topx = topx + (float(i)/5.0)*width
+                new_topy = topy + (float(i)/5.0)*height
+
+                box.append(self.ndpi_file.read_region((int(new_topx), int(new_topy)), 0, (int(new_width), int(new_height))))
+
+            #   box = self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height)))
+
+            # Now depending on the mode, do different things
+        else:
+            box.append(self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height))))
         if self.mode is "roi":
             self.set_roi(box)
         elif self.mode is "zoom":
@@ -195,19 +212,17 @@ class ViewableImage(Canvas):
         self.delete("boxselector")
 
     def set_roi(self, box):
-        roi = numpy.array(box)
+        #roi = numpy.array(box)
 
         # Add the ROI to our list
-        self.roi_list.append((self.roi_counter, roi, self.last_selection_region))
+        self.roi_list.append((self.roi_counter, box, self.last_selection_region))
 
         # Keep drawing the ROIs
         self.draw_rectangle(self.last_selection_region, "red", "roi"+str(self.roi_counter))
         self.roi_counter += 1
 
-        #self.create_text(self.curr_box_bbox[0][0], self.curr_box_bbox[0][1], text=str(len(self.roi_list)),
-        #                 anchor=SW, font=("Purisa", 16), tags="roi"+str(len(self.roi_list)))
-        # Call the segmentation (testing)
-        #rbc_seg.segmentation(roi)
+        self.create_text(self.curr_box_bbox[0][0], self.curr_box_bbox[0][1], text=str(len(self.roi_list)),
+                         anchor=SW, font=("Purisa", 16), tags="roi"+str(len(self.roi_list)))
 
     def draw_rectangle(self, level_0_coords, outline, tag):
         # We need to transform the level 0 coords to the current window
@@ -265,8 +280,32 @@ class ViewableImage(Canvas):
 
     def run_roi(self):
         # Just runs the latest ROI for now
-        rbc_seg.segmentation(self.roi_list[len(self.roi_list)-1][1])
+        rois = self.roi_list[len(self.roi_list) - 1][1]
+
+        if len(rois) > 1:
+            print "Doing the segmented ROI"
+            cell_list = []
+            for roi in rois:
+                cell_list.append(rbc_seg.segmentation(numpy.array(roi)))
+        else:
+            cell_list = rbc_seg.segmentation(numpy.array(rois[0]))
+
+        #cell_list = rbc_seg.segmentation(self.roi_list[len(self.roi_list)-1][1])
+        # Call the classification
+        prediction = classer.predict_cells(cell_list)
+        print prediction
         #numpy.save("segmentation_test.npy",self.roi_list[len(self.roi_list)-1][1])
+
+        # Plot the result
+        plt.figure()
+
+        no_of_cells = len(prediction)
+        for ind, item in enumerate(prediction):
+            plt.subplot(1, no_of_cells, ind)
+            plt.imshow(cell_list[ind].img)
+            plt.title("Classified: " + str(item))
+
+        plt.show()
 
 
 # Main class for handling GUI-related things

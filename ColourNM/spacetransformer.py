@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 
+# order of color names: black, blue, brown, gray, green, orange, pink, purple, red, white, yellow
 # Returns float64! w2c.npy needs to be accessible from where it is called.
 def im2c(im, color):
     w2c = np.load("w2c.npy")

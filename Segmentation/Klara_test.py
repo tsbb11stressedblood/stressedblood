@@ -45,7 +45,7 @@ def cell_watershed(img):
 
     # Dilate and close to fill the nuclei
     gray = cv2.dilate(gray, kernel, iterations=1)
-    close = cv2.morphologyEx(gray,cv2.MORPH_CLOSE,kernel, iterations = 3)
+    close = cv2.morphologyEx(gray,cv2.MORPH_CLOSE,kernel, iterations = 2)
     close[close == 255] = 0
     close[close > 0] = 1
 
@@ -70,6 +70,6 @@ def cell_watershed(img):
     #plt.imshow(img)
     #plt.show()
 
-    return img, ret, markers
+    return img, ret, markers, close
 
 #cell_watershed(np.load("segmentation_test.npy"))

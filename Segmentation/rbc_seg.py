@@ -29,12 +29,10 @@ def segmentation(ROI):
 
     # Watershed to find individual cells
     #img_fine, ret_fine, markers_fine = cell_watershed(img, dist_transform_thresh)
-    img_fine, ret_fine, markers_fine = Klara_test.cell_watershed(img)
-    cell_list = modify_cell_list(ROI,ret_fine,markers_fine,cell_list)
+    img_fine, ret_fine, markers_fine, markers_nuc = Klara_test.cell_watershed(img)
+    cell_list = modify_cell_list(ROI,ret_fine,markers_fine,markers_nuc,cell_list)
     cell_list = RBC_classification(cell_list)
 
-
-    cell_list = modify_cell_list(ROI,ret_fine,markers_fine,cell_list)
 
     # Class the cell to RBC, background and unknown (possibly WBC!)
     cell_list = RBC_classification(cell_list)
@@ -43,20 +41,6 @@ def segmentation(ROI):
     print_cell_labels(cell_list, ax)
     # Return a list with only WBC
     cell_list = wbc_cell_extraction(cell_list)
-
-
-    # show all binary images
-    #WBC cell_list plots
-    # fig = plt.figure(3)
-    # ax = fig.add_subplot(221)
-    # plt.imshow(cell_list[0].img, interpolation='nearest')
-    # ax = fig.add_subplot(222)
-    # plt.imshow(cell_list[1].marker, interpolation='nearest')
-    # ax = fig.add_subplot(223)
-    # plt.imshow(cell_list[3].img, interpolation='nearest')
-    # ax = fig.add_subplot(224)
-    # plt.imshow(cell_list[4].img, interpolation='nearest')
-
 
     print("Segmentation done")
     plt.show()
@@ -119,13 +103,13 @@ def cell_watershed(img, dist_thresh = 0.7):
     # Add one to all labels so that sure background is not 0, but 1
     markers = markers+1
 
-    plt.figure(15)
-    plt.imshow(markers)
-    plt.show()
+    #plt.figure(15)
+    #plt.imshow(markers)
+    #plt.show()
 
     # Now, mark the region of unknown with zero
     markers[unknown==255] = 0
-    print markers.shape, np.amax(markers), np.amin(markers)
+    #print markers.shape, np.amax(markers), np.amin(markers)
     markers = cv2.watershed(img, markers)
 
     img[markers == -1] = [255,0,0]
@@ -133,9 +117,13 @@ def cell_watershed(img, dist_thresh = 0.7):
     return img, ret, markers
 
 
-def modify_cell_list(ROI,ret,markers,cell_list):
+def modify_cell_list(ROI,ret,markers,markers_nuc_in,cell_list):
     # For each connectedobject in markers
-    #cell_list = []
+    markers_nuc = markers_nuc_in.copy()
+    markers_nuc[markers_nuc_in >= 1] = 1
+    markers_nuc[markers_nuc_in < 1] = 0
+    current_nuc = markers_nuc_in.copy()
+    #markers_nuc = np.array(markers_nuc, dtype=np.uint8)
     ellipse_list = []
     for num in range(2,ret):
         img2 = np.array(num==markers, dtype=np.uint8)
@@ -162,10 +150,18 @@ def modify_cell_list(ROI,ret,markers,cell_list):
         x,y,w,h = cv2.boundingRect(contour)
         cell_img = ROI[y:y+h,x:x+w, :]
         cell_mask = markers[y:y+h,x:x+w] == num
+
+        # Nuclei area
+        current_nuc = markers_nuc*img2
+        img_nuc = np.array(current_nuc, dtype=np.uint8)
+        dummy_img, contours_nuc, hierarchy_dummy = cv2.findContours(img_nuc, 1, 2)
+        contour_nuc = contours_nuc[0]
+        area_nuc = cv2.contourArea(contour_nuc) #markers_nuc[y:y+h, x:x+w]
+
         # Plots BB
         #img = cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2)
         # Construct cell in the cell_list
-        cell_list.append(Cell(ellipse, x,y,w,h, area, cell_mask, cell_img))
+        cell_list.append(Cell(ellipse, x,y,w,h, area,area_nuc, cell_mask, cell_img))
     return cell_list
 
 def RBC_classification(cell_list):
@@ -174,14 +170,20 @@ def RBC_classification(cell_list):
     # Extract the median area which most prob. is single RBC area
     for object in cell_list:
         cell_areas.append(object.area)
+
     RBC_mean_area = np.median(cell_areas)
+
+
     # For all cells or bunch of cells, check if they are ellipse-shaped and RBC-size
     for cell in cell_list:
-        if cell.minor_axis/cell.major_axis < 0.8:
-            if 0.6*RBC_mean_area < cell.area < 1.4*RBC_mean_area:
+        #print cell.area_nuc/cell.area
+
+        if cell.area_nuc/cell.area < .30: # Cell nucleus is smaller then the cell?
+            cell.label = "RBC"
+            if 0.6*RBC_mean_area < cell.area < 1.2*RBC_mean_area: # The cell is not to large or small?
                 cell.label = "RBC"
-            else:
-                cell.label = "U"
+                if cell.minor_axis/cell.major_axis < 0.85: # The cell is elliptic?
+                    cell.label = "RBC"
         else:
             cell.label = "U"
 
@@ -191,7 +193,7 @@ def print_cell_labels(cell_list, ax):
     for cell in cell_list:
         if cell.label == "RBC":
             ax.text(cell.x+cell.w/2, cell.y+cell.h/2, 'RBC', style='italic',
-            bbox={'facecolor':'red', 'alpha':0.5, 'pad':5})
+            bbox={'facecolor':'red', 'alpha':0.5, 'pad':2})
         if cell.label == "Background":
             ax.text(cell.x+cell.w/2, cell.y+cell.h/2, 'BG', style='italic',
             bbox={'facecolor':'red', 'alpha':0.5, 'pad':5})

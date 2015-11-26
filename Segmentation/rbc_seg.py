@@ -34,7 +34,7 @@ def segmentation(ROI):
     cell_list = RBC_classification(cell_list)
 
 
-    cell_list = modify_cell_list(ROI,ret_fine,markers_fine,cell_list)
+    #cell_list = modify_cell_list(ROI,ret_fine,markers_fine,cell_list)
 
     # Class the cell to RBC, background and unknown (possibly WBC!)
     cell_list = RBC_classification(cell_list)

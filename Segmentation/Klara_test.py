@@ -47,23 +47,23 @@ def cell_watershed(img):
     gray = cv2.dilate(gray, kernel, iterations=1)
     close = cv2.morphologyEx(gray,cv2.MORPH_CLOSE,kernel, iterations = 3)
     close[close == 255] = 0
+    close[close > 0] = 1
+
+    # Create image with unknown region (between membrane and nucleus)
+    unknown_region = unknown_mask - close
 
     #plt.figure("nuclei")
     #plt.imshow(close)
     # Create the markers for the nuclei
     ret, markers_nuc = cv2.connectedComponents(close)
 
-    #plt.figure("m")
-    #plt.imshow(markers_nuc)
-
     # Add the markers for the nuclei with the mask for the whole cells
-    markers = markers_nuc | unknown_mask
-
-    #plt.figure("markers")
-    #plt.imshow(markers_nuc)
+    markers_nuc += 1
+    ret += 1
+    markers_nuc[unknown_region==0] = 0
 
     # Perform watershed and mark the boarders on the image
-    markers = cv2.watershed(img, markers)
+    markers = cv2.watershed(img, markers_nuc)
     img[markers == -1] = [255,0,0]
 
     #plt.figure("res")

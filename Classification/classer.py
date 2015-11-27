@@ -7,12 +7,18 @@ from sklearn.decomposition import PCA
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import svm, datasets, metrics
+import platform
 import pickle
 
 iris = datasets.load_iris()
 
 # Trainer is saved to disk, import it to use it in classification.
-with open("/home/christoph/Work/TSBB11/git/stressedblood/Classification/trainer.pik", 'rb') as f:
+if platform.system() == "Windows":
+    filename = "trainer_win.pik"
+else:
+    filename = "trainer.pik"
+
+with open("../Classification/" + filename, 'rb') as f:
     trainer = pickle.load(f)
 
 

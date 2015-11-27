@@ -29,8 +29,8 @@ def cell_watershed(img):
     unknown_mask = cv2.erode(unknown_mask, kernel, iterations =1)
     unknown_mask = cv2.morphologyEx(unknown_mask,cv2.MORPH_CLOSE,kernel, iterations = 2)
 
-    #plt.figure("whole cell")
-    #plt.imshow(unknown_mask)
+    plt.figure("whole cell")
+    plt.imshow(unknown_mask)
     # Mask to get the nuclei
     color = 8
     gray = spacetransformer.im2c(img, color)
@@ -52,8 +52,8 @@ def cell_watershed(img):
     # Create image with unknown region (between membrane and nucleus)
     unknown_region = unknown_mask - close
 
-    #plt.figure("nuclei")
-    #plt.imshow(close)
+    plt.figure("nuclei")
+    plt.imshow(close)
     # Create the markers for the nuclei
     ret, markers_nuc = cv2.connectedComponents(close)
 

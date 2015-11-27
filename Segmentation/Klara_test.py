@@ -52,6 +52,6 @@ def cell_watershed(img):
     markers = cv2.watershed(background, markers)
     img[markers == -1] = [255,0,0]
 
-    return img, ret, markers
+    return img, ret, markers, markers_nuc
 
-cell_watershed(np.load("simple_test.npy"))
+#cell_watershed(np.load("simple_test.npy"))

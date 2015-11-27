@@ -123,6 +123,7 @@ def modify_cell_list(ROI,ret,markers,markers_nuc_in,cell_list):
     markers_nuc[markers_nuc_in >= 1] = 1
     markers_nuc[markers_nuc_in < 1] = 0
     current_nuc = markers_nuc_in.copy()
+
     #markers_nuc = np.array(markers_nuc, dtype=np.uint8)
     ellipse_list = []
     for num in range(2,ret):
@@ -153,6 +154,9 @@ def modify_cell_list(ROI,ret,markers,markers_nuc_in,cell_list):
 
         # Nuclei area
         current_nuc = markers_nuc*img2
+        #plt.figure("current nucleus")
+        #plt.imshow(current_nuc)
+        #plt.show()
         img_nuc = np.array(current_nuc, dtype=np.uint8)
         dummy_img, contours_nuc, hierarchy_dummy = cv2.findContours(img_nuc, 1, 2)
         contour_nuc = contours_nuc[0]
@@ -178,14 +182,27 @@ def RBC_classification(cell_list):
     for cell in cell_list:
         #print cell.area_nuc/cell.area
 
+        point = 0
         if cell.area_nuc/cell.area < .30: # Cell nucleus is smaller then the cell?
+            #cell.label = "RBC"
+            point += 2
+            #plt.figure()
+            #plt.imshow(cell.img)
+            # print cell.area
+            #print cell.area_nuc
+            #plt.show()
+        if 0.6*RBC_mean_area < cell.area < 1.4*RBC_mean_area: # The cell is not to large or small?
+            #cell.label = "RBC"
+            point += 1.5
+        if cell.minor_axis/cell.major_axis < 0.75: # The cell is elliptic?
+            #cell.label = "RBC"
+            point += 1.5
+        if point >= 3:
             cell.label = "RBC"
-            if 0.6*RBC_mean_area < cell.area < 1.2*RBC_mean_area: # The cell is not to large or small?
-                cell.label = "RBC"
-                if cell.minor_axis/cell.major_axis < 0.85: # The cell is elliptic?
-                    cell.label = "RBC"
         else:
             cell.label = "U"
+
+
 
     return cell_list
 

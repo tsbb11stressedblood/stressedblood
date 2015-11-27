@@ -39,7 +39,6 @@ def cell_watershed(img):
     # Create the markers for the nuclei
     ret, markers_nuc = cv2.connectedComponents(nuclei_mask)
 
-
     # Add the markers for the nuclei with the mask for the whole cells
     markers = markers_nuc | unknown_mask
 

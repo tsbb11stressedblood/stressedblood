@@ -202,8 +202,6 @@ def RBC_classification(cell_list):
         else:
             cell.label = "U"
 
-
-
     return cell_list
 
 def print_cell_labels(cell_list, ax):

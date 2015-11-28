@@ -6,7 +6,7 @@ displays them. Also handles ROI selection of the image that is later passed on a
 classification steps.
 
 author: Christoph H.
-last modified: 7th November 2015
+last modified: 27th November 2015
 """
 
 from Tkinter import *
@@ -20,6 +20,7 @@ import numpy
 import cv2
 from Segmentation import rbc_seg
 from Classification import classer
+import math
 
 
 # Class for handling all images that are viewable in the GUI.
@@ -53,6 +54,7 @@ class ViewableImage(Canvas):
         # Since we want multiple ROIs, save them in this list
         self.roi_list = []
         self.roi_counter = 0
+        self.sub_roi_list = []  # Needed for the subrois in the big rois
 
         # Bind some event happenings to appropriate methods
         self.bind('<Configure>', self.resize_image)
@@ -98,7 +100,7 @@ class ViewableImage(Canvas):
             factor = float(self.ndpi_file.level_dimensions[0][0])/float(self.winfo_width())
 
         self.current_level = self.ndpi_file.get_best_level_for_downsample(factor)
-        print self.current_level
+        #print self.current_level
 
         # We have to make sure that we only show the zoomed-in area
         if self.last_selection_region is not None and self.mode is "zoom":
@@ -128,7 +130,10 @@ class ViewableImage(Canvas):
                         # Found a ROI!
                         self.delete("roi"+str(num))
                         self.delete("boxselector")
+                        self.delete("subroi")
+                        index = self.roi_list.index((num, roi, bbox))
                         self.roi_list.remove((num, roi, bbox))
+                        del self.sub_roi_list[index]
                         break
         else:
             self.init_box_pos = (event.x, event.y)
@@ -150,6 +155,8 @@ class ViewableImage(Canvas):
     def clear_all_roi(self):
         for num, roi, bbox in self.roi_list:
             self.delete("roi"+str(num))
+        self.delete("subroi")
+        self.sub_roi_list = []
         self.roi_list = []
         self.roi_counter = 0
         self.delete("boxselector")
@@ -187,42 +194,87 @@ class ViewableImage(Canvas):
         # Multiply percentages of totals and transform to high res level
         # ------------------NEW----------------
         # Check if the ROI is too big, in that case split it and put into list
-
         box = []
+        sub_rois = [] # Needed for drawing the subrois later on
         if self.mode is "roi" and (l0_width > 1000 or l0_height > 1000):
+            fixed_size = 500.0
+            no_of_x_subrois = math.floor(float(l0_width)/float(fixed_size))
+            no_of_y_subrois = math.floor(float(l0_height)/float(fixed_size))
 
-            new_width = float(l0_width)/5.0
-            new_height = float(l0_height)/5.0
-            for i in range(5):
-                new_topx = topx + (float(i)/5.0)*width
-                new_topy = topy + (float(i)/5.0)*height
+            for curr_x in range(int(no_of_x_subrois)):
+                for curr_y in range(int(no_of_y_subrois)):
+                    curr_topx = l0_topx + fixed_size*float(curr_x)
+                    curr_topy = l0_topy + fixed_size*float(curr_y)
 
-                box.append(self.ndpi_file.read_region((int(new_topx), int(new_topy)), 0, (int(new_width), int(new_height))))
+                    box.append(self.ndpi_file.read_region((int(curr_topx), int(curr_topy)), 0, (int(fixed_size), int(fixed_size))))
+                    # For now, just print boxes to show where we cut it
+                    roi = [(int(curr_topx), int(curr_topy)), (int(fixed_size), int(fixed_size))]
+                    self.draw_rectangle(roi, "green", "subroi")
+                    sub_rois.append(roi)
 
-            #   box = self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height)))
+            # Now we need to handle the rest of the ROI that didn't fit perfectly into the fixed_size boxes
+            # Remember, this also sort of needs to loop
+            # Idea: Fix x or y, loop through the other one
 
-            # Now depending on the mode, do different things
-        else:
+            # Start with looping over x, y is fixed
+            topy_rest = float(l0_topy) + no_of_y_subrois*fixed_size
+            height_rest = (float(l0_topy) + float(l0_height)) - float(topy_rest)
+            for curr_x in range(int(no_of_x_subrois)):
+                curr_topx = l0_topx + fixed_size*float(curr_x)
+                box.append(self.ndpi_file.read_region((int(curr_topx), int(topy_rest)), 0, (int(fixed_size), int(height_rest))))
+
+                roi = [(int(curr_topx), int(topy_rest)), (int(fixed_size), int(height_rest))]
+                self.draw_rectangle(roi, "green", "subroi")
+                sub_rois.append(roi)
+
+            # Now loop over y and x is fixed
+            topx_rest = float(l0_topx) + no_of_x_subrois*fixed_size
+            width_rest = (float(l0_topx) + float(l0_width)) - float(topx_rest)
+            for curr_y in range(int(no_of_y_subrois)):
+                curr_topy = l0_topy + fixed_size*float(curr_y)
+                box.append(self.ndpi_file.read_region((int(topx_rest), int(curr_topy)), 0, (int(width_rest), int(fixed_size))))
+
+                roi = [(int(topx_rest), int(curr_topy)), (int(width_rest), int(fixed_size))]
+                self.draw_rectangle(roi, "green", "subroi")
+                sub_rois.append(roi)
+
+            # This is the last one, in the lower right corner
+            topx_rest = float(l0_topx) + no_of_x_subrois*fixed_size
+            topy_rest = float(l0_topy) + no_of_y_subrois*fixed_size
+            width_rest = (float(l0_topx) + float(l0_width)) - float(topx_rest)
+            height_rest = (float(l0_topy) + float(l0_height)) - float(topy_rest)
+            roi = [(int(topx_rest), int(topy_rest)), (int(width_rest), int(height_rest))]
+            self.draw_rectangle(roi, "green", "subroi")
+            sub_rois.append(roi)
+
+            box.append(self.ndpi_file.read_region((int(topx_rest), int(topy_rest)), 0, (int(width_rest), int(height_rest))))
+            # box = self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height)))
+
+        # Now depending on the mode, do different things
+        else: # This is the case that the ROI selected is small enough to be alone
             box.append(self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height))))
         if self.mode is "roi":
-            self.set_roi(box)
+            print "No of subboxes in roi you just selected: " + str(len(box))
+            self.set_roi(box, sub_rois)
         elif self.mode is "zoom":
-            print "set_box is done"
             self.zoom()
         self.delete("boxselector")
 
-    def set_roi(self, box):
+    def set_roi(self, box, sub_rois):
         #roi = numpy.array(box)
 
         # Add the ROI to our list
         self.roi_list.append((self.roi_counter, box, self.last_selection_region))
+        self.sub_roi_list.append(sub_rois)
 
         # Keep drawing the ROIs
+        for sub_roi in sub_rois:
+            self.draw_rectangle(sub_roi, "green", "subroi")
         self.draw_rectangle(self.last_selection_region, "red", "roi"+str(self.roi_counter))
         self.roi_counter += 1
 
-        self.create_text(self.curr_box_bbox[0][0], self.curr_box_bbox[0][1], text=str(len(self.roi_list)),
-                         anchor=SW, font=("Purisa", 16), tags="roi"+str(len(self.roi_list)))
+        #self.create_text(self.curr_box_bbox[0][0], self.curr_box_bbox[0][1], text=str(len(self.roi_list)),
+        #                 anchor=SW, font=("Purisa", 16), tags="roi"+str(len(self.roi_list)))
 
     def draw_rectangle(self, level_0_coords, outline, tag):
         # We need to transform the level 0 coords to the current window
@@ -262,11 +314,15 @@ class ViewableImage(Canvas):
         self.zoom_region = [(x, y), (width-x, height-y)]
         self.zoom_level += 1
 
-        print "heading into resize"
         self.resize_image((self.winfo_width(), self.winfo_height()))
 
         # We also need to make sure that the ROIs are (visually) transformed to the new zoom level
         # Loop through the ROIs and draw rectangles at new locations
+        for sub_roi in self.sub_roi_list:
+            if len(sub_roi) is not 0:
+                for roi in sub_roi:
+                    self.draw_rectangle(roi, "green", "subroi")
+
         for num, roi, bbox in self.roi_list:
             self.draw_rectangle(bbox, "red", "roi"+str(num))
 
@@ -275,6 +331,12 @@ class ViewableImage(Canvas):
         self.zoom_region = []
         self.zoom_level = 0
         self.resize_image((self.winfo_width(), self.winfo_height()))
+
+        for sub_roi in self.sub_roi_list:
+            if len(sub_roi) is not 0:
+                for roi in sub_roi:
+                    self.draw_rectangle(roi, "green", "subroi")
+
         for num, roi, bbox in self.roi_list:
             self.draw_rectangle(bbox, "red", "roi"+str(num))
 

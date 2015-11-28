@@ -7,7 +7,7 @@ last modified: 7th November 2015
 
 from gui import *
 import numpy as np
-"""
+
 root = Tk()
 # First get the resolution of the screen
 x = root.winfo_screenwidth()
@@ -27,3 +27,4 @@ root.mainloop()
 #img =  cv2.imread(imgpath2)
 img=np.load("../gui/.npy")
 rbc_seg.segmentation(img)
+"""

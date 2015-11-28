@@ -6,12 +6,13 @@ displays them. Also handles ROI selection of the image that is later passed on a
 classification steps.
 
 author: Christoph H.
-last modified: 27th November 2015
+last modified: 28th November 2015
 """
 
 from Tkinter import *
 import tkFileDialog
 import tkMessageBox
+from ttk import Progressbar
 from openslide import *
 import os
 from PIL import ImageTk as itk
@@ -49,19 +50,20 @@ class ViewableImage(Canvas):
         self.curr_box_bbox = None           # Also in current WINDOW coordinates
         self.last_selection_region = None   # This is in level 0 coordinates
         self.zoom_level = 0     # How many times have we zoomed?
-        self.zoom_region = []   # Region in level 0 coords that tells us where the zoom is, needed for transforming
+        self.zoom_region = []   # Stack of regions in level 0 coords that tells us where the zoom is, needed for transforming
 
         # Since we want multiple ROIs, save them in this list
-        self.roi_list = []
+        self.roi_list = []      # Contains Triple: (ROInumber, ROI_imagedata, (bbox, [sub_rois_list]))
         self.roi_counter = 0
-        self.sub_roi_list = []  # Needed for the subrois in the big rois
+        self.progress = Progressbar(self, orient="horizontal", length=100, mode="determinate", value=0)
+        # ProgressBar to show user what is going on. Only one active at a time
 
         # Bind some event happenings to appropriate methods
         self.bind('<Configure>', self.resize_image)
         self.bind('<B1-Motion>', self.select_box)
         self.bind('<Button-1>', self.set_init_box_pos)
         self.bind('<ButtonRelease-1>', self.set_box)
-        self.bind('<Button-3>', self.reset_zoom)
+        self.bind('<Button-3>', self.zoom_out)
 
     # Hanldes initial setup of the input image
     def setup_image(self):
@@ -83,6 +85,17 @@ class ViewableImage(Canvas):
         self.im = itk.PhotoImage(self.rgba_im)
         self.image_handle = self.create_image(0, 0, image=self.im, anchor=NW)
 
+    # Whenever all ROIs and subROIs need to be redrawn, call this
+    def redraw_ROI(self):
+        # Start with drawing all main (red) rois
+        for num, roi, bbox_container in self.roi_list:
+            sub_rois = bbox_container[1]
+            bbox = bbox_container[0]
+            if len(sub_rois) is not 0:
+                for sub_roi in sub_rois:
+                    self.draw_rectangle(sub_roi, "green", "subroi" + str(num))
+            self.draw_rectangle(bbox, "red", "roi"+str(num))
+
     # Method that ensures automatic resize in case the windows is resized by the user
     def resize_image(self, event):
         try:
@@ -99,13 +112,21 @@ class ViewableImage(Canvas):
         else:
             factor = float(self.ndpi_file.level_dimensions[0][0])/float(self.winfo_width())
 
+        print "Factor: " + str(factor)
         self.current_level = self.ndpi_file.get_best_level_for_downsample(factor)
-        #print self.current_level
+        print "Current level: " + str(self.current_level)
 
         # We have to make sure that we only show the zoomed-in area
         if self.last_selection_region is not None and self.mode is "zoom":
-            self.rgba_im = self.ndpi_file.read_region(self.last_selection_region[0], 0,
-                                                      self.last_selection_region[1])
+            self.render_status_text((100, 100), "Zooming...", 0, 50)
+            # Need to transform l0 coordinates to coordinates of current_level, but only width and height!
+            width, height = self.transform_to_arb_level(self.last_selection_region[1][0],
+                                                        self.last_selection_region[1][1],
+                                                        self.current_level)
+
+            self.rgba_im = self.ndpi_file.read_region(self.last_selection_region[0], # The x and y needs to be in l0...
+                                                      self.current_level,
+                                                      (int(width), int(height)))
         else:
             self.rgba_im = self.ndpi_file.read_region((0, 0), self.current_level,
                                                       self.ndpi_file.level_dimensions[self.current_level])
@@ -115,6 +136,7 @@ class ViewableImage(Canvas):
         self.im = itk.PhotoImage(self.rgba_im)
         self.delete(self.image_handle)
         self.create_image(0, 0, image=self.im, anchor=NW)
+        self.clear_status_text()
 
     def set_init_box_pos(self, event):
         # If we are in clear mode, make sure that we handle it correctly.
@@ -124,19 +146,24 @@ class ViewableImage(Canvas):
             (mouse_x, mouse_y) = self.transform_to_level_zero(event.x, event.y)
 
             # Loop through roi_list and see if we clicked on one of them
-            for num, roi, bbox in self.roi_list:
+            for num, roi, bbox_container in self.roi_list:
+                bbox = bbox_container[0]
                 if bbox[0][0] < mouse_x < bbox[0][0]+bbox[1][0]:
                     if bbox[0][1] < mouse_y < bbox[0][1]+bbox[1][1]:
                         # Found a ROI!
                         self.delete("roi"+str(num))
                         self.delete("boxselector")
-                        self.delete("subroi")
-                        index = self.roi_list.index((num, roi, bbox))
-                        self.roi_list.remove((num, roi, bbox))
-                        del self.sub_roi_list[index]
+                        self.delete("subroi"+str(num))
+                        self.roi_list.remove((num, roi, bbox_container))
                         break
         else:
             self.init_box_pos = (event.x, event.y)
+
+    # From level 0 to arbitrary level coordinates
+    def transform_to_arb_level(self, x_coord, y_coord, to_level):
+        # We know that x and y are in level 0.
+        factor = self.ndpi_file.level_downsamples[to_level]
+        return float(x_coord)/factor, float(y_coord)/factor
 
     # From window coordinates to level 0 coordinates
     def transform_to_level_zero(self, x_coord, y_coord):
@@ -148,15 +175,16 @@ class ViewableImage(Canvas):
             ld = self.ndpi_file.level_dimensions[0]
             return x_percent*ld[0], y_percent*ld[1]
         else:
-            ld = self.zoom_region
+            ld = self.zoom_region[-1]
             return x_percent*ld[1][0]+ld[0][0], y_percent*ld[1][1]+ld[0][1]
 
     # Member function for clearing all ROI
     def clear_all_roi(self):
-        for num, roi, bbox in self.roi_list:
+        for num, roi, bbox_container in self.roi_list:
+            sub_rois = bbox_container[1]
+            if len(sub_rois) is not 0:
+                self.delete("subroi" + str(num))
             self.delete("roi"+str(num))
-        self.delete("subroi")
-        self.sub_roi_list = []
         self.roi_list = []
         self.roi_counter = 0
         self.delete("boxselector")
@@ -171,6 +199,25 @@ class ViewableImage(Canvas):
             self.create_rectangle(self.curr_box_bbox, outline="yellow", tags="boxselector")
         elif self.mode is "zoom":
             self.create_rectangle(self.curr_box_bbox, outline="green", tags="boxselector")
+
+    # Lets us render a status bar, letting users know how far something has gotten
+    def render_status_text(self, position, text, percentage, length):
+        percentage = int(percentage*100.0)
+        x = position[0]
+        y = position[1]
+
+        self.progress["length"] = length
+        self.progress["value"] = percentage
+        self.progress.place(x=x, y=y)
+
+        self.create_text(x, y, text=text, anchor=SW, font=("Purisa", 16), tags="progresstext", fill="white")
+
+        self.master.update()
+
+    def clear_status_text(self):
+        self.progress.place_forget()
+        self.delete("progresstext")
+        self.master.update()
 
     def set_box(self, event):
         # This is executed when the user has dragged a selection box (either zoom or ROI) and he/she has now let go of
@@ -193,24 +240,29 @@ class ViewableImage(Canvas):
 
         # Multiply percentages of totals and transform to high res level
         # ------------------NEW----------------
+        # Code below is ugly, might be able to reduce it to single double loop
         # Check if the ROI is too big, in that case split it and put into list
         box = []
-        sub_rois = [] # Needed for drawing the subrois later on
+        sub_rois = []   # Needed for drawing the subrois later on
         if self.mode is "roi" and (l0_width > 1000 or l0_height > 1000):
             fixed_size = 500.0
             no_of_x_subrois = math.floor(float(l0_width)/float(fixed_size))
             no_of_y_subrois = math.floor(float(l0_height)/float(fixed_size))
+            total = (no_of_x_subrois+1.0)*(no_of_y_subrois+1.0)   # The total number of subrois needed to be done
+            counter = 0                                         # Used for knowing how far we've gotten in the loops
 
             for curr_x in range(int(no_of_x_subrois)):
                 for curr_y in range(int(no_of_y_subrois)):
                     curr_topx = l0_topx + fixed_size*float(curr_x)
                     curr_topy = l0_topy + fixed_size*float(curr_y)
 
-                    box.append(self.ndpi_file.read_region((int(curr_topx), int(curr_topy)), 0, (int(fixed_size), int(fixed_size))))
+                    box.append(numpy.array(self.ndpi_file.read_region((int(curr_topx), int(curr_topy)), 0, (int(fixed_size), int(fixed_size))), dtype=numpy.uint8))
                     # For now, just print boxes to show where we cut it
                     roi = [(int(curr_topx), int(curr_topy)), (int(fixed_size), int(fixed_size))]
-                    self.draw_rectangle(roi, "green", "subroi")
                     sub_rois.append(roi)
+                    # Render a status text aswell
+                    counter += 1
+                    self.render_status_text((topx, topy-20), "Reading data...", float(counter)/total, width-topx)
 
             # Now we need to handle the rest of the ROI that didn't fit perfectly into the fixed_size boxes
             # Remember, this also sort of needs to loop
@@ -221,22 +273,26 @@ class ViewableImage(Canvas):
             height_rest = (float(l0_topy) + float(l0_height)) - float(topy_rest)
             for curr_x in range(int(no_of_x_subrois)):
                 curr_topx = l0_topx + fixed_size*float(curr_x)
-                box.append(self.ndpi_file.read_region((int(curr_topx), int(topy_rest)), 0, (int(fixed_size), int(height_rest))))
+                box.append(numpy.array(self.ndpi_file.read_region((int(curr_topx), int(topy_rest)), 0, (int(fixed_size), int(height_rest))), dtype=numpy.uint8))
 
                 roi = [(int(curr_topx), int(topy_rest)), (int(fixed_size), int(height_rest))]
-                self.draw_rectangle(roi, "green", "subroi")
                 sub_rois.append(roi)
+                # Render a status text aswell
+                counter += 1
+                self.render_status_text((topx, topy-20), "Reading data...", float(counter)/total, width-topx)
 
             # Now loop over y and x is fixed
             topx_rest = float(l0_topx) + no_of_x_subrois*fixed_size
             width_rest = (float(l0_topx) + float(l0_width)) - float(topx_rest)
             for curr_y in range(int(no_of_y_subrois)):
                 curr_topy = l0_topy + fixed_size*float(curr_y)
-                box.append(self.ndpi_file.read_region((int(topx_rest), int(curr_topy)), 0, (int(width_rest), int(fixed_size))))
+                box.append(numpy.array(self.ndpi_file.read_region((int(topx_rest), int(curr_topy)), 0, (int(width_rest), int(fixed_size))), dtype=numpy.uint8))
 
                 roi = [(int(topx_rest), int(curr_topy)), (int(width_rest), int(fixed_size))]
-                self.draw_rectangle(roi, "green", "subroi")
                 sub_rois.append(roi)
+                # Render a status text aswell
+                counter += 1
+                self.render_status_text((topx, topy-20), "Reading data...", float(counter)/total, width-topx)
 
             # This is the last one, in the lower right corner
             topx_rest = float(l0_topx) + no_of_x_subrois*fixed_size
@@ -244,33 +300,33 @@ class ViewableImage(Canvas):
             width_rest = (float(l0_topx) + float(l0_width)) - float(topx_rest)
             height_rest = (float(l0_topy) + float(l0_height)) - float(topy_rest)
             roi = [(int(topx_rest), int(topy_rest)), (int(width_rest), int(height_rest))]
-            self.draw_rectangle(roi, "green", "subroi")
             sub_rois.append(roi)
+            # Render a status text aswell
+            counter += 1
+            self.render_status_text((topx, topy-20), "Reading data...", float(counter)/total, width-topx)
 
-            box.append(self.ndpi_file.read_region((int(topx_rest), int(topy_rest)), 0, (int(width_rest), int(height_rest))))
-            # box = self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height)))
+            tmp = self.ndpi_file.read_region((int(topx_rest), int(topy_rest)), 0, (int(width_rest), int(height_rest)))
+            box.append(numpy.array(tmp, dtype=numpy.uint8))
 
         # Now depending on the mode, do different things
-        else: # This is the case that the ROI selected is small enough to be alone
-            box.append(self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height))))
+        elif self.mode is "roi": # This is the case that the ROI selected is small enough to be alone
+            box.append(numpy.array(self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height))), dtype=numpy.uint8))
         if self.mode is "roi":
             print "No of subboxes in roi you just selected: " + str(len(box))
             self.set_roi(box, sub_rois)
         elif self.mode is "zoom":
             self.zoom()
         self.delete("boxselector")
+        self.clear_status_text()
 
     def set_roi(self, box, sub_rois):
         #roi = numpy.array(box)
 
         # Add the ROI to our list
-        self.roi_list.append((self.roi_counter, box, self.last_selection_region))
-        self.sub_roi_list.append(sub_rois)
+        self.roi_list.append((self.roi_counter, box, (self.last_selection_region, sub_rois)))
 
         # Keep drawing the ROIs
-        for sub_roi in sub_rois:
-            self.draw_rectangle(sub_roi, "green", "subroi")
-        self.draw_rectangle(self.last_selection_region, "red", "roi"+str(self.roi_counter))
+        self.redraw_ROI()
         self.roi_counter += 1
 
         #self.create_text(self.curr_box_bbox[0][0], self.curr_box_bbox[0][1], text=str(len(self.roi_list)),
@@ -288,9 +344,9 @@ class ViewableImage(Canvas):
         if self.zoom_level is 0:
             ld = self.ndpi_file.level_dimensions[0]
         else:
-            ld = self.zoom_region[1]
-            top_x = top_x - self.zoom_region[0][0]
-            top_y = top_y - self.zoom_region[0][1]
+            ld = self.zoom_region[-1][1]
+            top_x = top_x - self.zoom_region[-1][0][0]
+            top_y = top_y - self.zoom_region[-1][0][1]
 
         top_x_percent = float(top_x)/ld[0]
         top_y_percent = float(top_y)/ld[1]
@@ -311,34 +367,34 @@ class ViewableImage(Canvas):
         x, y = self.transform_to_level_zero(self.curr_box_bbox[0][0], self.curr_box_bbox[0][1])
         width, height = self.transform_to_level_zero(self.curr_box_bbox[1][0], self.curr_box_bbox[1][1])
 
-        self.zoom_region = [(x, y), (width-x, height-y)]
+        self.zoom_region.append([(int(x), int(y)), (int(width-x), int(height-y))])
         self.zoom_level += 1
 
         self.resize_image((self.winfo_width(), self.winfo_height()))
 
         # We also need to make sure that the ROIs are (visually) transformed to the new zoom level
-        # Loop through the ROIs and draw rectangles at new locations
-        for sub_roi in self.sub_roi_list:
-            if len(sub_roi) is not 0:
-                for roi in sub_roi:
-                    self.draw_rectangle(roi, "green", "subroi")
+        self.redraw_ROI()
 
-        for num, roi, bbox in self.roi_list:
-            self.draw_rectangle(bbox, "red", "roi"+str(num))
+    # Right click zooms to previous zoom level
+    def zoom_out(self, event):
+        if self.zoom_level is not 0:
+            if self.zoom_level is 1:
+                self.reset_zoom()
+            else:
+                self.zoom_region.pop()
+                self.zoom_level -= 1
 
-    def reset_zoom(self, event):
+                self.last_selection_region = self.zoom_region[-1]
+                self.resize_image((self.winfo_width(), self.winfo_height()))
+        self.redraw_ROI()
+
+    def reset_zoom(self):
         self.last_selection_region = None
         self.zoom_region = []
         self.zoom_level = 0
         self.resize_image((self.winfo_width(), self.winfo_height()))
 
-        for sub_roi in self.sub_roi_list:
-            if len(sub_roi) is not 0:
-                for roi in sub_roi:
-                    self.draw_rectangle(roi, "green", "subroi")
-
-        for num, roi, bbox in self.roi_list:
-            self.draw_rectangle(bbox, "red", "roi"+str(num))
+        self.redraw_ROI()
 
     def run_roi(self):
         # Just runs the latest ROI for now
@@ -348,9 +404,9 @@ class ViewableImage(Canvas):
             print "Doing the segmented ROI"
             cell_list = []
             for roi in rois:
-                cell_list.append(rbc_seg.segmentation(numpy.array(roi)))
+                cell_list.append(rbc_seg.segmentation(roi))
         else:
-            cell_list = rbc_seg.segmentation(numpy.array(rois[0]))
+            cell_list = rbc_seg.segmentation(rois[0])
 
         #cell_list = rbc_seg.segmentation(self.roi_list[len(self.roi_list)-1][1])
         # Call the classification
@@ -387,6 +443,7 @@ class GUI:
         self.clear_roi_button = None
         self.clear_all_roi_button = None
         self.run_button = None
+        self.restore_view_button = None
 
         # This stores the current image on screen
         self.curr_image = None
@@ -420,15 +477,24 @@ class GUI:
         self.clear_all_roi_button = Button(self.frame, text="Clear all ROI", command=self.clear_all_roi)
         self.clear_all_roi_button.grid(row=2, column=1)
 
+        # Restore view button
+        self.restore_view_button = Button(self.frame, text="Zoom out", command=self.restore_view)
+        self.restore_view_button.grid(row=3, column=1)
+
         # RUN button
         self.run_button = Button(self.frame, text="Run", command=self.run_roi)
-        self.run_button.grid(row=3, column=1)
+        self.run_button.grid(row=4, column=1)
 
         # This is to make sure that everything is fit to the frame when it expands
         for x in range(1):
             Grid.columnconfigure(self.frame, x, weight=1)
         for y in range(1):
             Grid.rowconfigure(self.frame, y, weight=1)
+
+    # Restores the zoom level
+    def restore_view(self):
+        if self.curr_image is not None:
+            self.curr_image.reset_zoom()
 
     def run_roi(self):
         if self.curr_image is not None:

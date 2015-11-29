@@ -18,8 +18,8 @@ if platform.system() == "Windows":
 else:
     filename = "trainer.pik"
 
-with open("../Classification/" + filename, 'rb') as f:
-    trainer = pickle.load(f)
+#with open("../Classification/" + filename, 'rb') as f:
+ #   trainer = pickle.load(f)
 
 
 def predict_cells(cell_list):

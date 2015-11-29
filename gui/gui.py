@@ -117,7 +117,7 @@ class ViewableImage(Canvas):
         print "Current level: " + str(self.current_level)
 
         # We have to make sure that we only show the zoomed-in area
-        if self.last_selection_region is not None and self.mode is "zoom":
+        if self.last_selection_region is not None:# and self.mode is "zoom":
             self.render_status_text((100, 100), "Zooming...", 0, 50)
             # Need to transform l0 coordinates to coordinates of current_level, but only width and height!
             width, height = self.transform_to_arb_level(self.last_selection_region[1][0],
@@ -381,9 +381,12 @@ class ViewableImage(Canvas):
             if self.zoom_level is 1:
                 self.reset_zoom()
             else:
+                # Pop one off of the stack and reduce the zoom level by 1
                 self.zoom_region.pop()
                 self.zoom_level -= 1
 
+                # The selection_region is used when resizing, so simulate that we just selected a region that is further
+                # down the zoom stack
                 self.last_selection_region = self.zoom_region[-1]
                 self.resize_image((self.winfo_width(), self.winfo_height()))
         self.redraw_ROI()

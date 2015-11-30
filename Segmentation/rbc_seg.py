@@ -13,6 +13,40 @@ from cell import *
 import Klara_test
 
 
+# Used for performance measure of the segmentation step
+def debug_segmentation(ROI):
+    # image init, and conversion to gray and then threshold it
+    img = ROI[:, :, 0:3]
+
+    cell_list = []
+
+    # Watershed to find individual cells
+    img_fine, ret_fine, markers_fine, markers_nuc = Klara_test.cell_watershed(img)
+    cell_list = modify_cell_list(ROI,ret_fine,markers_fine,markers_nuc,cell_list)
+
+    # Class the cell to RBC, background and unknown (possibly WBC!)
+    cell_list = RBC_classification(cell_list)
+    rbc_counter = rbc_cell_extraction(cell_list)
+
+    # Also extract image
+    for cell in cell_list:
+        if cell.label == "RBC":
+            subroi = ROI[cell.y:cell.y+cell.h, cell.x:cell.x+cell.w, :]
+            subroi[cell.mask] = 0
+            ROI[cell.y:cell.y+cell.h, cell.x:cell.x+cell.w, :] = subroi
+
+    return rbc_counter, ROI
+
+
+# Used for debugging/performance measure
+def rbc_cell_extraction(cell_list):
+    rbc_counter = 0
+    for cell in cell_list:
+        if cell.label == "RBC":
+            rbc_counter += 1
+    return rbc_counter
+
+
 # Segmentation function, call this one with an image or image region to run
 # Returns cell_list with all data stored in each cell
 def segmentation(ROI):

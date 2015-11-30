@@ -68,16 +68,12 @@ def segmentation(ROI):
     cell_list = RBC_classification(cell_list)
 
 
-    # Class the cell to RBC, background and unknown (possibly WBC!)
-    cell_list = RBC_classification(cell_list)
-
     # Print labels
     #print_cell_labels(cell_list, ax)
+    #plt.show()
     # Return a list with only WBC
     cell_list = wbc_cell_extraction(cell_list)
 
-    #print("Segmentation done")
-    #plt.show()
 
     return cell_list
 
@@ -169,12 +165,23 @@ def modify_cell_list(ROI,ret,markers,markers_nuc_in,cell_list):
 
         if len(contours)<1:
             continue
+        if len(contours) >1:
+            index = 0
+            area_max = 0
+            for ind,i in enumerate(contours):
 
-        # Now make sure that the contour is larger than 30 pixels
-        if len(contours[0]) < 25:
-            continue
+                area = cv2.contourArea(i)
+                if(area > area_max):
+                    area_max = area
+                    index = ind
+                    #print (len(contours))
+            contour = contours[index]
+        else:
         # If it is, take the contour and pass it on
-        contour = contours[0]
+            contour = contours[0]
+        # Now make sure that the contour is larger than 30 pixels
+        if len(contour) < 25:
+            continue
 
         ellipse = cv2.fitEllipse(contour)
         ellipse_list.append(ellipse)
@@ -217,7 +224,7 @@ def RBC_classification(cell_list):
         #print cell.area_nuc/cell.area
 
         point = 0
-        if cell.area_nuc/cell.area < .30: # Cell nucleus is smaller then the cell?
+        if cell.area_nuc/cell.area < .25: # Cell nucleus is smaller then the cell?
             #cell.label = "RBC"
             point += 2
             #plt.figure()
@@ -227,10 +234,10 @@ def RBC_classification(cell_list):
             #plt.show()
         if 0.6*RBC_mean_area < cell.area < 1.4*RBC_mean_area: # The cell is not to large or small?
             #cell.label = "RBC"
-            point += 1.5
+            point += 1
         if cell.minor_axis/cell.major_axis < 0.75: # The cell is elliptic?
             #cell.label = "RBC"
-            point += 1.5
+            point += 1
         if point >= 3:
             cell.label = "RBC"
         else:

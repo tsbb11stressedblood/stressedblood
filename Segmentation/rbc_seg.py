@@ -23,9 +23,9 @@ def segmentation(ROI):
     cell_list = []
 
     # Show the original img
-    fig = plt.figure(1)
-    ax = fig.add_subplot(111)
-    plt.imshow(img, interpolation='nearest')
+    #fig = plt.figure(1)
+    #ax = fig.add_subplot(111)
+    #plt.imshow(img, interpolation='nearest')
 
     # Watershed to find individual cells
     #img_fine, ret_fine, markers_fine = cell_watershed(img, dist_transform_thresh)
@@ -38,12 +38,12 @@ def segmentation(ROI):
     cell_list = RBC_classification(cell_list)
 
     # Print labels
-    print_cell_labels(cell_list, ax)
+    #print_cell_labels(cell_list, ax)
     # Return a list with only WBC
     cell_list = wbc_cell_extraction(cell_list)
 
-    print("Segmentation done")
-    plt.show()
+    #print("Segmentation done")
+    #plt.show()
 
     return cell_list
 
@@ -61,11 +61,11 @@ def cell_watershed(img, dist_thresh = 0.7):
     unknown_mask[gray<=0.5*np.amax(gray)] = 0
     unknown_mask[gray>0.5*np.amax(gray)] = 1
 
-    plt.figure(1000)
-    plt.imshow(bg_mask)
+    #plt.figure(1000)
+    #plt.imshow(bg_mask)
     #plt.show()
-    plt.figure(1001)
-    plt.imshow(unknown_mask)
+    #plt.figure(1001)
+    #plt.imshow(unknown_mask)
     kernel = np.ones((3,3),np.uint8)
     color = 8#10 default 4 och 8 - stronk cellkarna
     gray = spacetransformer.im2c(img, color)

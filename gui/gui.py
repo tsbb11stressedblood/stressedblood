@@ -6,7 +6,7 @@ displays them. Also handles ROI selection of the image that is later passed on a
 classification steps.
 
 author: Christoph H.
-last modified: 28th November 2015
+last modified: 30th November 2015
 """
 
 from Tkinter import *
@@ -93,8 +93,8 @@ class ViewableImage(Canvas):
             bbox = bbox_container[0]
             if len(sub_rois) is not 0:
                 for sub_roi in sub_rois:
-                    self.draw_rectangle(sub_roi, "green", "subroi" + str(num))
-            self.draw_rectangle(bbox, "red", "roi"+str(num))
+                    self.draw_rectangle(sub_roi, "green", 5, "subroi" + str(num))
+            self.draw_rectangle(bbox, "red", 4, "roi"+str(num))
 
     # Method that ensures automatic resize in case the windows is resized by the user
     def resize_image(self, event):
@@ -332,7 +332,7 @@ class ViewableImage(Canvas):
         #self.create_text(self.curr_box_bbox[0][0], self.curr_box_bbox[0][1], text=str(len(self.roi_list)),
         #                 anchor=SW, font=("Purisa", 16), tags="roi"+str(len(self.roi_list)))
 
-    def draw_rectangle(self, level_0_coords, outline, tag):
+    def draw_rectangle(self, level_0_coords, outline, line_width, tag):
         # We need to transform the level 0 coords to the current window
         #factor = 1.0/self.ndpi_file.level_downsamples[self.current_level]
         top_x = level_0_coords[0][0]
@@ -360,7 +360,7 @@ class ViewableImage(Canvas):
 
         box = [(top_x_view, top_y_view), (width_view+top_x_view, height_view+top_y_view)]
 
-        self.create_rectangle(box, outline=outline, tags=tag)
+        self.create_rectangle(box, outline=outline, tags=tag, width=line_width)
 
     def zoom(self):
         # Set the zoom_region in level 0 coords
@@ -400,18 +400,25 @@ class ViewableImage(Canvas):
         self.redraw_ROI()
 
     def run_roi(self):
-        # Just runs the latest ROI for now
-        rois = self.roi_list[len(self.roi_list) - 1][1]
-
-        if len(rois) > 1:
-            print "Doing the segmented ROI"
-            cell_list = []
+        # Loop through the roi list and do segmentation and classification for each roi
+        cell_list = []
+        # Initial loop to get the total amount of rois to do, for the progress bar
+        total_no_of_rois = 0
+        for num, rois, bbox_container in self.roi_list:
             for roi in rois:
-                cell_list.append(rbc_seg.segmentation(roi))
-        else:
-            cell_list = rbc_seg.segmentation(rois[0])
+                total_no_of_rois += 1
+        print "Total no of rois to do: " + str(total_no_of_rois)
 
-        #cell_list = rbc_seg.segmentation(self.roi_list[len(self.roi_list)-1][1])
+        # Counter for the progress bar
+        counter = 0
+        for num, rois, bbox_container in self.roi_list:
+            for roi in rois:
+                cell_list = cell_list + rbc_seg.segmentation(roi)
+                # Also make a progress bar
+                counter += 1
+                self.render_status_text((100, 100), "Running segmentation...", float(counter/float(total_no_of_rois)), 100)
+        self.clear_status_text()
+
         # Call the classification
         prediction = classer.predict_cells(cell_list)
         print prediction
@@ -420,9 +427,10 @@ class ViewableImage(Canvas):
         # Plot the result
         plt.figure()
 
-        no_of_cells = len(prediction)
+        cols = 5
+        rows = float(len(prediction)/cols)
         for ind, item in enumerate(prediction):
-            plt.subplot(1, no_of_cells, ind)
+            plt.subplot(rows, cols, ind)
             plt.imshow(cell_list[ind].img)
             plt.title("Classified: " + str(item))
 

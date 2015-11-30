@@ -6,21 +6,18 @@ last modified: 30th November 2015
 """
 
 from Tkinter import *
-import tkFileDialog
-import tkMessageBox
-from ttk import Progressbar
-import os
-from matplotlib import pyplot as plt
 import numpy
 from Segmentation import rbc_seg
 from PIL import Image, ImageTk
-import math
 
 
 class PerfomanceMeasureGUI:
     def __init__(self, master):
         # First we need a frame, which serves as the basic OS-specific window
         self.frame = Frame(master)
+
+        # Store the data
+        self.percentage_average = 0.
 
         # Packing it means that we want to fit it snuggly to the master and to make it visible
         self.frame.pack(fill=BOTH, expand=YES)
@@ -41,6 +38,10 @@ class PerfomanceMeasureGUI:
         self.ok_button = Button(self.frame, text="OK", command=self.ok_button_callback)
         self.ok_button.grid(row=5, column=2)
 
+        # Text for the current percentage average thingy
+        self.average_text = Label(self.frame, text="Current average: "+str(self.percentage_average))
+        self.average_text.grid(row=6, column=0)
+
         # Init image to first one
         self.im_number = 1
         self.curr_ROI = numpy.load("../npyimages/testim_1.npy")
@@ -50,14 +51,12 @@ class PerfomanceMeasureGUI:
         # Init first one
         self.draw_image()
 
-        # Store the data
-        self.percentage_average = 0
-
     def ok_button_callback(self):
         # Processing
         # First, get the entry of user
-        user_number = int(self.cell_entry.get())
-        if user_number:
+        user_number = self.cell_entry.get()
+        if user_number is not "":
+            user_number = int(user_number)
             curr_percent = float(self.curr_rbc_counter)/float(self.curr_rbc_counter + user_number)
             # Pretty special case
             if self.im_number is 1:
@@ -80,8 +79,8 @@ class PerfomanceMeasureGUI:
         self.curr_rbc_counter = rbc_counter
         self.im = ImageTk.PhotoImage(Image.fromarray(masked_ROI))
         self.canvas.create_image(0, 0, image=self.im, anchor=NW)
-
-        # Also print the current average in the top of the frame
+        self.average_text["text"] = "Current average: " + str(self.percentage_average)
+        self.frame.update()
 
 
 root = Tk()

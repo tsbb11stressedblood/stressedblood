@@ -419,27 +419,19 @@ class ViewableImage(Canvas):
                 self.render_status_text((100, 100), "Running segmentation...", float(counter/float(total_no_of_rois)), 100)
         self.clear_status_text()
 
-        # ----PERFORMANCE MEASURE SEGMENTATION----
-        # Firstly, show the user (some) of the rois w/o RBC and ask how many more there are still left in the picture
-        # Then, use the number of removed RBC (get it from rbc_seg) and calculate %-age
-
-
         # Call the classification
         prediction = classer.predict_cells(cell_list)
         print "No of classified unknowns: " + str(len(prediction))
-        #numpy.save("segmentation_test.npy",self.roi_list[len(self.roi_list)-1][1])
+        #numpy.save("red_shit2.npy", self.roi_list[len(self.roi_list)-1][1][0])
 
-        # Plot the result
-        #plt.figure()
+        plt.figure()
 
-        #cols = 5
-        #rows = float(len(prediction)/cols)
-        #for ind, item in enumerate(prediction):
-        #    plt.subplot(rows, cols, ind)
-        #    plt.imshow(cell_list[ind].img)
-        #    plt.title("Classified: " + str(item))
+        for ind, cell in enumerate(cell_list):
+            plt.subplot(1, len(prediction), ind)
+            plt.imshow(cell.img)
+            plt.title("Classified: " + str(prediction[ind]))
 
-        #plt.show()
+        plt.show()
 
 
 # Main class for handling GUI-related things

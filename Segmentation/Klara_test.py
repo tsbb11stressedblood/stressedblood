@@ -35,12 +35,19 @@ def cell_watershed(img):
     # Dilate and close to fill the nuclei
     nuclei_mask = cv2.erode(nuclei_mask, kernel, iterations =1)
     nuclei_mask = cv2.morphologyEx(nuclei_mask,cv2.MORPH_CLOSE,kernel, iterations = 2)
+    nuclei_mask[nuclei_mask > 0] = 1
+
+    # Create image with unknown region (between membrane and nucleus)
+    unknown_region = unknown_mask - nuclei_mask
 
     # Create the markers for the nuclei
     ret, markers_nuc = cv2.connectedComponents(nuclei_mask)
 
     # Add the markers for the nuclei with the mask for the whole cells
-    markers = markers_nuc | unknown_mask
+    markers = markers_nuc.copy()
+    markers += 1
+    ret += 1
+    markers[unknown_region == 0] = 0
 
     # Create a background image to use in the watershed
     background =img.copy()
@@ -48,10 +55,11 @@ def cell_watershed(img):
     background[:,:,1] = unknown_mask*255
     background[:,:,2] = unknown_mask*255
 
+
     # Perform watershed and mark the boarders on the image
     markers = cv2.watershed(background, markers)
     img[markers == -1] = [255,0,0]
 
-    return img, ret, markers, markers_nuc
+    return img, ret, markers, nuclei_mask
 
 #cell_watershed(np.load("simple_test.npy"))

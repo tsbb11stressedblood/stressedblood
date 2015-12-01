@@ -34,7 +34,7 @@ class ResultDisplayer(Toplevel):
         self.wm_title("Results")
 
         # Names of classes
-        self.classes = ["Class 0", "Class 1", "Class 2", "Class 3"]
+        self.classes = ["Heterophile", "Other", "Lymphocyte", "Crap"]
 
         # Contains the list of cells that classifier has classified
         self.cell_list = cell_list
@@ -239,7 +239,28 @@ class ResultDisplayer(Toplevel):
             self.update_number_label()
 
     def calc_button_callback(self):
-        pass
+        # Calculate
+        h = 0
+        l = 0
+        l_identifier = self.classes.index("Lymphocyte")
+        h_identifier = self.classes.index("Heterophile")
+        print "l_identifier (int): " + str(l_identifier)
+
+        for item in self.pred:
+            print "item: " + str(item)
+            if str(item) is str(l_identifier):
+                l += 1
+            elif str(item) is str(h_identifier):
+                h += 1
+        if (l == 0) and (h == 0):
+            show_msg("H/L-ratio", self, "There are no lymphocytes or heterophiles.")
+        elif l is 0:
+            show_msg("H/L-ratio", self, "There are no lymphocytes.\nThere are " + str(h) + " heterophiles.")
+        elif h is 0:
+            show_msg("H/L-ratio", self, "There are no heterophiles.\nThere are " + str(l) + " lymphocytes.")
+        else:
+            ratio = float(h)/float(l)
+            show_msg("H/L-ratio", self, "H/L: " + str(ratio))
 
 
 # Class for handling displaying of images, ROI selection and running the algorithms on these ROIs.
@@ -638,11 +659,14 @@ class InteractionWindow(Canvas):
         self.clear_status_text()
 
         # Call the classification
-        prediction = classer.predict_cells(cell_list)
-        print "No of classified unknowns: " + str(len(prediction))
-        #numpy.save("red_shit2.npy", self.roi_list[len(self.roi_list)-1][1][0])
+        if len(cell_list) is 0:
+            show_msg("No WBC", self, "Only RBCs were detected in this/these roi/rois.")
+        else:
+            prediction = classer.predict_cells(cell_list)
+            print "No of classified unknowns: " + str(len(prediction))
+            #numpy.save("red_shit2.npy", self.roi_list[len(self.roi_list)-1][1][0])
 
-        test = ResultDisplayer(cell_list, prediction)
+            test = ResultDisplayer(cell_list, prediction)
         """
         plt.figure()
 

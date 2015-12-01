@@ -9,16 +9,17 @@ from sklearn.decomposition import PCA
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import svm, datasets, metrics
+import platform
 import pickle # Needed for saving the trainer to file
 #import classer
 
 
 class WhiteCell:
     def __init__(self, cell, _label):
-        self.img = cell.img     # Remove img to use one white_
+        self.img = cell    # Remove img to use one white_
         self.size = float(np.size(self.img))
-        #self.make_mask()       # Comment out to use one white_
-        self.mask = cell.mask
+        self.make_mask()       # Comment out to use one white_
+        #self.mask = cell.mask
 
     def make_mask(self):
         mask = copy.copy(self.img)
@@ -109,40 +110,42 @@ def classify_data(features,trained_classifier):
     return predicted_classes
 
 ## FROM white_
-# WBC_data = []
-# for i in range(1, 21):
-#     WBC_array = np.load("white_" + str(i) + ".npy")
-#     wc = WhiteCell(WBC_array, -1)
-#     wc_features = feature_selection(wc)
-#     WBC_data.append(wc_features)
-#
-# WBC_data= np.asarray(WBC_data)
-# np.save("white_feature_array.npy",WBC_data )
+WBC_data = []
+for i in range(1, 21):
+ WBC_array = np.load("white_" + str(i) + ".npy")
+ wc = WhiteCell(WBC_array, -1)
+ wc_features = feature_selection(wc)
+ WBC_data.append(wc_features)
 
-# # FROM CELL-LIST
-# RBC_array = np.load("../gui/red_shit.npy")
-# REB_celllist=rbc_seg.segmentation(RBC_array)
-#
-#
-# RBC_data = []
-# for cell in REB_celllist:
-#     wc = WhiteCell(cell, -1)
-#     wc_features = feature_selection(wc)
-#     RBC_data.append(wc_features)
-#
-#
-# RBC_data= np.asarray(RBC_data)
-# np.save("red_feature_array.npy",RBC_data )
+WBC_data= np.asarray(WBC_data)
+np.save("white_feature_array.npy",WBC_data )
+
+# FROM CELL-LIST
+#RBC_array = np.load("../gui/red_shit.npy")
+#REB_celllist=rbc_seg.segmentation(RBC_array)
+
+
+#RBC_data = []
+#for cell in REB_celllist:
+# wc = WhiteCell(cell, -1)
+# wc_features = feature_selection(wc)
+# RBC_data.append(wc_features)
+
+
+#RBC_data= np.asarray(RBC_data)
+#np.save("red_feature_array.npy",RBC_data )
 
 WBC_data = np.load("white_feature_array.npy")
-RBC_data = np.load("red_feature_array.npy")
+#RBC_data = np.load("red_feature_array.npy")
 
-feature_array = np.append(WBC_data,RBC_data[0:19],axis=0)
+#feature_array = np.append(WBC_data,RBC_data[0:19],axis=0)
+feature_array = WBC_data
 
 WBC_labels = np.array([0,1,1,0,1,2,1,0,1,0,0,0,2,2,0,1,1,2,1,1])
-RBC_labels=3*np.ones([np.shape(RBC_data[0:19])[0]])
+#RBC_labels=3*np.ones([np.shape(RBC_data[0:19])[0]])
 
-labels_array = np.append(WBC_labels,RBC_labels,axis=0)
+#labels_array = np.append(WBC_labels,RBC_labels,axis=0)
+labels_array = WBC_labels
 
 print np.shape(labels_array)
 print labels_array
@@ -153,10 +156,15 @@ y = labels_array
 
 trainer = training(X, y)
 
-with open("trainer.pik", "wb") as f:
+if platform.system() == "Windows":
+    filename = "trainer_win.pik"
+else:
+    filename = "trainer.pik"
+
+with open(filename, "wb") as f:
     pickle.dump(trainer, f)
 
-with open("trainer.pik", 'rb') as f:
+with open(filename, 'rb') as f:
     trainerTest = pickle.load(f)
 
 prediction = classify_data(X,trainerTest)

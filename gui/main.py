@@ -9,15 +9,20 @@ from gui import *
 import numpy as np
 
 root = Tk()
+root.wm_title("Stressed Blood")
 # First get the resolution of the screen
 x = root.winfo_screenwidth()
 y = root.winfo_screenheight()
 
 # Make the window a fixed size based on resolution, and non-resizable
-root.geometry('{}x{}'.format(int(x*0.8), int(y*0.8)))
+w = int(x*0.8)
+h = int(y*0.8)
+x_pos = 50
+y_pos = 50
+root.geometry('%dx%d+%d+%d' % (w, h, x_pos, y_pos))
+#root.geometry('{}x{}'.format(int(x*0.8), int(y*0.8)))
 
 # Turns off resizing
-
 root.resizable(0, 0)
 app = GUI(root)
 root.mainloop()

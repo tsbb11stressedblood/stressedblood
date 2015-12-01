@@ -1,12 +1,12 @@
 """
 GUI handler for the project.
 
-This module allows users to load images, converts them to something actually usable (not NDPI) and
-displays them. Also handles ROI selection of the image that is later passed on and used in the segmentation and
-classification steps.
+This module foremost provides a GUI and allows users to load images, convert them to something actually usable
+(not NDPI) and display them. Also handles ROI selection of the image that is later passed on and used in the
+segmentation and classification steps.
 
 author: Christoph H.
-last modified: 30th November 2015
+last modified: 1st December 2015
 """
 
 from Tkinter import *
@@ -16,6 +16,7 @@ from ttk import Progressbar
 from openslide import *
 import os
 from PIL import ImageTk as itk
+from PIL import Image
 from matplotlib import pyplot as plt
 import numpy
 import cv2
@@ -24,8 +25,225 @@ from Classification import classer
 import math
 
 
-# Class for handling all images that are viewable in the GUI.
-class ViewableImage(Canvas):
+# This class handles the displaying of the results of the classification of the cells classified from the user-
+# selected ROI. Dat sentence tho
+# NOTE: TopLevel is Tkinters cryptic name for a new child window... yeah don't ask
+class ResultDisplayer(Toplevel):
+    def __init__(self, cell_list, prediction):
+        Toplevel.__init__(self)
+        self.wm_title("Results")
+
+        # Names of classes
+        self.classes = ["Class 0", "Class 1", "Class 2", "Class 3"]
+
+        # Contains the list of cells that classifier has classified
+        self.cell_list = cell_list
+
+        # Contains the enumeration of the class, index corresponds to that of cell_list
+        self.pred = prediction
+
+        # This splits the cells into pages, may look like [ [c1_info ... c20_info], [c21_info ... c40_info], ... ] etc
+        # where c1_info is a tuple containing (cell1.img, prediction[cell1])
+        self.pages = []
+        self.max_rows = 4
+        self.max_cols = 5
+        self.max_cell_per_page = self.max_cols*self.max_rows
+        self.cell_boxes = []
+        self.curr_page = 0
+
+        # We need some buttons
+        self.calc_button = None
+        self.next_button = None
+        self.prev_button = None
+        self.stat_button = None
+        self.apply_view_button = None
+        self.drop_down_menu = None
+        self.drop_down_var = StringVar()
+
+        # And a label for displaying how many cells there are etc.
+        self.number_label = None
+
+        # This method initializes buttons and labels
+        self.init_layout()
+
+        # Now we need to initialize the actual cell boxes (results)
+        self.create_pages("Default")
+        self.recreate_boxes()
+
+        # Lastly render the first page
+        self.render_page(0)
+
+        # ... And update the number_label text
+        self.update_number_label()
+
+    def init_layout(self):
+        # Init the buttons
+        self.calc_button = Button(self, text="Calc H/L", command=self.calc_button_callback)
+        self.calc_button.grid(row=0, column=1)
+
+        self.next_button = Button(self, text="Next page", command=self.next_button_callback)
+        self.next_button.grid(row=5, column=4)
+
+        self.prev_button = Button(self, text="Previous page", command=self.prev_button_callback)
+        self.prev_button.grid(row=5, column=0)
+
+        self.stat_button = Button(self, text="Statistics...", command=self.stat_button_callback)
+        self.stat_button.grid(row=0, column=0)
+
+        self.apply_view_button = Button(self, text="Apply", command=self.apply_view_button_callback)
+        self.apply_view_button.grid(row=0, column=3, sticky=W)
+
+        # Init the drop-down list
+        self.drop_down_menu = OptionMenu(self, self.drop_down_var,
+                                         "Default",
+                                         self.classes[0],
+                                         self.classes[1],
+                                         self.classes[2],
+                                         self.classes[3])
+        self.drop_down_menu.grid(row=0, column=2, sticky=E)
+
+        # Init the label
+        self.number_label = Label(self, text="FOO")
+        self.number_label.grid(row=0, column=4)
+
+    def apply_view_button_callback(self):
+        token = self.drop_down_var.get()
+        if token == "Default":
+            pass
+        else:
+            token = self.classes.index(token)
+        self.create_pages(token)
+        self.curr_page = 0
+        self.update_number_label()
+        self.render_page(0)
+
+    def stat_button_callback(self):
+        # Calculate some statistics for the user
+        class0_total = 0
+        class1_total = 0
+        class2_total = 0
+        class3_total = 0
+        for item in self.pred:
+            if str(item) is "0":
+                class0_total += 1
+            elif str(item) is "1":
+                class1_total += 1
+            elif str(item) is "2":
+                class2_total += 1
+            elif str(item) is "3":
+                class3_total += 1
+            else:
+                print "Some weird class got in: " + str(item)
+
+        str0 = "# of " + self.classes[0] + ": " + str(class0_total)
+        str1 = "# of " + self.classes[1] + ": " + str(class1_total)
+        str2 = "# of " + self.classes[2] + ": " + str(class2_total)
+        str3 = "# of " + self.classes[3] + ": " + str(class3_total)
+        show_msg("Statistics", self, str0 + "\n" + str1 + "\n" + str2 + "\n" + str3)
+
+    def update_number_label(self):
+        # Define some parameters needed
+        # Loop through pages to get the total
+        total = 0
+        for page in self.pages:
+            for cell in page:
+                total += 1
+        total = str(total)
+        curr_lower = str(1 + self.curr_page*self.max_cell_per_page)
+
+        # Upper limit is special case if we're on the last page
+        if self.curr_page+1 is not len(self.pages):
+            curr_upper = str(self.max_cell_per_page + self.curr_page*self.max_cell_per_page)
+        else:
+            curr_upper = total
+
+        self.number_label["text"] = "Showing cells " + curr_lower + " - " + curr_upper + " of " + total + " total"
+
+    def create_pages(self, token):
+        self.pages = []
+
+        # Fill pages either with any cell, or only with a certain class, that's what token is for
+        if isinstance(token, str):
+            counter = 1
+            sub_page = []
+            for ind, cell in enumerate(self.cell_list):
+                if counter % self.max_cell_per_page is 0:
+                    sub_page.append((cell.img, self.pred[ind]))
+                    self.pages.append(sub_page)
+                    counter = 1
+                    sub_page = []
+                else:
+                    sub_page.append((cell.img, self.pred[ind]))
+                    counter += 1
+            if counter % self.max_cell_per_page is not 0:
+                self.pages.append(sub_page)
+
+        else:
+            counter = 1
+            sub_page = []
+            for ind, cell in enumerate(self.cell_list):
+                if self.pred[ind] == token:
+                    if counter % self.max_cell_per_page is 0:
+                        sub_page.append((cell.img, self.pred[ind]))
+                        self.pages.append(sub_page)
+                        counter = 1
+                        sub_page = []
+                    else:
+                        sub_page.append((cell.img, self.pred[ind]))
+                        counter += 1
+            if counter % self.max_cell_per_page is not 0:
+                self.pages.append(sub_page)
+
+    def recreate_boxes(self):
+        self.cell_boxes = []
+        # create max_cell_per_page number of boxes, use frames for this
+        for row in range(self.max_rows):
+            for col in range(self.max_cols):
+                fr = Frame(self, width=150, height=150, borderwidth=5)#, relief=SUNKEN)
+                fr.grid(row=row+1, column=col)
+                fr.pack_propagate(0)
+                self.cell_boxes.append(fr)
+
+    def render_page(self, _page):
+        page = self.pages[_page]
+
+        # First loop through the frames and check that there is nothing there
+        self.recreate_boxes()
+
+        # Loop through all cells in this particular page and draw them in the frame boxes
+        for index, (cell_img, pred) in enumerate(page):
+            im = Image.fromarray(cell_img)
+            photo = itk.PhotoImage(im)
+            im_label = Label(self.cell_boxes[index], image=photo)
+            im_label.image = photo # Tragic fix for things
+
+            # Also create a text label that tells us which class this was classified to
+            class_label = Label(self.cell_boxes[index], text=self.classes[pred])
+            class_label.pack(side=TOP)
+
+            im_label.pack(side=TOP)
+
+    def prev_button_callback(self):
+        # Do some checking to see that we can actually go to prev page
+        if self.curr_page is not 0:
+            self.curr_page -= 1
+            self.render_page(self.curr_page)
+            self.update_number_label()
+
+    def next_button_callback(self):
+        # Do some checking to see that we can actually go to another page
+        total_pages = len(self.pages)
+        if (self.curr_page + 1) is not total_pages:
+            self.curr_page += 1
+            self.render_page(self.curr_page)
+            self.update_number_label()
+
+    def calc_button_callback(self):
+        pass
+
+
+# Class for handling displaying of images, ROI selection and running the algorithms on these ROIs.
+class InteractionWindow(Canvas):
     def __init__(self, master, _ndpi_file):
         self.master = master
 
@@ -65,7 +283,7 @@ class ViewableImage(Canvas):
         self.bind('<ButtonRelease-1>', self.set_box)
         self.bind('<Button-3>', self.zoom_out)
 
-    # Hanldes initial setup of the input image
+    # Handles initial setup of the input image
     def setup_image(self):
 
         # Select best scale space level and get its size
@@ -424,6 +642,8 @@ class ViewableImage(Canvas):
         print "No of classified unknowns: " + str(len(prediction))
         #numpy.save("red_shit2.npy", self.roi_list[len(self.roi_list)-1][1][0])
 
+        test = ResultDisplayer(cell_list, prediction)
+        """
         plt.figure()
 
         for ind, cell in enumerate(cell_list):
@@ -431,7 +651,7 @@ class ViewableImage(Canvas):
             plt.imshow(cell.img)
             plt.title("Classified: " + str(prediction[ind]))
 
-        plt.show()
+        plt.show()"""
 
 
 # Main class for handling GUI-related things
@@ -486,7 +706,7 @@ class GUI:
         self.clear_all_roi_button.grid(row=2, column=1)
 
         # Restore view button
-        self.restore_view_button = Button(self.frame, text="Zoom out", command=self.restore_view)
+        self.restore_view_button = Button(self.frame, text="Reset view", command=self.restore_view)
         self.restore_view_button.grid(row=3, column=1)
 
         # RUN button
@@ -546,7 +766,7 @@ class GUI:
                 # Remember to delete the old image first
                 if self.curr_image is not None:
                     self.curr_image.destroy()
-                self.curr_image = ViewableImage(self.frame, ndpi_file)
+                self.curr_image = InteractionWindow(self.frame, ndpi_file)
                 self.curr_image.grid(row=0, columnspan=4, sticky=W+E+N+S)
 
             else:
@@ -556,8 +776,8 @@ class GUI:
 
 
 # Very quick and dirty wrappers for displaying message popup windows
-def show_msg(message):
-    tkMessageBox.showinfo("Message", message)
+def show_msg(title, _parent, message):
+    tkMessageBox.showinfo(title, message, parent=_parent)
 
 
 def show_error(error):

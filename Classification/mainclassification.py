@@ -18,10 +18,10 @@ import pickle # Needed for saving the trainer to file
 
 class WhiteCell:
     def __init__(self, cell, _label):
-        self.img = cell    # Remove img to use one white_
+        self.img = cell.img    # Remove img to use one white_
         self.size = float(np.size(self.img))
-        self.make_mask()       # Comment out to use one white_
-        #self.mask = cell.mask
+        #self.make_mask()       # Comment out to use one white_
+        self.mask = cell.mask
 
     def make_mask(self):
         mask = copy.copy(self.img)
@@ -90,8 +90,8 @@ def training(training_features, training_labels):
     '''
 
     C = 1.0 # SVM regularization parameter
-    #trained_classifier = svm.SVC(kernel='rbf', gamma=0.2, C=C).fit(training_features, training_labels)
-    trained_classifier = svm.LinearSVC(C=C).fit(training_features, training_labels)
+    trained_classifier = svm.SVC(kernel='rbf', gamma=0.9, C=C).fit(training_features, training_labels)
+    #trained_classifier = svm.LinearSVC(C=C).fit(training_features, training_labels)
 
     return trained_classifier
 
@@ -192,38 +192,38 @@ def cross_validation(features, labels):
 # WBC_data= np.asarray(WBC_data)
 # np.save("white_feature_array.npy",WBC_data )
 
-# FROM CELL-LIST
-#RBC_array = np.load("../gui/red_shit.npy")
-#REB_celllist=rbc_seg.segmentation(RBC_array)
+#FROM CELL-LIST
+RBC_data = []
+for i in range(1, 5):
+    RBC_array = np.load("others_" + str(i) + ".npy")
+    REB_celllist=rbc_seg.segmentation(RBC_array)
 
+    for cell in REB_celllist:
+        wc = WhiteCell(cell, -1)
+        wc_features = feature_selection(wc)
+        RBC_data.append(wc_features)
 
-#RBC_data = []
-#for cell in REB_celllist:
-# wc = WhiteCell(cell, -1)
-# wc_features = feature_selection(wc)
-# RBC_data.append(wc_features)
-
-
-#RBC_data= np.asarray(RBC_data)
+RBC_data= np.asarray(RBC_data)
 #np.save("red_feature_array.npy",RBC_data )
 
 WBC_data = np.load("white_feature_array.npy")
 #RBC_data = np.load("red_feature_array.npy")
 
-#feature_array = np.append(WBC_data,RBC_data[0:19],axis=0)
-feature_array = WBC_data
+feature_array = np.append(WBC_data,RBC_data,axis=0)
+#feature_array = WBC_data
 
 
 #WBC_labels = np.array([0,1,1,0,1,2,1,0,1,0,0,0,2,2,0,1,1,2,1,1,1,2,2,0,2,1,2,2,1,2,1,2,2,2,2,1,2,2,1,1,2,1,1,1,1,0,2,1,1,1,2,1,1,1,2,2,2,2,0,2,1,1,1,0,2,2,2,2,1,2,2,1,0,1,1,2,2,2,2,2,1,2,1,2,0,1,2,2,1,1,2,0,2,2,0,1,1,1,2,0])
 #np.save("WBC_labels.npy",WBC_labels)
 WBC_labels = np.load("WBC_labels.npy")
 
-#RBC_labels=3*np.ones([np.shape(RBC_data[0:19])[0]])
-#labels_array = np.append(WBC_labels,RBC_labels,axis=0)
+RBC_labels=3*np.ones([np.shape(RBC_data)[0]])
+labels_array = np.append(WBC_labels,RBC_labels,axis=0)
 
 
 X = feature_array
-y = WBC_labels
+y = labels_array
+
 trainer = training(X, y)
 
 if platform.system() == "Windows":
@@ -244,4 +244,5 @@ with open(filename, 'rb') as f:
 # accuracy = float(np.trace(confusion))/float(np.sum(confusion))
 # print "Accuracy:", accuracy
 
-total_accuracy = cross_validation(feature_array,WBC_labels)
+
+total_accuracy = cross_validation(X,y)

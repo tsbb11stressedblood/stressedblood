@@ -53,151 +53,153 @@ def segmentation(ROI):
     # image init, and conversion to gray and then threshold it
     img = ROI[:, :, 0:3]
 
-    binary_list = []
     cell_list = []
 
-    # Show the original img
-    #fig = plt.figure(1)
-    #ax = fig.add_subplot(111)
-    #plt.imshow(img, interpolation='nearest')
-
     # Watershed to find individual cells
-    #img_fine, ret_fine, markers_fine = cell_watershed(img, dist_transform_thresh)
+    #img_fine, ret_fine, markers_fine, markers_nuc = cell_watershed(img)
     img_fine, ret_fine, markers_fine, markers_nuc = Klara_test.cell_watershed(img)
+    # Put all the objects in the cell_list
     cell_list = modify_cell_list(ROI,ret_fine,markers_fine,markers_nuc,cell_list)
+    # Basic classification to RBC and labels these cells
     cell_list = RBC_classification(cell_list)
 
-
+    # Show the original img
+    #fig = plt.figure("klara")
+    #ax = fig.add_subplot(111)
+    #plt.imshow(img, interpolation='nearest')
     # Print labels
     #print_cell_labels(cell_list, ax)
     #plt.show()
-    # Return a list with only WBC
+
+    # Remove all the cells classified to RBC, cell_list now only contains unknown cells
     cell_list = wbc_cell_extraction(cell_list)
 
 
     return cell_list
 
-def cell_watershed(img, dist_thresh = 0.7):
-    #gray = cv2.cvtColor(img ,cv2.COLOR_BGR2GRAY)
-
-    color = 10#10 default 4 och 8 - stronk cellkarna
-    gray_transform = spacetransformer.im2c(img, color)
-    gray = np.array(gray_transform * 255, dtype=np.uint8)
-    grayimg = gray.copy()
-    bg_mask = grayimg
-    bg_mask[gray>0.5*np.amax(gray)] = 0
-    bg_mask[gray<=0.5*np.amax(gray)] = 1
-    unknown_mask = gray.copy()
-    unknown_mask[gray<=0.5*np.amax(gray)] = 0
-    unknown_mask[gray>0.5*np.amax(gray)] = 1
-
-    #plt.figure(1000)
-    #plt.imshow(bg_mask)
-    #plt.show()
-    #plt.figure(1001)
-    #plt.imshow(unknown_mask)
+def cell_watershed(img):
+    """
+    Performs watershed on an RGB-image. Returns the image with the new boarders and the markers
+    """
+    img = img[:,:,0:3]
     kernel = np.ones((3,3),np.uint8)
-    color = 8#10 default 4 och 8 - stronk cellkarna
-    gray = spacetransformer.im2c(img, color)
-    gray = np.array(gray * 255, dtype=np.uint8)
-    gray[gray<.35*np.amax(gray)] = -1
 
-    gray = cv2.dilate(gray, kernel, iterations=1)
+    # Mask the background to get the whole cells
+    color = 10
+    bg_transform = spacetransformer.im2c(img, color)
+    bg_transform = np.array(bg_transform * 255, dtype=np.uint8)
+    bg_img = bg_transform.copy()
+    unknown_mask = bg_transform.copy()
+    unknown_mask[bg_img<=0.45*np.amax(bg_img)] = 0
+    unknown_mask[bg_img>0.45*np.amax(bg_img)] = 1
 
-    close = cv2.morphologyEx(gray,cv2.MORPH_CLOSE,kernel, iterations = 2)
+    # Erode and close to remove trash
+    #unknown_mask = cv2.erode(unknown_mask, kernel, iterations =1)
+    unknown_mask = cv2.morphologyEx(unknown_mask,cv2.MORPH_CLOSE,kernel, iterations = 2)
 
 
-    #gray = cv2.cvtColor(gray ,cv2.COLOR_BGR2GRAY)
-    ret, thresh = cv2.threshold(gray,0,255,cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)
+    # Mask to get the nuclei
+    color = 4
+    nuclei = spacetransformer.im2c(img, color)
+    nuclei = np.array(nuclei * 255, dtype=np.uint8)
+    nuclei_mask = nuclei.copy()
+    nuclei_mask[nuclei< 0.07*np.amax(nuclei)] = 1 #0.05
+    nuclei_mask[nuclei>=0.07*np.amax(nuclei)] = 0
 
-    # noise removal with a 3x3 kernel
+    # Dilate and close to fill the nuclei
+    nuclei_mask = cv2.dilate(nuclei_mask, kernel, iterations = 1)
+    nuclei_mask = cv2.erode(nuclei_mask, kernel, iterations = 2)
+    #nuclei_mask = cv2.morphologyEx(nuclei_mask,cv2.MORPH_CLOSE,kernel, iterations = 2)
 
-    opening = cv2.morphologyEx(thresh,cv2.MORPH_OPEN,kernel, iterations = 2)
-    #opening = thresh
+    nuclei_mask[nuclei_mask > 0] = 1
 
-    # sure background area, more dilation with more iterations
-    sure_bg = bg_mask
-    # sure_bg = cv2.dilate(opening,kernel,iterations = 2)
+    unknown_mask[unknown_mask > 0] = 1
 
-    # Finding sure foreground area, threshold might need changing: lower threshold-factor gives larger sure_fg
-    dist_transform = cv2.distanceTransform(opening, cv2.DIST_L2, 5)
-    ret, sure_fg = cv2.threshold(dist_transform,dist_thresh*dist_transform.max(),255,0) #0.7 default
+    # Create image with unknown region (between membrane and nucleus)
+    unknown_region = nuclei_mask - unknown_mask
+    unknown_region[unknown_region > 0] = 1
 
-    # Finding unknown region, borders of bg-fg
-    sure_fg = np.uint8(sure_fg)
-    #unknown = cv2.subtract(sure_bg,sure_fg)
-    unknown = unknown_mask
-    # Marker labelling
-    ret, markers = cv2.connectedComponents(sure_fg)
+    #plt.figure("unknown_region")
+    #plt.imshow(unknown_region)
+    #plt.figure("unknown_mask")
+    #plt.imshow(unknown_mask)
+    plt.figure("nuclei_mask")
+    plt.imshow(nuclei_mask)
+    #print(np.amax(unknown_region))
+    #print(np.amax(unknown_mask))
+    #print(np.amax(nuclei_mask))
+    # Create the markers for the nuclei
+    ret, markers_nuc = cv2.connectedComponents(nuclei_mask)
 
-    # Add one to all labels so that sure background is not 0, but 1
-    markers = markers+1
+    # Add the markers for the nuclei with the mask for the whole cells
+    markers = markers_nuc.copy()
+    markers += 1
+    ret += 1
+    markers[unknown_region == 0] = 0
 
-    #plt.figure(15)
-    #plt.imshow(markers)
-    #plt.show()
+    # Create a background image to use in the watershed
+    background = img.copy()
+    background[:,:,0] = unknown_mask*255
+    background[:,:,1] = unknown_mask*255
+    background[:,:,2] = unknown_mask*255
 
-    # Now, mark the region of unknown with zero
-    markers[unknown==255] = 0
-    #print markers.shape, np.amax(markers), np.amin(markers)
-    markers = cv2.watershed(img, markers)
 
+    # Perform watershed and mark the boarders on the image
+    markers = cv2.watershed(background, markers)
     img[markers == -1] = [255,0,0]
 
-    return img, ret, markers
+    return img, ret, markers, nuclei_mask
+
 
 
 def modify_cell_list(ROI,ret,markers,markers_nuc_in,cell_list):
-    # For each connectedobject in markers
+    # For each connected object in markers
     markers_nuc = markers_nuc_in.copy()
     markers_nuc[markers_nuc_in >= 1] = 1
     markers_nuc[markers_nuc_in < 1] = 0
-    current_nuc = markers_nuc_in.copy()
-
+    #current_nuc = markers_nuc_in.copy()
     #markers_nuc = np.array(markers_nuc, dtype=np.uint8)
+
     ellipse_list = []
     for num in range(2,ret):
         img2 = np.array(num==markers, dtype=np.uint8)
         dummy_img, contours, hierarchy = cv2.findContours(img2, 1, 2)
-
         # Fit ellipses on marked objects in the thresh-image
-        # First extract contour from the list contours
-
-        if len(contours)<1:
+        # First extract a contour from the list contours
+        if len(contours) < 1:
             continue
-        if len(contours) >1:
+        if len(contours) > 1:
             index = 0
             area_max = 0
             for ind,i in enumerate(contours):
-
+                # If contours is filled with many objects, the largest object will be chosen
+                #  (other objects should be small noise pixels)
                 area = cv2.contourArea(i)
                 if(area > area_max):
                     area_max = area
                     index = ind
-                    #print (len(contours))
+
             contour = contours[index]
         else:
-        # If it is, take the contour and pass it on
+
             contour = contours[0]
-        # Now make sure that the contour is larger than 30 pixels
+        # Now make sure that this contour is larger than 30 pixels
         if len(contour) < 25:
             continue
 
+        # Fit ellipses to cells
         ellipse = cv2.fitEllipse(contour)
         ellipse_list.append(ellipse)
-        # Determine cell area
+        # Determine the current contour objects area
         area = cv2.contourArea(contour)
 
-        #Cut out region
+        # Cut out a boundingbox of the object
         x,y,w,h = cv2.boundingRect(contour)
         cell_img = ROI[y:y+h,x:x+w, :]
         cell_mask = markers[y:y+h,x:x+w] == num
 
-        # Nuclei area
+        # Determine the current objects nuclei area
         current_nuc = markers_nuc*img2
-        #plt.figure("current nucleus")
-        #plt.imshow(current_nuc)
-        #plt.show()
         img_nuc = np.array(current_nuc, dtype=np.uint8)
         dummy_img, contours_nuc, hierarchy_dummy = cv2.findContours(img_nuc, 1, 2)
         contour_nuc = contours_nuc[0]
@@ -215,28 +217,20 @@ def RBC_classification(cell_list):
     # Extract the median area which most prob. is single RBC area
     for object in cell_list:
         cell_areas.append(object.area)
-
     RBC_mean_area = np.median(cell_areas)
-
 
     # For all cells or bunch of cells, check if they are ellipse-shaped and RBC-size
     for cell in cell_list:
         #print cell.area_nuc/cell.area
-
         point = 0
-        if cell.area_nuc/cell.area < .25: # Cell nucleus is smaller then the cell?
-            #cell.label = "RBC"
+        # Check if the nucleus is much smaller than the entire cell
+        if cell.area_nuc/cell.area < .25:
             point += 2
-            #plt.figure()
-            #plt.imshow(cell.img)
-            # print cell.area
-            #print cell.area_nuc
-            #plt.show()
-        if 0.6*RBC_mean_area < cell.area < 1.4*RBC_mean_area: # The cell is not to large or small?
-            #cell.label = "RBC"
+        # The cell should be in a reasonable size
+        if 0.6*RBC_mean_area < cell.area < 3*RBC_mean_area: # upper bound doesnt really matter?
             point += 1
-        if cell.minor_axis/cell.major_axis < 0.75: # The cell is elliptic?
-            #cell.label = "RBC"
+        # Check if the cell is elliptic
+        if cell.minor_axis/cell.major_axis < 0.75:
             point += 1
         if point >= 3:
             cell.label = "RBC"
@@ -247,15 +241,9 @@ def RBC_classification(cell_list):
 
 def print_cell_labels(cell_list, ax):
     for cell in cell_list:
-        if cell.label == "RBC":
-            ax.text(cell.x+cell.w/2, cell.y+cell.h/2, 'RBC', style='italic',
-            bbox={'facecolor':'red', 'alpha':0.5, 'pad':2})
-        if cell.label == "Background":
-            ax.text(cell.x+cell.w/2, cell.y+cell.h/2, 'BG', style='italic',
-            bbox={'facecolor':'red', 'alpha':0.5, 'pad':5})
-        if cell.label == "U":
-            ax.text(cell.x+cell.w/2, cell.y+cell.h/2, 'U', style='italic',
-            bbox={'facecolor':'red', 'alpha':0.5, 'pad':5})
+        ax.text(cell.x+cell.w/2, cell.y+cell.h/2, cell.label, style='italic',
+        bbox={'facecolor':'red', 'alpha':0.5, 'pad':2})
+
 
 def wbc_cell_extraction(cell_list):
     wbc_list = []

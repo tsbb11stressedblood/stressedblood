@@ -55,14 +55,17 @@ from PIL import Image, ImageTk
 
 
 
-
-for i in range(1, 21):
+'''
+Showing the white cells
+'''
+for i in range(76, 101):
     WBC_array = np.load("white_" + str(i) + ".npy")
     plt.figure(1)
-    plt.subplot(450 + i)
-    plt.imshow(WBC_array)
-    #plt.title("white_" + str(i) + ".npy")
+    ax = plt.subplot(5,5,i-75)
+    ax.imshow(WBC_array)
+    ax.set_title(str(i))
+    plt.axis('off')
+#plt.savefig('WBC_im_1.png')
 plt.show(1)
-
 
 

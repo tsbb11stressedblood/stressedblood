@@ -244,10 +244,8 @@ class ResultDisplayer(Toplevel):
         l = 0
         l_identifier = self.classes.index("Lymphocyte")
         h_identifier = self.classes.index("Heterophile")
-        print "l_identifier (int): " + str(l_identifier)
 
         for item in self.pred:
-            print "item: " + str(item)
             if str(item) is str(l_identifier):
                 l += 1
             elif str(item) is str(h_identifier):
@@ -303,6 +301,9 @@ class InteractionWindow(Canvas):
         self.bind('<Button-1>', self.set_init_box_pos)
         self.bind('<ButtonRelease-1>', self.set_box)
         self.bind('<Button-3>', self.zoom_out)
+
+        # DEBUG
+        self.counter = 0
 
     # Handles initial setup of the input image
     def setup_image(self):
@@ -435,7 +436,21 @@ class InteractionWindow(Canvas):
 
         # Depending on the mode, we get different colors on the box
         if self.mode is "roi":
-            self.create_rectangle(self.curr_box_bbox, outline="yellow", tags="boxselector")
+            width = self.curr_box_bbox[1][0]
+            height = self.curr_box_bbox[1][1]
+            topx = self.curr_box_bbox[0][0]
+            topy = self.curr_box_bbox[0][1]
+
+            l0_width, l0_height = self.transform_to_level_zero(width, height)
+            l0_topx, l0_topy = self.transform_to_level_zero(topx, topy)
+
+            # Get absolute pixel differences
+            l0_width = abs(l0_width - l0_topx)
+            l0_height = abs(l0_height - l0_topy)
+            if (l0_width > 1000) or (l0_height > 1000):
+                self.create_rectangle(self.curr_box_bbox, outline="red", tags="boxselector")
+            else:
+                self.create_rectangle(self.curr_box_bbox, outline="yellow", tags="boxselector")
         elif self.mode is "zoom":
             self.create_rectangle(self.curr_box_bbox, outline="green", tags="boxselector")
 
@@ -639,6 +654,7 @@ class InteractionWindow(Canvas):
         self.redraw_ROI()
 
     def run_roi(self):
+        """
         # Loop through the roi list and do segmentation and classification for each roi
         cell_list = []
         # Initial loop to get the total amount of rois to do, for the progress bar
@@ -668,14 +684,18 @@ class InteractionWindow(Canvas):
 
             test = ResultDisplayer(cell_list, prediction)
         """
-        plt.figure()
-
-        for ind, cell in enumerate(cell_list):
-            plt.subplot(1, len(prediction), ind)
-            plt.imshow(cell.img)
-            plt.title("Classified: " + str(prediction[ind]))
-
-        plt.show()"""
+        """
+        roi = numpy.load("../npyimages/stitched_im.npy")
+        print "Running seg, hold on..."
+        cell_list = rbc_seg.segmentation(roi)
+        print "Running classifier"
+        prediction = classer.predict_cells(cell_list)
+        print "Starting resultdisplayer"
+        test = ResultDisplayer(cell_list, prediction)
+        """
+        roi = self.roi_list[len(self.roi_list)-1][1][0]
+        numpy.save("../npyimages/c_test" + str(self.counter) + ".npy", roi)
+        self.counter += 1
 
 
 # Main class for handling GUI-related things

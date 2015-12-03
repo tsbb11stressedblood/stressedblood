@@ -24,7 +24,6 @@ with open("../Classification/" + filename, 'rb') as f:
 
 def predict_cells(cell_list):
     WBC_data = []
-    print len(cell_list)
     for cell in cell_list:
         wc = WhiteCell(cell, -1)
         wc_features = feature_selection(wc)

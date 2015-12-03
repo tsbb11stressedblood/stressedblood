@@ -40,7 +40,7 @@ class ResultDisplayer(Toplevel):
         self.cell_list = cell_list
 
         # Contains the enumeration of the class, index corresponds to that of cell_list
-        self.pred = prediction
+        self.pred = map(int, prediction)
 
         # This splits the cells into pages, may look like [ [c1_info ... c20_info], [c21_info ... c40_info], ... ] etc
         # where c1_info is a tuple containing (cell1.img, prediction[cell1])
@@ -265,6 +265,9 @@ class ResultDisplayer(Toplevel):
 class InteractionWindow(Canvas):
     def __init__(self, master, _ndpi_file):
         self.master = master
+
+        # For WBC-hunt
+        self.hunter = False
 
         # Call the super constructor
         Canvas.__init__(self, master)
@@ -498,75 +501,79 @@ class InteractionWindow(Canvas):
         # Check if the ROI is too big, in that case split it and put into list
         box = []
         sub_rois = []   # Needed for drawing the subrois later on
-        if self.mode is "roi" and (l0_width > 1000 or l0_height > 1000):
-            fixed_size = 500.0
-            no_of_x_subrois = math.floor(float(l0_width)/float(fixed_size))
-            no_of_y_subrois = math.floor(float(l0_height)/float(fixed_size))
-            total = (no_of_x_subrois+1.0)*(no_of_y_subrois+1.0)   # The total number of subrois needed to be done
-            counter = 0                                         # Used for knowing how far we've gotten in the loops
+        if not self.hunter:
+            if self.mode is "roi" and (l0_width > 1000 or l0_height > 1000):
+                fixed_size = 500.0
+                no_of_x_subrois = math.floor(float(l0_width)/float(fixed_size))
+                no_of_y_subrois = math.floor(float(l0_height)/float(fixed_size))
+                total = (no_of_x_subrois+1.0)*(no_of_y_subrois+1.0)   # The total number of subrois needed to be done
+                counter = 0                                         # Used for knowing how far we've gotten in the loops
 
-            for curr_x in range(int(no_of_x_subrois)):
-                for curr_y in range(int(no_of_y_subrois)):
+                for curr_x in range(int(no_of_x_subrois)):
+                    for curr_y in range(int(no_of_y_subrois)):
+                        curr_topx = l0_topx + fixed_size*float(curr_x)
+                        curr_topy = l0_topy + fixed_size*float(curr_y)
+
+                        box.append(numpy.array(self.ndpi_file.read_region((int(curr_topx), int(curr_topy)), 0, (int(fixed_size), int(fixed_size))), dtype=numpy.uint8))
+                        # For now, just print boxes to show where we cut it
+                        roi = [(int(curr_topx), int(curr_topy)), (int(fixed_size), int(fixed_size))]
+                        sub_rois.append(roi)
+                        # Render a status text aswell
+                        counter += 1
+                        self.render_status_text((topx, topy-20), "Reading data...", float(counter)/total, width-topx)
+
+                # Now we need to handle the rest of the ROI that didn't fit perfectly into the fixed_size boxes
+                # Remember, this also sort of needs to loop
+                # Idea: Fix x or y, loop through the other one
+
+                # Start with looping over x, y is fixed
+                topy_rest = float(l0_topy) + no_of_y_subrois*fixed_size
+                height_rest = (float(l0_topy) + float(l0_height)) - float(topy_rest)
+                for curr_x in range(int(no_of_x_subrois)):
                     curr_topx = l0_topx + fixed_size*float(curr_x)
-                    curr_topy = l0_topy + fixed_size*float(curr_y)
+                    box.append(numpy.array(self.ndpi_file.read_region((int(curr_topx), int(topy_rest)), 0, (int(fixed_size), int(height_rest))), dtype=numpy.uint8))
 
-                    box.append(numpy.array(self.ndpi_file.read_region((int(curr_topx), int(curr_topy)), 0, (int(fixed_size), int(fixed_size))), dtype=numpy.uint8))
-                    # For now, just print boxes to show where we cut it
-                    roi = [(int(curr_topx), int(curr_topy)), (int(fixed_size), int(fixed_size))]
+                    roi = [(int(curr_topx), int(topy_rest)), (int(fixed_size), int(height_rest))]
                     sub_rois.append(roi)
                     # Render a status text aswell
                     counter += 1
                     self.render_status_text((topx, topy-20), "Reading data...", float(counter)/total, width-topx)
 
-            # Now we need to handle the rest of the ROI that didn't fit perfectly into the fixed_size boxes
-            # Remember, this also sort of needs to loop
-            # Idea: Fix x or y, loop through the other one
+                # Now loop over y and x is fixed
+                topx_rest = float(l0_topx) + no_of_x_subrois*fixed_size
+                width_rest = (float(l0_topx) + float(l0_width)) - float(topx_rest)
+                for curr_y in range(int(no_of_y_subrois)):
+                    curr_topy = l0_topy + fixed_size*float(curr_y)
+                    box.append(numpy.array(self.ndpi_file.read_region((int(topx_rest), int(curr_topy)), 0, (int(width_rest), int(fixed_size))), dtype=numpy.uint8))
 
-            # Start with looping over x, y is fixed
-            topy_rest = float(l0_topy) + no_of_y_subrois*fixed_size
-            height_rest = (float(l0_topy) + float(l0_height)) - float(topy_rest)
-            for curr_x in range(int(no_of_x_subrois)):
-                curr_topx = l0_topx + fixed_size*float(curr_x)
-                box.append(numpy.array(self.ndpi_file.read_region((int(curr_topx), int(topy_rest)), 0, (int(fixed_size), int(height_rest))), dtype=numpy.uint8))
+                    roi = [(int(topx_rest), int(curr_topy)), (int(width_rest), int(fixed_size))]
+                    sub_rois.append(roi)
+                    # Render a status text aswell
+                    counter += 1
+                    self.render_status_text((topx, topy-20), "Reading data...", float(counter)/total, width-topx)
 
-                roi = [(int(curr_topx), int(topy_rest)), (int(fixed_size), int(height_rest))]
+                # This is the last one, in the lower right corner
+                topx_rest = float(l0_topx) + no_of_x_subrois*fixed_size
+                topy_rest = float(l0_topy) + no_of_y_subrois*fixed_size
+                width_rest = (float(l0_topx) + float(l0_width)) - float(topx_rest)
+                height_rest = (float(l0_topy) + float(l0_height)) - float(topy_rest)
+                roi = [(int(topx_rest), int(topy_rest)), (int(width_rest), int(height_rest))]
                 sub_rois.append(roi)
                 # Render a status text aswell
                 counter += 1
                 self.render_status_text((topx, topy-20), "Reading data...", float(counter)/total, width-topx)
 
-            # Now loop over y and x is fixed
-            topx_rest = float(l0_topx) + no_of_x_subrois*fixed_size
-            width_rest = (float(l0_topx) + float(l0_width)) - float(topx_rest)
-            for curr_y in range(int(no_of_y_subrois)):
-                curr_topy = l0_topy + fixed_size*float(curr_y)
-                box.append(numpy.array(self.ndpi_file.read_region((int(topx_rest), int(curr_topy)), 0, (int(width_rest), int(fixed_size))), dtype=numpy.uint8))
+                tmp = self.ndpi_file.read_region((int(topx_rest), int(topy_rest)), 0, (int(width_rest), int(height_rest)))
+                box.append(numpy.array(tmp, dtype=numpy.uint8))
 
-                roi = [(int(topx_rest), int(curr_topy)), (int(width_rest), int(fixed_size))]
-                sub_rois.append(roi)
-                # Render a status text aswell
-                counter += 1
-                self.render_status_text((topx, topy-20), "Reading data...", float(counter)/total, width-topx)
+            # Now depending on the mode, do different things
+            elif self.mode is "roi": # This is the case that the ROI selected is small enough to be alone
+                box.append(numpy.array(self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height))), dtype=numpy.uint8))
 
-            # This is the last one, in the lower right corner
-            topx_rest = float(l0_topx) + no_of_x_subrois*fixed_size
-            topy_rest = float(l0_topy) + no_of_y_subrois*fixed_size
-            width_rest = (float(l0_topx) + float(l0_width)) - float(topx_rest)
-            height_rest = (float(l0_topy) + float(l0_height)) - float(topy_rest)
-            roi = [(int(topx_rest), int(topy_rest)), (int(width_rest), int(height_rest))]
-            sub_rois.append(roi)
-            # Render a status text aswell
-            counter += 1
-            self.render_status_text((topx, topy-20), "Reading data...", float(counter)/total, width-topx)
-
-            tmp = self.ndpi_file.read_region((int(topx_rest), int(topy_rest)), 0, (int(width_rest), int(height_rest)))
-            box.append(numpy.array(tmp, dtype=numpy.uint8))
-
-        # Now depending on the mode, do different things
-        elif self.mode is "roi": # This is the case that the ROI selected is small enough to be alone
-            box.append(numpy.array(self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height))), dtype=numpy.uint8))
         if self.mode is "roi":
             print "No of subboxes in roi you just selected: " + str(len(box))
+            if self.hunter:
+                box.append(numpy.array(self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height))), dtype=numpy.uint8))
             self.set_roi(box, sub_rois)
         elif self.mode is "zoom":
             self.zoom()
@@ -577,7 +584,11 @@ class InteractionWindow(Canvas):
         #roi = numpy.array(box)
 
         # Add the ROI to our list
-        self.roi_list.append((self.roi_counter, box, (self.last_selection_region, sub_rois)))
+        if not self.hunter:
+            self.roi_list.append((self.roi_counter, box, (self.last_selection_region, sub_rois)))
+        else:
+            new_region = [self.last_selection_region[0], (500, 500)]
+            self.roi_list.append((self.roi_counter, box, (new_region, sub_rois)))
 
         # Keep drawing the ROIs
         self.redraw_ROI()
@@ -654,48 +665,41 @@ class InteractionWindow(Canvas):
         self.redraw_ROI()
 
     def run_roi(self):
-        """
-        # Loop through the roi list and do segmentation and classification for each roi
-        cell_list = []
-        # Initial loop to get the total amount of rois to do, for the progress bar
-        total_no_of_rois = 0
-        for num, rois, bbox_container in self.roi_list:
-            for roi in rois:
-                total_no_of_rois += 1
-        print "Total no of rois to do: " + str(total_no_of_rois)
+        if not self.hunter:
+            # Loop through the roi list and do segmentation and classification for each roi
+            cell_list = []
+            # Initial loop to get the total amount of rois to do, for the progress bar
+            total_no_of_rois = 0
+            for num, rois, bbox_container in self.roi_list:
+                for roi in rois:
+                    total_no_of_rois += 1
+            print "Total no of rois to do: " + str(total_no_of_rois)
 
-        # Counter for the progress bar
-        counter = 0
-        for num, rois, bbox_container in self.roi_list:
-            for roi in rois:
-                cell_list = cell_list + rbc_seg.segmentation(roi)
-                # Also make a progress bar
-                counter += 1
-                self.render_status_text((100, 100), "Running segmentation...", float(counter/float(total_no_of_rois)), 100)
-        self.clear_status_text()
+            # Counter for the progress bar
+            counter = 0
+            for num, rois, bbox_container in self.roi_list:
+                for roi in rois:
+                    cell_list = cell_list + rbc_seg.segmentation(roi)
+                    # Also make a progress bar
+                    counter += 1
+                    self.render_status_text((100, 100), "Running segmentation...", float(counter/float(total_no_of_rois)), 100)
+            self.clear_status_text()
 
-        # Call the classification
-        if len(cell_list) is 0:
-            show_msg("No WBC", self, "Only RBCs were detected in this/these roi/rois.")
-        else:
-            prediction = classer.predict_cells(cell_list)
-            print "No of classified unknowns: " + str(len(prediction))
-            #numpy.save("red_shit2.npy", self.roi_list[len(self.roi_list)-1][1][0])
+            # Call the classification
+            if len(cell_list) is 0:
+                show_msg("No WBC", self, "Only RBCs were detected in this/these roi/rois.")
+            else:
+                prediction = classer.predict_cells(cell_list)
+                print "No of classified unknowns: " + str(len(prediction))
+                #numpy.save("red_shit2.npy", self.roi_list[len(self.roi_list)-1][1][0])
 
-            test = ResultDisplayer(cell_list, prediction)
-        """
-        """
-        roi = numpy.load("../npyimages/stitched_im.npy")
-        print "Running seg, hold on..."
-        cell_list = rbc_seg.segmentation(roi)
-        print "Running classifier"
-        prediction = classer.predict_cells(cell_list)
-        print "Starting resultdisplayer"
-        test = ResultDisplayer(cell_list, prediction)
-        """
-        roi = self.roi_list[len(self.roi_list)-1][1][0]
-        numpy.save("../npyimages/c_test" + str(self.counter) + ".npy", roi)
-        self.counter += 1
+                test = ResultDisplayer(cell_list, prediction)
+
+        if self.hunter:
+            for num, rois, bbox_container in self.roi_list:
+                for roi in rois:
+                    numpy.save("../npyimages/c_test" + str(self.counter) + ".npy", roi)
+                    self.counter += 1
 
 
 # Main class for handling GUI-related things

@@ -2,8 +2,8 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 stitched_im = np.zeros((0, 0, 3), 'uint8')
-for num in range(21):
-    im = np.load("../npyimages/testim_" + str(num+1) + ".npy")
+for num in range(25):
+    im = np.load("../npyimages/c_test" + str(num) + ".npy")
     curr_size = stitched_im.shape
     new_im_size = im.shape
 

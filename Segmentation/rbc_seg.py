@@ -56,10 +56,11 @@ def segmentation(ROI):
     cell_list = []
 
     # Watershed to find individual cells
-    #img_fine, ret_fine, markers_fine, markers_nuc = cell_watershed(img)
-    img_fine, ret_fine, markers_fine, markers_nuc = Klara_test.cell_watershed(img)
+    #img_fine, ret_fine, markers_fine, markers_nuc, joined_mask, cells_to_remove = Klara_test.cell_watershed(img)
+    cytoplasm_cont, nuclei_mask = Klara_test.cell_watershed(img)
     # Put all the objects in the cell_list
-    cell_list = modify_cell_list(ROI,ret_fine,markers_fine,markers_nuc,cell_list)
+    #cell_list = modify_cell_list(ROI,ret_fine,markers_fine,markers_nuc,cell_list)
+    cell_list = Klara_test.modify_cell_list(img, cytoplasm_cont, nuclei_mask)
     # Basic classification to RBC and labels these cells
     cell_list = RBC_classification(cell_list)
 

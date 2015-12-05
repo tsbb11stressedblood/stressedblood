@@ -92,8 +92,14 @@ def cell_watershed(img):
         center = (int(x),int(y))
         radius = int(radius)
         cv2.circle(nuclei_circles, center, radius, (255,255,255), 1)
+        #plt.figure()
+        #plt.imshow(nuclei_circles)
         circle_area = 3.14*radius*radius
         nuclei_area = cv2.contourArea(c)
+        hull = cv2.convexHull(c)
+        hull_area = cv2.contourArea(hull)
+        if hull_area > 0:
+            print(nuclei_area, hull_area, nuclei_area/hull_area, center)
         if nuclei_area/circle_area < .6 and nuclei_area > 150:
             joined_nuclei_cont.append(c)
 
@@ -102,6 +108,8 @@ def cell_watershed(img):
     empty = np.array(empty*255, dtype=np.uint8)
     joined_nuclei = empty.copy()
     cv2.drawContours(joined_nuclei, joined_nuclei_cont, -1, (255,255,255), -1)
+    plt.figure()
+    plt.imshow(joined_nuclei)
 
 
     # Erode joined nuclei and get new contours
@@ -144,27 +152,31 @@ def cell_watershed(img):
     cytoplasm_markers = empty.copy()
     cytoplasm_markers[markers == -1] =1
     cytoplasm_markers_im = empty.copy()
-
     cytoplasm_markers_im[markers > 1] = 1
     cytoplasm_markers_im[markers == -1] = 0
     cytoplasm_markers_im[markers == 1] = 0
     cytoplasm_markers_im = cv2.erode(cytoplasm_markers_im, np.ones(2))
-
     _,cytoplasm_cont,_ = cv2.findContours(cytoplasm_markers_im, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
     to_be_removed = []
     to_be_exchanged = []
     to_be_inserted = []
     for i,c in enumerate(cytoplasm_cont):
-        temp = empty.copy()
-        cv2.drawContours(temp, [c], -1, (1,1,1), -1)
-        if np.sum(temp*cells_to_remove_im) > 0:
+        #temp = empty.copy()
+        #cv2.drawContours(temp, [c], -1, (1,1,1), -1)
+        x,y,w,h = cv2.boundingRect(c)
+        cell_img = cells_to_remove_im[y:y+h,x:x+w]
+        join = joined_mask[y:y+h,x:x+w]
+        emp = np.zeros(np.shape(cell_img))
+        temp = emp.copy()
+        cv2.drawContours(temp, [c], -1, (1,1,1), -1, offset=(-x,-y))
+        if np.sum(temp*cell_img) > 0:
             to_be_removed.append(i)
-        if np.sum(temp*joined_mask)> 0:
+        if np.sum(temp*join)> 0:
             to_be_exchanged.append(i)
             for con in large_nuclei_cont:
-                joined = empty.copy()
-                cv2.drawContours(joined, con, -1, (1,1,1), -1)
+                joined = emp.copy()
+                cv2.drawContours(joined, con, -1, (1,1,1), -1,offset=(-x,-y))
                 if np.sum(temp*joined) > 0:
                     to_be_inserted.append(con[0])
 
@@ -175,8 +187,12 @@ def cell_watershed(img):
         del cytoplasm_cont[i]
     cv2.drawContours(empty, cytoplasm_cont, -1, (255,255,255), -1)
     plt.figure()
+    plt.imshow(nuclei_mask)
+    plt.figure()
     plt.imshow(empty)
-    #plt.show()
+    plt.figure()
+    plt.imshow(img)
+    plt.show()
     return cytoplasm_cont, nuclei_mask
 
 def modify_cell_list(ROI,cytoplasm_cont, nuclei_mask):
@@ -184,7 +200,7 @@ def modify_cell_list(ROI,cytoplasm_cont, nuclei_mask):
 
     print np.size(cytoplasm_cont)
     for c in cytoplasm_cont:
-        if cv2.contourArea(c) != 0:
+        if cv2.contourArea(c) > 20:
             # Determine the current contour objects area
             area = cv2.contourArea(c)
             # Fit ellipses to cells
@@ -209,3 +225,6 @@ def modify_cell_list(ROI,cytoplasm_cont, nuclei_mask):
             print c
     return cell_list
 
+#im = np.load("../gui/zooooom.npy")
+im = np.load("../npyimages/testim_1.npy")
+cell_watershed(im)

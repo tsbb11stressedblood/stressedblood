@@ -22,9 +22,15 @@ y_pos = 50
 root.geometry('%dx%d+%d+%d' % (w, h, x_pos, y_pos))
 #root.geometry('{}x{}'.format(int(x*0.8), int(y*0.8)))
 
+
+#def on_close():
+#    root.destroy()
+#    exit(0)
+
 # Turns off resizing
 root.resizable(0, 0)
 app = GUI(root)
+#root.protocol("WM_DELETE_WINDOW", on_close)
 root.mainloop()
 """
 #imgpath1 = 'smallbloodsmear.jpg'

@@ -501,7 +501,9 @@ class InteractionWindow(Canvas):
         # Check if the ROI is too big, in that case split it and put into list
         box = []
         sub_rois = []   # Needed for drawing the subrois later on
+
         if not self.hunter:
+
             if self.mode is "roi" and (l0_width > 1000 or l0_height > 1000):
                 fixed_size = 500.0
                 no_of_x_subrois = math.floor(float(l0_width)/float(fixed_size))
@@ -581,8 +583,6 @@ class InteractionWindow(Canvas):
         self.clear_status_text()
 
     def set_roi(self, box, sub_rois):
-        #roi = numpy.array(box)
-
         # Add the ROI to our list
         if not self.hunter:
             self.roi_list.append((self.roi_counter, box, (self.last_selection_region, sub_rois)))
@@ -675,6 +675,27 @@ class InteractionWindow(Canvas):
                     total_no_of_rois += 1
             print "Total no of rois to do: " + str(total_no_of_rois)
 
+            # Show all rois before the segmentation
+            # Stitch all the sub_rois together
+            """
+            stitched_im = numpy.zeros((0, 0, 3), 'uint8')
+            col_counter = 0
+            for num, rois, bbox_container in self.roi_list:
+                # For each roi here, build row-wise
+                for roi in rois:
+                    im = roi
+                    curr_size = stitched_im.shape
+                    new_im_size = im.shape
+
+                    new_stitched_im = numpy.zeros((curr_size[0] + new_im_size[0], new_im_size[1] + curr_size[1]*col_counter, 3), 'uint8')
+                    new_stitched_im[0:curr_size[0], 0:curr_size[1], :] = stitched_im
+                    new_stitched_im[curr_size[0]:curr_size[0]+new_im_size[0], col_counter*curr_size[1]:col_counter*curr_size[1]+new_im_size[1], :] = im[:, :, 0:3]
+                    stitched_im = new_stitched_im
+
+                col_counter += 1
+
+            test = ImageShower(self, stitched_im, "Before segmentation")"""
+
             # Counter for the progress bar
             counter = 0
             for num, rois, bbox_container in self.roi_list:
@@ -700,6 +721,20 @@ class InteractionWindow(Canvas):
                 for roi in rois:
                     numpy.save("../npyimages/c_test" + str(self.counter) + ".npy", roi)
                     self.counter += 1
+
+
+class ImageShower(Toplevel):
+    def __init__(self, master, data, title):
+        Toplevel.__init__(self)
+        self.master = master
+        self.wm_title(title)
+
+        # Show the image
+        self.tmp = Image.fromarray(data)
+        self.im = itk.PhotoImage(self.tmp)
+        self.label = Label(self, image=self.im)
+        self.label.im = self.im
+        self.label.pack()
 
 
 # Main class for handling GUI-related things

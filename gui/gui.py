@@ -700,6 +700,7 @@ class InteractionWindow(Canvas):
             counter = 0
             for num, rois, bbox_container in self.roi_list:
                 for roi in rois:
+                    numpy.save("outzoomed", roi)
                     cell_list = cell_list + rbc_seg.segmentation(roi)
                     # Also make a progress bar
                     counter += 1

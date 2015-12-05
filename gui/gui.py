@@ -503,7 +503,7 @@ class InteractionWindow(Canvas):
         sub_rois = []   # Needed for drawing the subrois later on
 
         if not self.hunter:
-
+            """
             if self.mode is "roi" and (l0_width > 1000 or l0_height > 1000):
                 fixed_size = 500.0
                 no_of_x_subrois = math.floor(float(l0_width)/float(fixed_size))
@@ -567,9 +567,9 @@ class InteractionWindow(Canvas):
 
                 tmp = self.ndpi_file.read_region((int(topx_rest), int(topy_rest)), 0, (int(width_rest), int(height_rest)))
                 box.append(numpy.array(tmp, dtype=numpy.uint8))
-
+            """
             # Now depending on the mode, do different things
-            elif self.mode is "roi": # This is the case that the ROI selected is small enough to be alone
+            if self.mode is "roi": # This is the case that the ROI selected is small enough to be alone
                 box.append(numpy.array(self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height))), dtype=numpy.uint8))
 
         if self.mode is "roi":

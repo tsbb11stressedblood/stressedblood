@@ -12,11 +12,13 @@ def get_threshold(hist):
     min_ind = np.argmin(hist[15:np.size(hist)/3])
     return min_ind + 15
 
-def mask_joined_WBC(eroded_nuclei_cont, nuclei_mask):
+def mask_joined_WBC(eroded_nuclei_cont, nuclei_mask, max_radius):
     circles = []
-    contours = []
-    mask = np.zeros(np.shape(nuclei_mask))
-    overlap = np.zeros(np.shape(nuclei_mask))
+    shape = np.shape(nuclei_mask)
+    image_max_y = shape[0]
+    image_max_x = shape[1]
+    mask = np.zeros(shape)
+    overlap = np.zeros(shape)
 
     for c in eroded_nuclei_cont:
         mom = cv2.moments(c)
@@ -26,27 +28,53 @@ def mask_joined_WBC(eroded_nuclei_cont, nuclei_mask):
             cx = int(mom['m10']/mom['m00'])
             cy = int(mom['m01']/mom['m00'])
 
+        y_min = max(cy-max_radius, 0)
+        y_max = min(cy + max_radius,image_max_y)
+        x_min = max(cx-max_radius, 0)
+        x_max = min(cx + max_radius, image_max_x)
+
+        nuclei_mask_temp = nuclei_mask[y_min:y_max,x_min:x_max]
+        nucleus_mask = np.zeros(np.shape(nuclei_mask_temp))
+
         radius = 1
         area_ratio = 1
+
         while area_ratio > .9:
             radius += 1
             circ_area = 3.14*radius**2
-            nucleus_mask = np.zeros(np.shape(nuclei_mask))
-            cv2.circle(nucleus_mask, (cx,cy), radius,(255,255,255),-1)
-            nucleus_mask = nucleus_mask * nuclei_mask/255
+            cv2.circle(nucleus_mask, (max_radius,max_radius), radius,(1,1,1),-1)
+            nucleus_mask = nucleus_mask*nuclei_mask_temp
             area = np.sum(nucleus_mask)
             area_ratio = area/circ_area
 
-        nucleus_mask = np.array(nucleus_mask, dtype=np.uint8)
         circles.append([cx,cy,radius])
-        for cir in circles:
-             dist = math.sqrt((cir[0]-cx)**2 + (cir[1]-cy)**2)
-             if dist <= cir[2] + radius:
-                 overlap[nucleus_mask * mask==1] = 1
-        mask[nucleus_mask ==1] =1
-        _, cont, _ = cv2.findContours(nucleus_mask, 1, 2)
-        contours.append(cont)
-    return overlap, mask, contours
+
+    checked_circles = []
+    for cir in circles:
+        cx = cir[0]
+        cy = cir[1]
+        radius = cir[2]
+        for che in checked_circles:
+            dist = math.sqrt((che[0]-cx)**2 + (che[1]-cy)**2)
+            if dist <= cir[2] + radius:
+                one_circle = np.zeros(np.shape(nuclei_mask))
+                cv2.circle(one_circle, (cx,cy), radius,(1,1,1),-1)
+                overlap[one_circle * mask==1] = 1
+        cv2.circle(mask, (cx,cy), radius,(1,1,1),-1)
+        checked_circles.append(cir)
+
+    mask[overlap == 1] = 0
+    mask[nuclei_mask*mask == 0] = 0
+    mask = np.array(mask, dtype=np.uint8)
+    _, cont, _ = cv2.findContours(mask.copy(), 1, 2)
+
+    # for con in cont:
+    #     temp = np.zeros(np.shape(nuclei_mask))
+    #     cv2.drawContours(temp, [con], -1, (1,1,1), -1)
+    #     plt.figure()
+    #     plt.imshow(temp)
+
+    return overlap, mask, cont
 
 def cell_watershed(img):
     """
@@ -84,14 +112,17 @@ def cell_watershed(img):
 
 
     # Get contours and find joined nuclei
-    nuclei_circles = nuclei_mask.copy()
-    _, all_nuclei_cont, hierarchy = cv2.findContours(nuclei_circles.copy(), 1, 2)
+    #nuclei_circles = nuclei_mask.copy()
+    _, all_nuclei_cont, hierarchy = cv2.findContours(nuclei_mask.copy(), 1, 2)
     joined_nuclei_cont = []
+    max_radius = 0
     for c in all_nuclei_cont:
         (x,y), radius = cv2.minEnclosingCircle(c)
         center = (int(x),int(y))
         radius = int(radius)
-        cv2.circle(nuclei_circles, center, radius, (255,255,255), 1)
+        if radius > max_radius:
+            max_radius = radius
+        #cv2.circle(nuclei_circles, center, radius, (255,255,255), 1)
         #plt.figure()
         #plt.imshow(nuclei_circles)
         circle_area = 3.14*radius*radius
@@ -108,22 +139,22 @@ def cell_watershed(img):
     empty = np.array(empty*255, dtype=np.uint8)
     joined_nuclei = empty.copy()
     cv2.drawContours(joined_nuclei, joined_nuclei_cont, -1, (255,255,255), -1)
-    plt.figure()
-    plt.imshow(joined_nuclei)
-
 
     # Erode joined nuclei and get new contours
     kernelll = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (20,20))
     eroded_joined_nuclei = cv2.erode(joined_nuclei,kernelll,iterations=1)
     _, eroded_nuclei_cont, hierarchy = cv2.findContours(eroded_joined_nuclei.copy(), 1, 2)
+    eroded_nuclei = empty.copy()
+    cv2.drawContours(eroded_nuclei, eroded_nuclei_cont, -1, (255,255,255), -1)
 
     # Get new mask for large nuclei
-    overlap, joined_mask, large_nuclei_cont  = mask_joined_WBC(eroded_nuclei_cont, nuclei_mask)
+    overlap, joined_mask, large_nuclei_cont  = mask_joined_WBC(eroded_nuclei_cont, nuclei_mask, max_radius)
     joined_mask[overlap==1] = 0
     erode_mask = cv2.erode(joined_mask, np.ones(2))
+
+
     cells_to_remove = []
     cells_to_remove_im = empty.copy()
-
     for i,con in enumerate(joined_nuclei_cont):
         temp = empty.copy()
         cv2.drawContours(temp, [con], -1, (255,255,255), -1)
@@ -176,9 +207,9 @@ def cell_watershed(img):
             to_be_exchanged.append(i)
             for con in large_nuclei_cont:
                 joined = emp.copy()
-                cv2.drawContours(joined, con, -1, (1,1,1), -1,offset=(-x,-y))
+                cv2.drawContours(joined, [con], -1, (1,1,1), -1,offset=(-x,-y))
                 if np.sum(temp*joined) > 0:
-                    to_be_inserted.append(con[0])
+                    to_be_inserted.append(con)
 
     for i, cell in enumerate(to_be_exchanged):
         cytoplasm_cont[cell] = to_be_inserted[i]
@@ -226,5 +257,5 @@ def modify_cell_list(ROI,cytoplasm_cont, nuclei_mask):
     return cell_list
 
 #im = np.load("../gui/zooooom.npy")
-im = np.load("../npyimages/testim_1.npy")
-cell_watershed(im)
+#im = np.load("../npyimages/testim_21.npy")
+#cell_watershed(im)

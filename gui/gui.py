@@ -331,7 +331,7 @@ class InteractionWindow(Canvas):
     # Whenever all ROIs and subROIs need to be redrawn, call this
     def redraw_ROI(self):
         # Start with drawing all main (red) rois
-        for num, roi, bbox_container in self.roi_list:
+        for num, roi_container, bbox_container in self.roi_list:
             sub_rois = bbox_container[1]
             bbox = bbox_container[0]
             if len(sub_rois) is not 0:
@@ -423,7 +423,7 @@ class InteractionWindow(Canvas):
 
     # Member function for clearing all ROI
     def clear_all_roi(self):
-        for num, roi, bbox_container in self.roi_list:
+        for num, roi_container, bbox_container in self.roi_list:
             sub_rois = bbox_container[1]
             if len(sub_rois) is not 0:
                 self.delete("subroi" + str(num))
@@ -495,6 +495,7 @@ class InteractionWindow(Canvas):
         # We need to be able to access this region in the resize function
         self.last_selection_region = [(int(l0_topx), int(l0_topy)), (int(l0_width), int(l0_height))]
 
+        entire_roi = numpy.array(self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height))), dtype=numpy.uint8)
         # Multiply percentages of totals and transform to high res level
         # ------------------NEW----------------
         # Code below is ugly, might be able to reduce it to single double loop
@@ -503,7 +504,7 @@ class InteractionWindow(Canvas):
         sub_rois = []   # Needed for drawing the subrois later on
 
         if not self.hunter:
-            """
+
             if self.mode is "roi" and (l0_width > 1000 or l0_height > 1000):
                 fixed_size = 500.0
                 no_of_x_subrois = math.floor(float(l0_width)/float(fixed_size))
@@ -567,28 +568,28 @@ class InteractionWindow(Canvas):
 
                 tmp = self.ndpi_file.read_region((int(topx_rest), int(topy_rest)), 0, (int(width_rest), int(height_rest)))
                 box.append(numpy.array(tmp, dtype=numpy.uint8))
-            """
+
             # Now depending on the mode, do different things
-            if self.mode is "roi": # This is the case that the ROI selected is small enough to be alone
+            elif self.mode is "roi": # This is the case that the ROI selected is small enough to be alone
                 box.append(numpy.array(self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height))), dtype=numpy.uint8))
 
         if self.mode is "roi":
             print "No of subboxes in roi you just selected: " + str(len(box))
             if self.hunter:
                 box.append(numpy.array(self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height))), dtype=numpy.uint8))
-            self.set_roi(box, sub_rois)
+            self.set_roi(box, sub_rois, entire_roi)
         elif self.mode is "zoom":
             self.zoom()
         self.delete("boxselector")
         self.clear_status_text()
 
-    def set_roi(self, box, sub_rois):
+    def set_roi(self, box, sub_rois, entire_roi):
         # Add the ROI to our list
         if not self.hunter:
-            self.roi_list.append((self.roi_counter, box, (self.last_selection_region, sub_rois)))
+            self.roi_list.append((self.roi_counter, (entire_roi, box), (self.last_selection_region, sub_rois)))
         else:
             new_region = [self.last_selection_region[0], (500, 500)]
-            self.roi_list.append((self.roi_counter, box, (new_region, sub_rois)))
+            self.roi_list.append((self.roi_counter, (entire_roi, box), (new_region, sub_rois)))
 
         # Keep drawing the ROIs
         self.redraw_ROI()
@@ -670,35 +671,19 @@ class InteractionWindow(Canvas):
             cell_list = []
             # Initial loop to get the total amount of rois to do, for the progress bar
             total_no_of_rois = 0
-            for num, rois, bbox_container in self.roi_list:
+            for num, roi_container, bbox_container in self.roi_list:
+                entire_roi = roi_container[0]
+                test = ImageShower(self, entire_roi, "Before segmentation, roi number " + str(num))
+                rois = roi_container[1]
                 for roi in rois:
                     total_no_of_rois += 1
             print "Total no of rois to do: " + str(total_no_of_rois)
 
-            # Show all rois before the segmentation
-            # Stitch all the sub_rois together
-            """
-            stitched_im = numpy.zeros((0, 0, 3), 'uint8')
-            col_counter = 0
-            for num, rois, bbox_container in self.roi_list:
-                # For each roi here, build row-wise
-                for roi in rois:
-                    im = roi
-                    curr_size = stitched_im.shape
-                    new_im_size = im.shape
-
-                    new_stitched_im = numpy.zeros((curr_size[0] + new_im_size[0], new_im_size[1] + curr_size[1]*col_counter, 3), 'uint8')
-                    new_stitched_im[0:curr_size[0], 0:curr_size[1], :] = stitched_im
-                    new_stitched_im[curr_size[0]:curr_size[0]+new_im_size[0], col_counter*curr_size[1]:col_counter*curr_size[1]+new_im_size[1], :] = im[:, :, 0:3]
-                    stitched_im = new_stitched_im
-
-                col_counter += 1
-
-            test = ImageShower(self, stitched_im, "Before segmentation")"""
 
             # Counter for the progress bar
             counter = 0
-            for num, rois, bbox_container in self.roi_list:
+            for num, roi_container, bbox_container in self.roi_list:
+                rois = roi_container[1]
                 for roi in rois:
                     numpy.save("outzoomed", roi)
                     cell_list = cell_list + rbc_seg.segmentation(roi)
@@ -718,7 +703,8 @@ class InteractionWindow(Canvas):
                 test = ResultDisplayer(cell_list, prediction)
 
         if self.hunter:
-            for num, rois, bbox_container in self.roi_list:
+            for num, roi_container, bbox_container in self.roi_list:
+                rois = roi_container[1]
                 for roi in rois:
                     numpy.save("../npyimages/c_test" + str(self.counter) + ".npy", roi)
                     self.counter += 1
@@ -729,12 +715,15 @@ class ImageShower(Toplevel):
         Toplevel.__init__(self)
         self.master = master
         self.wm_title(title)
+        self.size = (500, 500)
 
         # Show the image
         self.tmp = Image.fromarray(data)
+        self.tmp = self.tmp.resize(self.size)
         self.im = itk.PhotoImage(self.tmp)
         self.label = Label(self, image=self.im)
         self.label.im = self.im
+        self.geometry('500x500')
         self.label.pack()
 
 
@@ -844,6 +833,7 @@ class GUI:
 
             if file_extension.lower() == ".ndpi":
                 print("Loading ndpi-image using openslide")
+                print "Filename: " + str(filename)
                 ndpi_file = OpenSlide(filename)
 
                 # Create a ViewableImage that handles the ndpi-file further.

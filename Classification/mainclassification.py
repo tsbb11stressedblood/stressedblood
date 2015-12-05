@@ -5,6 +5,7 @@ from whitecell import *
 from classification import *
 import math
 from Segmentation import rbc_seg
+from matplotlib.colors import ListedColormap
 import itertools
 from sklearn.decomposition import PCA
 import numpy as np
@@ -90,7 +91,7 @@ def training(training_features, training_labels):
     '''
 
     C = 1.0 # SVM regularization parameter
-    trained_classifier = svm.SVC(kernel='rbf', gamma=0.9, C=C).fit(training_features, training_labels)
+    trained_classifier = svm.SVC(kernel='rbf', gamma=5, C=C).fit(training_features, training_labels)
     #trained_classifier = svm.LinearSVC(C=C).fit(training_features, training_labels)
 
     return trained_classifier
@@ -102,16 +103,46 @@ def classify_data(features,trained_classifier):
     :param trained_classifier:
     :return: predicted_classes
     '''
-    predicted_classes  = trained_classifier.predict(features)
+    predicted_classes = trained_classifier.predict(features)
 
     return predicted_classes
+
+def display_classer(X,y):
+    X = reduce_dimension(X,2)
+    cmap_light = ListedColormap([[1,0,0,0.5],[0,1,0,0.5],[0,0,1,0.5],[1,1,0,0.5]])
+    cmap_bold = ListedColormap([[1,0,0,1],[0,1,0,1],[0,0,1,1],[1,1,0,1]])
+
+    model = training(X, y)
+
+    plt.figure()
+    plt.clf()
+    plt.scatter(X[:, 0], X[:, 1], c=y, zorder=10, cmap=cmap_bold)
+
+    # Circle out the test data
+    #plt.scatter(X[:, 0], X[:, 1], s=80, facecolors='none', zorder=10)
+
+    plt.axis('tight')
+    x_min = X[:, 0].min()
+    x_max = X[:, 0].max()
+    y_min = X[:, 1].min()
+    y_max = X[:, 1].max()
+
+    xx, yy = np.mgrid[x_min:x_max:200j, y_min:y_max:200j]
+    Z = model.predict(np.c_[xx.ravel(), yy.ravel()])
+
+    # Put the result into a color plot
+    Z = Z.reshape(xx.shape)
+    plt.contourf(xx, yy, Z, cmap=cmap_light)
+    plt.axis('off')
+
+    plt.show()
+
 
 def cross_validation(features, labels):
     '''
     Calculate the cross accuracy for 4 sets from the data
     :param features:
     :param lables:
-    :param sets:
     :return: accuracy
     '''
 
@@ -183,7 +214,7 @@ def cross_validation(features, labels):
 
 ## FROM white_
 # WBC_data = []
-# for i in range(1, 101):
+# for i in range(1, 121):
 #  WBC_array = np.load("white_" + str(i) + ".npy")
 #  wc = WhiteCell(WBC_array, -1)
 #  wc_features = feature_selection(wc)
@@ -194,7 +225,7 @@ def cross_validation(features, labels):
 
 #FROM CELL-LIST
 RBC_data = []
-for i in range(1, 5):
+for i in range(1, 10):
     RBC_array = np.load("others_" + str(i) + ".npy")
     REB_celllist=rbc_seg.segmentation(RBC_array)
 
@@ -204,16 +235,19 @@ for i in range(1, 5):
         RBC_data.append(wc_features)
 
 RBC_data= np.asarray(RBC_data)
+print "__________________________________"
 #np.save("red_feature_array.npy",RBC_data )
+print np.shape(RBC_data)
 
 WBC_data = np.load("white_feature_array.npy")
 #RBC_data = np.load("red_feature_array.npy")
+print np.shape(WBC_data)
 
 feature_array = np.append(WBC_data,RBC_data,axis=0)
 #feature_array = WBC_data
 
 
-#WBC_labels = np.array([0,1,1,0,1,2,1,0,1,0,0,0,2,2,0,1,1,2,1,1,1,2,2,0,2,1,2,2,1,2,1,2,2,2,2,1,2,2,1,1,2,1,1,1,1,0,2,1,1,1,2,1,1,1,2,2,2,2,0,2,1,1,1,0,2,2,2,2,1,2,2,1,0,1,1,2,2,2,2,2,1,2,1,2,0,1,2,2,1,1,2,0,2,2,0,1,1,1,2,0])
+#WBC_labels = np.array([0,1,1,0,1,2,1,0,1,0,0,0,2,2,0,1,1,2,1,1,1,2,2,0,2,1,2,2,1,2,1,2,2,2,2,1,2,2,1,1,2,1,1,1,1,0,2,1,1,1,2,1,1,1,2,2,2,2,0,2,1,1,1,0,2,2,2,2,1,2,2,1,0,1,1,2,2,2,2,2,1,2,1,2,0,1,2,2,1,1,2,0,2,2,0,1,1,1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
 #np.save("WBC_labels.npy",WBC_labels)
 WBC_labels = np.load("WBC_labels.npy")
 
@@ -237,12 +271,12 @@ with open(filename, "wb") as f:
 with open(filename, 'rb') as f:
     trainer = pickle.load(f)
 
-# prediction = classify_data(test_data,trainer)
-# confusion = metrics.confusion_matrix(test_labels, prediction)
-#
-# print"Confusion matrix:", "\n" ,confusion, "\n"
-# accuracy = float(np.trace(confusion))/float(np.sum(confusion))
-# print "Accuracy:", accuracy
-
 
 total_accuracy = cross_validation(X,y)
+
+#prediction = classify_data(X,trainer)
+#confusion = metrics.confusion_matrix(y, prediction)
+#print confusion
+
+display_classer(X,y)
+

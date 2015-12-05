@@ -96,10 +96,10 @@ def cell_watershed(img):
         #plt.imshow(nuclei_circles)
         circle_area = 3.14*radius*radius
         nuclei_area = cv2.contourArea(c)
-        hull = cv2.convexHull(c)
-        hull_area = cv2.contourArea(hull)
-        if hull_area > 0:
-            print(nuclei_area, hull_area, nuclei_area/hull_area, center)
+        #hull = cv2.convexHull(c)
+        #hull_area = cv2.contourArea(hull)
+        #if hull_area > 0:
+            #print(nuclei_area, hull_area, nuclei_area/hull_area, center)
         if nuclei_area/circle_area < .6 and nuclei_area > 150:
             joined_nuclei_cont.append(c)
 
@@ -185,14 +185,14 @@ def cell_watershed(img):
 
     for i in sorted(to_be_removed, reverse=True):
         del cytoplasm_cont[i]
-    cv2.drawContours(empty, cytoplasm_cont, -1, (255,255,255), -1)
-    plt.figure()
-    plt.imshow(nuclei_mask)
-    plt.figure()
-    plt.imshow(empty)
-    plt.figure()
-    plt.imshow(img)
-    plt.show()
+    #cv2.drawContours(empty, cytoplasm_cont, -1, (255,255,255), -1)
+    # plt.figure()
+    # plt.imshow(nuclei_mask)
+    # plt.figure()
+    # plt.imshow(empty)
+    # plt.figure()
+    # plt.imshow(img)
+    # plt.show()
     return cytoplasm_cont, nuclei_mask
 
 def modify_cell_list(ROI,cytoplasm_cont, nuclei_mask):

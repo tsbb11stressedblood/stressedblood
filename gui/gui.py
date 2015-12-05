@@ -168,12 +168,12 @@ class ResultDisplayer(Toplevel):
             sub_page = []
             for ind, cell in enumerate(self.cell_list):
                 if counter % self.max_cell_per_page is 0:
-                    sub_page.append((cell.img, self.pred[ind]))
+                    sub_page.append((cell.big_img, self.pred[ind]))
                     self.pages.append(sub_page)
                     counter = 1
                     sub_page = []
                 else:
-                    sub_page.append((cell.img, self.pred[ind]))
+                    sub_page.append((cell.big_img, self.pred[ind]))
                     counter += 1
             if counter % self.max_cell_per_page is not 0:
                 self.pages.append(sub_page)
@@ -184,12 +184,12 @@ class ResultDisplayer(Toplevel):
             for ind, cell in enumerate(self.cell_list):
                 if self.pred[ind] == token:
                     if counter % self.max_cell_per_page is 0:
-                        sub_page.append((cell.img, self.pred[ind]))
+                        sub_page.append((cell.big_img, self.pred[ind]))
                         self.pages.append(sub_page)
                         counter = 1
                         sub_page = []
                     else:
-                        sub_page.append((cell.img, self.pred[ind]))
+                        sub_page.append((cell.big_img, self.pred[ind]))
                         counter += 1
             if counter % self.max_cell_per_page is not 0:
                 self.pages.append(sub_page)
@@ -495,7 +495,7 @@ class InteractionWindow(Canvas):
         # We need to be able to access this region in the resize function
         self.last_selection_region = [(int(l0_topx), int(l0_topy)), (int(l0_width), int(l0_height))]
 
-        entire_roi = numpy.array(self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height))), dtype=numpy.uint8)
+        #entire_roi = numpy.array(self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height))), dtype=numpy.uint8)
         # Multiply percentages of totals and transform to high res level
         # ------------------NEW----------------
         # Code below is ugly, might be able to reduce it to single double loop
@@ -504,7 +504,7 @@ class InteractionWindow(Canvas):
         sub_rois = []   # Needed for drawing the subrois later on
 
         if not self.hunter:
-
+            """
             if self.mode is "roi" and (l0_width > 1000 or l0_height > 1000):
                 fixed_size = 500.0
                 no_of_x_subrois = math.floor(float(l0_width)/float(fixed_size))
@@ -568,28 +568,28 @@ class InteractionWindow(Canvas):
 
                 tmp = self.ndpi_file.read_region((int(topx_rest), int(topy_rest)), 0, (int(width_rest), int(height_rest)))
                 box.append(numpy.array(tmp, dtype=numpy.uint8))
-
+            """
             # Now depending on the mode, do different things
-            elif self.mode is "roi": # This is the case that the ROI selected is small enough to be alone
+            if self.mode is "roi": # This is the case that the ROI selected is small enough to be alone
                 box.append(numpy.array(self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height))), dtype=numpy.uint8))
 
         if self.mode is "roi":
             print "No of subboxes in roi you just selected: " + str(len(box))
             if self.hunter:
                 box.append(numpy.array(self.ndpi_file.read_region((int(l0_topx), int(l0_topy)), 0, (int(l0_width), int(l0_height))), dtype=numpy.uint8))
-            self.set_roi(box, sub_rois, entire_roi)
+            self.set_roi(box, sub_rois)
         elif self.mode is "zoom":
             self.zoom()
         self.delete("boxselector")
         self.clear_status_text()
 
-    def set_roi(self, box, sub_rois, entire_roi):
+    def set_roi(self, box, sub_rois):
         # Add the ROI to our list
         if not self.hunter:
-            self.roi_list.append((self.roi_counter, (entire_roi, box), (self.last_selection_region, sub_rois)))
+            self.roi_list.append((self.roi_counter, box, (self.last_selection_region, sub_rois)))
         else:
             new_region = [self.last_selection_region[0], (500, 500)]
-            self.roi_list.append((self.roi_counter, (entire_roi, box), (new_region, sub_rois)))
+            self.roi_list.append((self.roi_counter, box, (new_region, sub_rois)))
 
         # Keep drawing the ROIs
         self.redraw_ROI()
@@ -671,22 +671,23 @@ class InteractionWindow(Canvas):
             cell_list = []
             # Initial loop to get the total amount of rois to do, for the progress bar
             total_no_of_rois = 0
-            for num, roi_container, bbox_container in self.roi_list:
-                entire_roi = roi_container[0]
-                test = ImageShower(self, entire_roi, "Before segmentation, roi number " + str(num))
-                rois = roi_container[1]
+            for num, rois, bbox_container in self.roi_list:
                 for roi in rois:
+                    test = ImageShower(self, roi, "Before segmentation, roi number " + str(num))
                     total_no_of_rois += 1
             print "Total no of rois to do: " + str(total_no_of_rois)
 
-
             # Counter for the progress bar
             counter = 0
-            for num, roi_container, bbox_container in self.roi_list:
-                rois = roi_container[1]
+            for num, rois, bbox_container in self.roi_list:
+                #rois = roi_container[1]
                 for roi in rois:
-                    numpy.save("outzoomed", roi)
-                    cell_list = cell_list + rbc_seg.segmentation(roi)
+                    tmp_list, new_roi = rbc_seg.segment_and_remove_from_roi(roi)
+                    cell_list = cell_list + tmp_list
+
+                    # Show a segmented version of the ROI, "intermediate result"
+                    test = ImageShower(self, new_roi, "After segmentation, roi number " + str(num))
+
                     # Also make a progress bar
                     counter += 1
                     self.render_status_text((100, 100), "Running segmentation...", float(counter/float(total_no_of_rois)), 100)
@@ -703,8 +704,8 @@ class InteractionWindow(Canvas):
                 test = ResultDisplayer(cell_list, prediction)
 
         if self.hunter:
-            for num, roi_container, bbox_container in self.roi_list:
-                rois = roi_container[1]
+            for num, rois, bbox_container in self.roi_list:
+                #rois = roi_container[1]
                 for roi in rois:
                     numpy.save("../npyimages/c_test" + str(self.counter) + ".npy", roi)
                     self.counter += 1

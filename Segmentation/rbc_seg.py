@@ -21,19 +21,25 @@ def debug_segmentation(ROI):
     cell_list = []
 
     # Watershed to find individual cells
-    img_fine, ret_fine, markers_fine, markers_nuc = Klara_test.cell_watershed(img)
-    cell_list = modify_cell_list(ROI,ret_fine,markers_fine,markers_nuc,cell_list)
-
-    # Class the cell to RBC, background and unknown (possibly WBC!)
+    #img_fine, ret_fine, markers_fine, markers_nuc, joined_mask, cells_to_remove = Klara_test.cell_watershed(img)
+    cytoplasm_cont, nuclei_mask = Klara_test.cell_watershed(img)
+    # Put all the objects in the cell_list
+    #cell_list = modify_cell_list(ROI,ret_fine,markers_fine,markers_nuc,cell_list)
+    cell_list = Klara_test.modify_cell_list(img, cytoplasm_cont, nuclei_mask)
+    # Basic classification to RBC and labels these cells
     cell_list = RBC_classification(cell_list)
+
     rbc_counter = rbc_cell_extraction(cell_list)
 
     # Also extract image
     for cell in cell_list:
         if cell.label == "RBC":
             subroi = ROI[cell.y:cell.y+cell.h, cell.x:cell.x+cell.w, :]
-            subroi[cell.mask] = 0
+            subroi[:, :, 0] = subroi[:, :, 0]*np.invert(cell.mask.astype(bool))
+            subroi[:, :, 1] = subroi[:, :, 1]*np.invert(cell.mask.astype(bool))
+            subroi[:, :, 2] = subroi[:, :, 2]*np.invert(cell.mask.astype(bool))
             ROI[cell.y:cell.y+cell.h, cell.x:cell.x+cell.w, :] = subroi
+            #ROI[cell.mask.astype(int)] = 0
 
     return rbc_counter, ROI
 
@@ -45,6 +51,62 @@ def rbc_cell_extraction(cell_list):
         if cell.label == "RBC":
             rbc_counter += 1
     return rbc_counter
+
+
+# This segmentation variant is used if one needs to remove the segmented RBCs from the ROI aswell
+def segment_and_remove_from_roi(ROI):
+    # First run the usual segmentation algor
+    # image init, and conversion to gray and then threshold it
+    img = np.copy(ROI[:, :, 0:3])
+
+    # Watershed to find individual cells
+    #img_fine, ret_fine, markers_fine, markers_nuc, joined_mask, cells_to_remove = Klara_test.cell_watershed(img)
+    cytoplasm_cont, nuclei_mask = Klara_test.cell_watershed(img)
+    # Put all the objects in the cell_list
+    #cell_list = modify_cell_list(ROI,ret_fine,markers_fine,markers_nuc,cell_list)
+    cell_list = Klara_test.modify_cell_list(img, cytoplasm_cont, nuclei_mask)
+    # Basic classification to RBC and labels these cells
+    cell_list = RBC_classification(cell_list)
+
+    # Now loop through and remove the segmented rois from the ROI
+    for cell in cell_list:
+        if cell.label == "RBC":
+            subroi = img[cell.y:cell.y+cell.h, cell.x:cell.x+cell.w, :]
+            subroi0 = subroi[:, :, 0]
+            subroi1 = subroi[:, :, 1]
+            subroi2 = subroi[:, :, 2]
+
+            subroi0 = subroi0*np.invert(cell.mask.astype(bool))
+            subroi1 = subroi1*np.invert(cell.mask.astype(bool))
+            subroi2 = subroi2*np.invert(cell.mask.astype(bool))
+
+            subroi[:, :, 0] = subroi0
+            subroi[:, :, 1] = subroi1
+            subroi[:, :, 2] = subroi2
+
+            img[cell.y:cell.y+cell.h, cell.x:cell.x+cell.w, :] = subroi
+
+    # Remove all the cells classified to RBC, cell_list now only contains unknown cells
+    cell_list = wbc_cell_extraction(cell_list)
+
+    # Before returning, make sure that the image is a bigger bounding box (for viewing purposes)
+    for cell in cell_list:
+        # First add center coordinates for the bounding box
+        xf = cell.x + float(cell.w)/2.
+        yf = cell.y + float(cell.h)/2.
+
+        # Get the size of the ROI
+        roi_rows = ROI.shape[0]
+        roi_cols = ROI.shape[1]
+
+        # Check so that the image is not outside of the ROI
+        if (yf - 50 < 0) or (yf + 50 > roi_rows) or (xf - 50 < 0) or (xf + 50 > roi_cols):
+            # If it is, then simply use what we already have.. IDGAF
+            cell.big_img = ROI[cell.y:cell.y+cell.h, cell.x:cell.x+cell.w, :]
+        else:
+            cell.big_img = ROI[int(yf - 50):int(yf + 50), int(xf - 50):int(xf + 50), :]
+
+    return cell_list, img
 
 
 # Segmentation function, call this one with an image or image region to run
@@ -64,17 +126,25 @@ def segmentation(ROI):
     # Basic classification to RBC and labels these cells
     cell_list = RBC_classification(cell_list)
 
-    # Show the original img
-    #fig = plt.figure("klara")
-    #ax = fig.add_subplot(111)
-    #plt.imshow(img, interpolation='nearest')
-    # Print labels
-    #print_cell_labels(cell_list, ax)
-    #plt.show()
-
     # Remove all the cells classified to RBC, cell_list now only contains unknown cells
     cell_list = wbc_cell_extraction(cell_list)
 
+    # Before returning, make sure that the image is a bigger bounding box (for viewing purposes)
+    for cell in cell_list:
+        # First add center coordinates for the bounding box
+        xf = cell.x + float(cell.w)/2.
+        yf = cell.y + float(cell.h)/2.
+
+        # Get the size of the ROI
+        roi_rows = ROI.shape[0]
+        roi_cols = ROI.shape[1]
+
+        # Check so that the image is not outside of the ROI
+        if (yf - 50 < 0) or (yf + 50 > roi_rows) or (xf - 50 < 0) or (xf + 50 > roi_cols):
+            # If it is, then simply use what we already have.. IDGAF
+            cell.big_img = cell.img
+        else:
+            cell.big_img = ROI[int(yf - 50):int(yf + 50), int(xf - 50):int(xf + 50), :]
 
     return cell_list
 

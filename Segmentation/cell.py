@@ -11,6 +11,7 @@ class Cell:
         self.label = "unknown"
 
         self.img = cell_img
+        self.big_img = None
 
         # Store data
         self.mask = _mask

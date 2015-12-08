@@ -13,7 +13,7 @@ from Tkinter import *
 import tkFileDialog
 import tkMessageBox
 from ttk import Progressbar
-from openslide import *
+#from openslide import *
 import os
 from PIL import ImageTk as itk
 from PIL import Image

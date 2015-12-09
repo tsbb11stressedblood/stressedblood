@@ -11,6 +11,9 @@ class WhiteCell:
         self.size = float(np.size(self.img))
         #self.make_mask()
         self.mask = cell.mask
+        # Should be copied from cell:
+        #self.nucleus_mask
+        #self.contour
 
     def make_mask(self):
         mask = copy.copy(self.img)

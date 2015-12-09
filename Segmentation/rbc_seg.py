@@ -61,7 +61,7 @@ def segment_and_remove_from_roi(ROI):
 
     # Watershed to find individual cells
     #img_fine, ret_fine, markers_fine, markers_nuc, joined_mask, cells_to_remove = Klara_test.cell_watershed(img)
-    cytoplasm_cont, nuclei_mask = Klara_test.cell_watershed(img)
+    cytoplasm_cont, nuclei_mask, removed_cells, exchanged_cells = Klara_test.cell_watershed(img)
     # Put all the objects in the cell_list
     #cell_list = modify_cell_list(ROI,ret_fine,markers_fine,markers_nuc,cell_list)
     cell_list = Klara_test.modify_cell_list(img, cytoplasm_cont, nuclei_mask)
@@ -119,7 +119,7 @@ def segmentation(ROI):
 
     # Watershed to find individual cells
     #img_fine, ret_fine, markers_fine, markers_nuc, joined_mask, cells_to_remove = Klara_test.cell_watershed(img)
-    cytoplasm_cont, nuclei_mask = Klara_test.cell_watershed(img)
+    cytoplasm_cont, nuclei_mask, removed_cells, exchanged_cells = Klara_test.cell_watershed(img)
     # Put all the objects in the cell_list
     #cell_list = modify_cell_list(ROI,ret_fine,markers_fine,markers_nuc,cell_list)
     cell_list = Klara_test.modify_cell_list(img, cytoplasm_cont, nuclei_mask)

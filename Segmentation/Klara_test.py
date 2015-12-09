@@ -18,7 +18,7 @@ def mask_joined_WBC(eroded_nuclei_cont, nuclei_mask, max_radius):
     Separates the large joined WBC from overlapping objects
     :param eroded_nuclei_cont: List with contours of the eroded joined_nuclei_mask, only large WBC remaining
     :param nuclei_mask: Binary image of the nuclei
-    :param max_radius: The largest radius for all enclosing circles of the joined nuclei
+    :param max_radius: The largest radius of all enclosing circles for the joined nuclei
     :return:
     """
     circles = []
@@ -194,6 +194,9 @@ def cell_watershed(img):
 
     to_be_removed = []
     to_be_inserted = []
+    removed_cells = []
+    exchanged_cells = []
+
     for i,c in enumerate(cytoplasm_cont):
         x,y,w,h = cv2.boundingRect(c)
         cell_img = cells_to_remove_im[y:y+h,x:x+w]
@@ -203,8 +206,10 @@ def cell_watershed(img):
         cv2.drawContours(temp, [c], -1, (1,1,1), -1, offset=(-x,-y))
         if np.sum(temp*cell_img) > 0:
             to_be_removed.append(i)
+            removed_cells.append(c)
         if np.sum(temp*join)> 0:
             to_be_removed.append(i)
+            exchanged_cells.append(c)
             for con in large_nuclei_cont:
                 joined = emp.copy()
                 cv2.drawContours(joined, [con], -1, (1,1,1), -1,offset=(-x,-y))
@@ -217,7 +222,7 @@ def cell_watershed(img):
     for con in to_be_inserted:
         cytoplasm_cont.append(con)
 
-    return cytoplasm_cont, nuclei_mask
+    return cytoplasm_cont, nuclei_mask, removed_cells, exchanged_cells
 
 def modify_cell_list(ROI,cytoplasm_cont, nuclei_mask):
     cell_list = []
@@ -243,11 +248,15 @@ def modify_cell_list(ROI,cytoplasm_cont, nuclei_mask):
             nucleus_mask = nucleus_mask*cell_mask
             area_nuc = np.sum(nucleus_mask)
             cell_list.append(Cell(ellipse, x,y,w,h, area, area_nuc, cell_mask, cell_img, nucleus_mask, c))
+
     print "Number of cells in cellist: ", cell_list.__len__()
     return cell_list
 
 #im = np.load("../gui/ek_test_2.npy")
-#im = np.load("../npyimages/testim_21.npy")
-#cytoplasm_cont, nuclei_mask = cell_watershed(im)
+#
+# im = np.load("../npyimages/testim_3.npy")
+# plt.figure()
+# plt.imshow(im)
+# cytoplasm_cont, nuclei_mask = cell_watershed(im)
 
 #modify_cell_list(im,cytoplasm_cont, nuclei_mask)

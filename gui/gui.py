@@ -731,6 +731,8 @@ class ImageShower(Toplevel):
 # Main class for handling GUI-related things
 class GUI:
     def __init__(self, master):
+        # Load the classifier
+        classer.load_trainer_from_file()
 
         # First we need a frame, which serves as the basic OS-specific window
         self.frame = Frame(master)

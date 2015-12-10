@@ -12,14 +12,19 @@ import pickle
 
 iris = datasets.load_iris()
 
-# Trainer is saved to disk, import it to use it in classification.
-if platform.system() == "Windows":
-    filename = "trainer_win.pik"
-else:
-    filename = "trainer.pik"
+trainer = None
 
-with open("../Classification/" + filename, 'rb') as f:
-    trainer = pickle.load(f)
+
+def load_trainer_from_file():
+    global trainer
+    # Trainer is saved to disk, import it to use it in classification.
+    if platform.system() == "Windows":
+        filename = "trainer_win.pik"
+    else:
+        filename = "trainer.pik"
+
+    with open("../Classification/" + filename, 'rb') as f:
+        trainer = pickle.load(f)
 
 
 def predict_cells(cell_list):

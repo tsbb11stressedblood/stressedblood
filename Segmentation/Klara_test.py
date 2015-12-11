@@ -10,8 +10,19 @@ import cProfile, pstats, StringIO
 import copy
 
 def get_threshold(hist):
-    min_ind = np.argmin(hist[15:np.size(hist)/3])
-    return min_ind + 15
+    ind = np.argmax(hist)
+    done = False
+    while not done:
+        if hist[ind + 1] < hist[ind]:
+            ind += 1
+        elif hist[ind + 3] < hist[ind]:
+            ind += 1
+        if hist[ind + 1] > hist[ind] and hist[ind + 3] > hist[ind]:
+            done = True
+        if ind > 200:
+            done = True
+    print ind
+    return ind
 
 def mask_joined_WBC(eroded_nuclei_cont, nuclei_mask, max_radius):
     """

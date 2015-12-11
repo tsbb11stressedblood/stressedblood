@@ -11,9 +11,10 @@ class WhiteCell:
         self.size = float(np.size(self.img))
         #self.make_mask()
         self.mask = cell.mask
-        # Should be copied from cell:
-        #self.nucleus_mask
-        #self.contour
+        self.nucleus_mask = cell.nucleus_mask
+        self.contour = cell.contour
+        self.area = cell.area
+        self.area_nuc = cell.area_nuc
 
     def make_mask(self):
         mask = copy.copy(self.img)
@@ -28,12 +29,21 @@ class WhiteCell:
 
     def get_mean_var_energy(self, color):
         col = spacetransformer.im2c(self.img, color)
+        col[self.mask == 0] = 0
         energy = np.sum(np.power(col, 2))/self.size
         return [np.mean(col), np.var(col), energy]
 
     def hist_features(self, color, bins, interval = [0,1]):
         col = spacetransformer.im2c(self.img, color)
-        col[self.mask == -1] = -1
+        col[self.mask == 0] = -1
         hist,_ = np.histogram(col,bins,interval)
+        hist = hist/float(np.size(col[col>=0]))
+        return hist
+
+    def hist_features_hsv(self, channel, bins, interval = [0,1]):
+        col = cv2.cvtColor(cell.img, cv2.COLOR_RGB2HSV_FULL)
+        col = col[:,:,channel]/255.0
+        col[self.mask == 0] = -1
+        hist, _ = np.histogram(col, bins, interval)
         hist = hist/float(np.size(col[col>=0]))
         return hist

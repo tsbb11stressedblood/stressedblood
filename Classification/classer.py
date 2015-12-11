@@ -19,9 +19,9 @@ def load_trainer_from_file():
     global trainer
     # Trainer is saved to disk, import it to use it in classification.
     if platform.system() == "Windows":
-        filename = "trainer_win.pik"
+        filename = "trainer_easy.pik"
     else:
-        filename = "trainer.pik"
+        filename = "trainer_easy.pik"
 
     with open("../Classification/" + filename, 'rb') as f:
         trainer = pickle.load(f)
@@ -48,6 +48,8 @@ def feature_selection(whitecell):
     feature_array.append(whitecell.hist_features(2,10))
     feature_array.append(whitecell.hist_features(7,10,[0,0.2]))
     feature_array.append(whitecell.hist_features(8,15))
+    feature_array.append([whitecell.area/2500.0])
+    feature_array.append([whitecell.area_nuc/float(whitecell.area)])
     return [item for sublist in feature_array for item in sublist]
 
 def reduce_dimension(features, keep):

@@ -666,6 +666,7 @@ class InteractionWindow(Canvas):
         self.redraw_ROI()
 
     def run_roi(self):
+
         if not self.hunter:
             # Loop through the roi list and do segmentation and classification for each roi
             cell_list = []
@@ -702,6 +703,14 @@ class InteractionWindow(Canvas):
                 #numpy.save("red_shit2.npy", self.roi_list[len(self.roi_list)-1][1][0])
 
                 test = ResultDisplayer(cell_list, prediction)
+
+        """testimg = cv2.imread("../npyimages/only_whites_3.png")
+        testimg = cv2.cvtColor(testimg, cv2.COLOR_BGR2RGB)
+        cell_list = rbc_seg.segmentation(testimg)
+        prediction = classer.predict_cells(cell_list)
+        test = ResultDisplayer(cell_list, prediction)
+        #fff = open('../only_smeared.pik', 'w+')
+        #pickle.dump(cell_list, fff)"""
 
         if self.hunter:
             for num, rois, bbox_container in self.roi_list:

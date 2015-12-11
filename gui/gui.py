@@ -175,7 +175,7 @@ class ResultDisplayer(Toplevel):
                 else:
                     sub_page.append((cell.big_img, self.pred[ind]))
                     counter += 1
-            if counter % self.max_cell_per_page is not 0:
+            if counter-1 % self.max_cell_per_page is not 0:
                 self.pages.append(sub_page)
 
         else:
@@ -191,7 +191,7 @@ class ResultDisplayer(Toplevel):
                     else:
                         sub_page.append((cell.big_img, self.pred[ind]))
                         counter += 1
-            if counter % self.max_cell_per_page is not 0:
+            if counter-1 % self.max_cell_per_page is not 0:
                 self.pages.append(sub_page)
 
     def recreate_boxes(self):

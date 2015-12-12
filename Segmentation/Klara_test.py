@@ -239,7 +239,7 @@ def modify_cell_list(ROI,cytoplasm_cont, nuclei_mask):
     cell_list = []
 
     for c in cytoplasm_cont:
-        if cv2.contourArea(c) > 20:
+        if cv2.contourArea(c) > 100:
             # Determine the current contour objects area
             area = cv2.contourArea(c)
             # Fit ellipses to cells

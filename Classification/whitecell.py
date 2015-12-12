@@ -41,7 +41,7 @@ class WhiteCell:
         return hist
 
     def hist_features_hsv(self, channel, bins, interval = [0,1]):
-        col = cv2.cvtColor(cell.img, cv2.COLOR_RGB2HSV_FULL)
+        col = cv2.cvtColor(self.img, cv2.COLOR_RGB2HSV_FULL)
         col = col[:,:,channel]/255.0
         col[self.mask == 0] = -1
         hist, _ = np.histogram(col, bins, interval)

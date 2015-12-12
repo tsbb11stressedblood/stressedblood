@@ -12,7 +12,7 @@ from ColourNM import spacetransformer
 from cell import *
 import Klara_test
 
-
+import pickle
 # Used for performance measure of the segmentation step
 def debug_segmentation(ROI):
     # image init, and conversion to gray and then threshold it
@@ -53,6 +53,48 @@ def rbc_cell_extraction(cell_list):
     return rbc_counter
 
 
+def smooth_contours(cell_list):
+    # Smooth the contours
+    for i,cell in enumerate(cell_list):
+        new_mask = cv2.erode(cell.mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5)),iterations=2 )
+        new_mask = cv2.dilate(new_mask, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5,5)),iterations=2 )
+        """
+        print len(cell_list)
+        if i < 30:
+            plt.figure(4)
+            plt.subplot(6,5,i+1)
+            plt.imshow(new_mask)
+        elif i < 60:
+            plt.figure(5)
+            plt.subplot(6,5,i-30+1)
+            plt.imshow(new_mask)
+        #else:
+        #    plt.figure(6)
+        #    plt.subplot(6,5,i-60+1)
+        #    plt.imshow(new_mask)
+
+        if i < 30:
+            plt.figure(1)
+            plt.subplot(6,5,i+1)
+            plt.imshow(cell.mask)
+        elif i < 60:
+            plt.figure(2)
+            plt.subplot(6,5,i-30+1)
+            plt.imshow(cell.mask)
+        #else:
+        #    plt.figure(3)
+        #    plt.subplot(6,5,i-60+1)
+        #    plt.imshow(cell.mask)
+
+        """
+        if np.sum(new_mask) > 0:
+            cell.mask = new_mask
+            cell.area = np.sum(new_mask>0)
+            if cell.area_nuc > cell.area:
+                cell.area_nuc = cell.area
+    #plt.show()
+    return cell_list
+
 # This segmentation variant is used if one needs to remove the segmented RBCs from the ROI aswell
 def segment_and_remove_from_roi(ROI):
     # First run the usual segmentation algor
@@ -68,6 +110,9 @@ def segment_and_remove_from_roi(ROI):
     # Basic classification to RBC and labels these cells
     cell_list = RBC_classification(cell_list)
 
+    # Smooth the contours
+    cell_list = smooth_contours(cell_list)
+    
     # Now loop through and remove the segmented rois from the ROI
     for cell in cell_list:
         if cell.label == "RBC":
@@ -124,11 +169,17 @@ def segmentation(ROI):
     # Put all the objects in the cell_list
     #cell_list = modify_cell_list(ROI,ret_fine,markers_fine,markers_nuc,cell_list)
     cell_list = Klara_test.modify_cell_list(img, cytoplasm_cont, nuclei_mask)
+
+    #fff = open('../others_1.pik', 'w+')
+    #pickle.dump(cell_list, fff)
+
     # Basic classification to RBC and labels these cells
     cell_list = RBC_classification(cell_list)
 
     # Remove all the cells classified to RBC, cell_list now only contains unknown cells
     cell_list = wbc_cell_extraction(cell_list)
+    #smooth contours to remove tentacles
+    cell_list = smooth_contours(cell_list)
 
     # Before returning, make sure that the image is a bigger bounding box (for viewing purposes)
     for cell in cell_list:

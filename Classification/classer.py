@@ -46,10 +46,17 @@ def feature_selection(whitecell):
     feature_array.append(whitecell.get_mean_var_energy(7))
     feature_array.append(whitecell.get_mean_var_energy(8))
     feature_array.append(whitecell.hist_features(2,10))
-    feature_array.append(whitecell.hist_features(7,10,[0,0.2]))
-    feature_array.append(whitecell.hist_features(8,15))
+    feature_array.append(whitecell.hist_features(7,5,[0,0.4]))
+    feature_array.append(whitecell.hist_features(8,10))
+    feature_array.append(whitecell.hist_features(4,5,[0,0.5]))
     feature_array.append([whitecell.area/2500.0])
-    feature_array.append([whitecell.area_nuc/float(whitecell.area)])
+    if whitecell.area > 0:
+        ratio = whitecell.area_nuc/float(whitecell.area)
+    else:
+        ratio = .1
+    feature_array.append([ratio])
+
+    feature_array.append(whitecell.hist_features_hsv(1, 10))
     return [item for sublist in feature_array for item in sublist]
 
 def reduce_dimension(features, keep):

@@ -21,34 +21,31 @@ def get_feature_array(cell_list):
 
     return WBC_data
 
-training_files = ["only_whites_clean.png", "only_whites_2.png", "only_whites_1_hard.png", "only_smeared.png"]
+training_files = ["only_whites_clean.png", "only_whites_2.png", "only_whites_1_hard.png", "only_smeared.png", "crap_1.png"]
 
 labels2 = [1,2,1,1,0,2,2,0,0,2,2,1,0,1,2,1,2,2,1,0,1,0,0,0,2,2,0,1,0,1]
 labels_smeared = [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]
-labels1 = [2,2,3,0,1,2,2,2,1,1,1,3,0,2,0,2,3,0,1,1, 0,0,1,1,0,1,0,1,3,3, 0,1]
+#labels1 = [2,2,3,0,1,2,2,2,1,1,1,3,0,2,0,2,3,0,1,1, 0,0,1,1,0,1,0,1,3,3]
+labels1 = [2,2,3,0,1,2,2,1,1,0,0,2,0,2,3,0,1,1,0,0,1,1,0,1,0,1,0,3,2,1]
 labels_1_hard = [2,1,0,0,1,0,2,2,1,2,1,3,2,2,1,1,1,2,2,0,0,2,0,2,0,2,2,2,0,0]
+labels_crap_1 = [3 for i in range(61)]
+print "alla:", len(labels_crap_1) + len(labels1) + len(labels_1_hard) + len(labels2) + len(labels_smeared)
 #labels_others_1 = [3 for i in range(len(cell_list_others_1))]
 
-all_labels = [labels1, labels2, labels_1_hard, labels_smeared]
+all_labels = [labels1, labels2, labels_1_hard, labels_smeared, labels_crap_1]
 labels = []
 for i,filename in enumerate(training_files):
         testimg = cv2.imread("../npyimages/" + filename)
         testimg = cv2.cvtColor(testimg, cv2.COLOR_BGR2RGB)
-        #cell_list = rbc_seg.segmentation(testimg)
-        #testimg = np.load("../Classification/others_2.npy")
-        #plt.imshow(testimg)
-        #plt.show()
+
         if filename == "only_whites_clean.png":
             cell_list = rbc_seg.segmentation(testimg)
             del cell_list[11]
             del cell_list[7]
             print "len clean:", len(cell_list)
 
-        if filename == "only_whites_2.png":
-            cell_list = rbc_seg.segmentation(testimg)
-        if filename == "only_whites_1_hard.png":
-            cytoplasm_cont, nuclei_mask, removed_cells, exchanged_cells = Klara_test.cell_watershed(testimg)
-            cell_list_1_hard_ = Klara_test.modify_cell_list(testimg, cytoplasm_cont, nuclei_mask)
+        elif filename == "only_whites_1_hard.png":
+            cell_list_1_hard_ = rbc_seg.segmentation(testimg)
             cell_list = []
             cell_list.append(cell_list_1_hard_[8])
             cell_list.append(cell_list_1_hard_[10])
@@ -81,20 +78,34 @@ for i,filename in enumerate(training_files):
             cell_list.append(cell_list_1_hard_[119])
             cell_list.append(cell_list_1_hard_[120])
             print "LEEN:", len(cell_list)
+
+        elif filename == "crap_1.png":
+            cytoplasm_cont, nuclei_mask, removed_cells, exchanged_cells = Klara_test.cell_watershed(testimg)
+            cell_list = Klara_test.modify_cell_list(testimg, cytoplasm_cont, nuclei_mask)
+            print "HEEEJ", len(cell_list)
+        elif filename == "only_smeared.png":
+            cytoplasm_cont, nuclei_mask, removed_cells, exchanged_cells = Klara_test.cell_watershed(testimg)
+            cell_list = Klara_test.modify_cell_list(testimg, cytoplasm_cont, nuclei_mask)
         else:
             cell_list = rbc_seg.segmentation(testimg)
             print "other:", len(cell_list)
+            for c in cell_list:
+                window_width = int(c.img.shape[1] * 2)
+                window_height = int(c.img.shape[0] * 2)
+
+                cv2.namedWindow('dst_rt', cv2.WINDOW_NORMAL)
+                cv2.resizeWindow('dst_rt', window_width, window_height)
+                cv2.imshow('dst_rt',cv2.cvtColor(c.img, cv2.COLOR_BGR2RGB))
+                cv2.waitKey(0)
 
         feature_array = get_feature_array(cell_list)
         if i==0:
             features = feature_array
-        print feature_array.shape
-        print features.shape
-        features = np.append(features, feature_array, axis=0)
-        print features.shape
+        else:
+            features = np.append(features, feature_array, axis=0)
         labels = labels + all_labels[i]
 
-labels = labels + [3 for i in range(32)]
+#labels = labels + [3 for i in range(32)]
 
 #labels = labels1+labels2+labels_smeared + labels_others_1 + labels_1_hard
 print features.shape, len(labels)

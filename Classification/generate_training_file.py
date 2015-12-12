@@ -89,14 +89,6 @@ for i,filename in enumerate(training_files):
         else:
             cell_list = rbc_seg.segmentation(testimg)
             print "other:", len(cell_list)
-            for c in cell_list:
-                window_width = int(c.img.shape[1] * 2)
-                window_height = int(c.img.shape[0] * 2)
-
-                cv2.namedWindow('dst_rt', cv2.WINDOW_NORMAL)
-                cv2.resizeWindow('dst_rt', window_width, window_height)
-                cv2.imshow('dst_rt',cv2.cvtColor(c.img, cv2.COLOR_BGR2RGB))
-                cv2.waitKey(0)
 
         feature_array = get_feature_array(cell_list)
         if i==0:

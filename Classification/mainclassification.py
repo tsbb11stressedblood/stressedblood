@@ -58,7 +58,7 @@ def cross_validation(features, labels):
     features, labels = shuffle(features, labels, random_state=1) #consistently shuffle data
     sets = 4.0
     num_samples = np.shape(features)[0]
-    set_samples = math.floor(float(num_samples)/sets)
+    set_samples = int(math.floor(float(num_samples)/sets))
 
     # Get each set of training and test data
     training_data_1 = features[0:3*set_samples,:]
@@ -120,66 +120,7 @@ def cross_validation(features, labels):
 
     return total_accuracy
 
-
-# # FROM white_
-# WBC_data = []
-# for i in range(1, 101):
-#  WBC_array = np.load("white_" + str(i) + ".npy")
-#  wc = WhiteCell(WBC_array, -1)
-#  wc_features = feature_selection(wc)
-#  WBC_data.append(wc_features)
-#
-# WBC_data= np.asarray(WBC_data)
-# np.save("white_feature_array.npy",WBC_data )
-#
-# # FROM low_en1_
-# LOW_EN = []
-# for i in range(1, 12):
-#     f = Image.open("low_en" + str(i) + ".png")
-#     lo_array= np.asarray(f)
-#     lo = WhiteCell(lo_array, -1)
-#     lo_features = feature_selection(lo)
-#     LOW_EN.append(lo_features)
-#
-# LOW_EN= np.asarray(LOW_EN)
-# np.save("low_feature_array.npy",LOW_EN )
-
-"""
-#FROM CELL-LIST
-RBC_data = []
-for i in range(1, 5):
-    RBC_array = np.load("others_" + str(i) + ".npy")
-    REB_celllist=rbc_seg.segmentation(RBC_array)
-
-    for cell in REB_celllist:
-        wc = WhiteCell(cell, -1)
-        wc_features = feature_selection(wc)
-        RBC_data.append(wc_features)
-
-RBC_data=np.asarray(RBC_data)
-print "__________________________________"
-#np.save("red_feature_array.npy",RBC_data )
-print np.shape(RBC_data)
-
-WBC_data = np.load("white_feature_array.npy")
-#RBC_data = np.load("red_feature_array.npy")
-print np.shape(WBC_data)
-
-LOW_data = np.load("low_feature_array.npy")
-print np.shape(LOW_data)
-
-feature_array = np.append(WBC_data,RBC_data,axis=0)
-#feature_array = WBC_data
-
-
-WBC_labels = np.array([0,1,1,0,1,2,1,0,1,0,0,0,2,2,0,1,1,2,1,1,1,2,2,0,2,1,2,2,1,2,1,2,2,2,2,1,2,2,1,1,2,1,1,1,1,0,2,1,1,1,2,1,1,1,2,2,2,2,0,2,1,1,1,0,2,2,2,2,1,2,2,1,0,1,1,2,2,2,2,2,1,2,1,2,0,1,2,2,1,1,2,0,2,2,0,1,1,1,2,0])
-#np.save("WBC_labels.npy",WBC_labels)
-#WBC_labels = np.load("WBC_labels.npy")
-
-RBC_labels=3*np.ones([np.shape(RBC_data)[0]])
-labels_array = np.append(WBC_labels,RBC_labels,axis=0)
-"""
-
+'''
 # Run the segmentation on our test image, to get training data.
 test_im = cv2.cvtColor(cv2.imread("../npyimages/only_whites_clean.png"), cv2.COLOR_BGR2RGB)
 cell_list = rbc_seg.segmentation(test_im)
@@ -194,7 +135,7 @@ for cell in cell_list[20:30]:
 plt.show()
 
 #labels = np.array([])
-
+'''
 """
 X = feature_array
 y = labels_array

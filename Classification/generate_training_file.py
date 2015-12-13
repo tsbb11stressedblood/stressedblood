@@ -8,6 +8,7 @@ import platform
 import pickle
 import classer
 from Segmentation import Klara_test
+import mainclassification
 
 def get_feature_array(cell_list):
     WBC_data = []
@@ -105,3 +106,6 @@ trainer = classer.training(features, labels)
 
 fff = open('./trainer_easy.pik', 'wb')
 pickle.dump(trainer, fff)
+
+mainclassification.cross_validation(features,labels)
+mainclassification.display_classer(features,labels)

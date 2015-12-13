@@ -103,5 +103,5 @@ for i,filename in enumerate(training_files):
 print features.shape, len(labels)
 trainer = classer.training(features, labels)
 
-fff = open('./trainer_easy.pik', 'w+')
+fff = open('./trainer_easy.pik', 'wb')
 pickle.dump(trainer, fff)

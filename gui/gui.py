@@ -34,7 +34,7 @@ class ResultDisplayer(Toplevel):
         self.wm_title("Results")
 
         # Names of classes
-        self.classes = ["Heterophile", "Other", "Lymphocyte", "Crap"]
+        self.classes = ["Heterophil", "Other", "Lymphocyte", "Crap"]
 
         # Contains the list of cells that classifier has classified
         self.cell_list = cell_list
@@ -243,7 +243,7 @@ class ResultDisplayer(Toplevel):
         h = 0
         l = 0
         l_identifier = self.classes.index("Lymphocyte")
-        h_identifier = self.classes.index("Heterophile")
+        h_identifier = self.classes.index("Heterophil")
 
         for item in self.pred:
             if str(item) is str(l_identifier):
@@ -255,7 +255,7 @@ class ResultDisplayer(Toplevel):
         elif l is 0:
             show_msg("H/L-ratio", self, "There are no lymphocytes.\nThere are " + str(h) + " heterophiles.")
         elif h is 0:
-            show_msg("H/L-ratio", self, "There are no heterophiles.\nThere are " + str(l) + " lymphocytes.")
+            show_msg("H/L-ratio", self, "There are no heterophils.\nThere are " + str(l) + " lymphocytes.")
         else:
             ratio = float(h)/float(l)
             show_msg("H/L-ratio", self, "H/L: " + str(ratio))
@@ -704,7 +704,8 @@ class InteractionWindow(Canvas):
 
                 test = ResultDisplayer(cell_list, prediction)
 
-        """testimg = cv2.imread("../npyimages/only_whites_3.png")
+        """
+        testimg = cv2.imread("../npyimages/only_whites_3.png")
         testimg = cv2.cvtColor(testimg, cv2.COLOR_BGR2RGB)
         cell_list = rbc_seg.segmentation(testimg)
         prediction = classer.predict_cells(cell_list)

@@ -18,8 +18,8 @@
    inkscape:version="0.91 r13725"
    sodipodi:docname="poster.svg"
    inkscape:export-filename="C:\Users\erikhk\skola\tsbb11\stressedblood\poster.png"
-   inkscape:export-xdpi="150.00539"
-   inkscape:export-ydpi="150.00539">
+   inkscape:export-xdpi="300.01077"
+   inkscape:export-ydpi="300.01077">
   <sodipodi:namedview
      id="base"
      pagecolor="#ffffff"
@@ -27,9 +27,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.7"
-     inkscape:cx="661.60265"
-     inkscape:cy="796.60181"
+     inkscape:zoom="0.24748737"
+     inkscape:cx="1017.0667"
+     inkscape:cy="1480.1247"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -42,13 +42,59 @@
   <defs
      id="defs4">
     <marker
+       inkscape:stockid="Arrow2Mstart"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker14256"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path14258"
+         style="fill:#d96459;fill-opacity:1;fill-rule:evenodd;stroke:#d96459;stroke-width:0.625;stroke-linejoin:round;stroke-opacity:1"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         transform="scale(0.6,0.6)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="marker14024"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow2Mstart">
+      <path
+         inkscape:connector-curvature="0"
+         transform="scale(0.6,0.6)"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         style="fill:#d96459;fill-opacity:1;fill-rule:evenodd;stroke:#d96459;stroke-width:0.625;stroke-linejoin:round;stroke-opacity:1"
+         id="path14026" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow2Mstart"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="marker13918"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path13920"
+         style="fill:#d96459;fill-opacity:1;fill-rule:evenodd;stroke:#d96459;stroke-width:0.625;stroke-linejoin:round;stroke-opacity:1"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         transform="scale(0.6,0.6)"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
        inkscape:isstock="true"
        style="overflow:visible"
        id="marker12393"
        refX="0"
        refY="0"
        orient="auto"
-       inkscape:stockid="Arrow2Mstart">
+       inkscape:stockid="Arrow2Mstart"
+       inkscape:collect="always">
       <path
          inkscape:connector-curvature="0"
          transform="scale(0.6,0.6)"
@@ -881,6 +927,13 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(0,1927.5591)">
+    <rect
+       style="opacity:1;fill:#f9f2ce;fill-opacity:1;stroke:none;stroke-width:17.71653557;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect10013"
+       width="2108.4841"
+       height="2408.4009"
+       x="0"
+       y="-1516.7524" />
     <path
        style="fill:#aa87aa;fill-opacity:1;stroke:#2b0055;stroke-width:14.17322826;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="m -1080.248,-3219.483 c -127.5736,59.6488 -194.6309,56.5943 -252.3811,-36.7518 -44.7409,-72.3182 39.4651,-159.0349 150.8007,-205.6844 111.3356,-46.6494 225.25173,-55.3338 252.38113,36.7518 29.4058,99.8123 -41.4496,154.5558 -150.80073,205.6844 z"
@@ -1311,7 +1364,7 @@
     <rect
        style="opacity:1;fill:#6ca288;fill-opacity:1;stroke:none;stroke-width:17.71653557;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect9807"
-       width="2114.2856"
+       width="2108.5713"
        height="414.28568"
        x="0"
        y="-1928.7808" />
@@ -1650,13 +1703,6 @@
          style="fill:#741400;fill-opacity:0.09411765;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
     </g>
     <rect
-       style="opacity:1;fill:#f9f2ce;fill-opacity:1;stroke:none;stroke-width:17.71653557;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="rect10013"
-       width="2109.1985"
-       height="2405.5437"
-       x="0"
-       y="-1513.8953" />
-    <rect
        style="opacity:1;fill:#f2e394;fill-opacity:1;stroke:none;stroke-width:17.71653557;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        id="rect10017"
        width="703.06616"
@@ -1688,8 +1734,8 @@
     <rect
        y="883.9613"
        x="0"
-       height="168.40088"
-       width="2105.2212"
+       height="169.65088"
+       width="2105.7568"
        id="rect10025"
        style="opacity:1;fill:#6ca288;fill-opacity:1;stroke:none;stroke-width:17.71653557;stroke-linecap:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <g
@@ -2633,14 +2679,14 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:40px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="-354.36139"
-       y="-776.53119"
+       x="-510.07568"
+       y="-763.67407"
        id="text6986"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan6988"
-         x="-354.36139"
-         y="-776.53119">laborious task</tspan></text>
+         x="-510.07568"
+         y="-763.67407">laborious task</tspan></text>
     <g
        id="g7880"
        transform="translate(-2610.2342,1672.8126)">
@@ -3281,7 +3327,7 @@
     </g>
     <g
        id="g7981"
-       transform="translate(12.677054,61.589569)">
+       transform="translate(-0.45492909,61.589569)">
       <g
          style="stroke:none"
          transform="matrix(0.24060199,0.00494128,0,0.22523812,1182.2988,134.59278)"
@@ -4523,7 +4569,7 @@
        y="143.15126" />
     <g
        id="g7969"
-       transform="translate(-71.60866,-184.46413)">
+       transform="translate(-63.52744,-184.46413)">
       <g
          style="stroke:none"
          transform="matrix(0.2694159,0.00599113,0,0.23941701,248.967,429.3382)"
@@ -4610,9 +4656,7 @@
            id="rect8032"
            style="text-align:justify;text-anchor:start" /></flowRegion><flowPara
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Arial;-inkscape-font-specification:Arial;text-align:justify;text-anchor:start"
-         id="flowPara8042">Different color transforms has been used to segment out the cells, in some color spaces the cell nuclei are very visible, while in others the whole individual cells are distinguished from the background. The images are then convoluted with a Gaussian kernel to remove noise and facilitate thresholding.</flowPara><flowPara
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Arial;-inkscape-font-specification:Arial;text-align:justify;text-anchor:start"
-         id="flowPara8061" /><flowPara
+         id="flowPara8042">Different color transforms have been used to segment out the cells, in some color spaces the cell nuclei are very visible, while in others the whole individual cells are distinguished from the background. The images are then convoluted with a Gaussian kernel to remove noise and facilitate thresholding.</flowPara><flowPara
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Arial;-inkscape-font-specification:Arial;text-align:justify;text-anchor:start"
          id="flowPara8063">Watershed is then performed on the resulting</flowPara></flowRoot>    <flowRoot
        xml:space="preserve"
@@ -4743,7 +4787,7 @@
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Arial;-inkscape-font-specification:Arial;text-align:justify;text-anchor:start"
          id="flowPara12843">A number of features are extracted from the cells in different color spaces, selected to differentiate between the different types of white blood cells. Lastly, an SVM classifier based on these features is implemented.</flowPara></flowRoot>    <g
        id="g6835"
-       transform="matrix(0.5254813,0,0,0.5254813,440.57961,-79.466865)">
+       transform="matrix(0.5254813,0,0,0.5254813,427.34706,-79.466865)">
       <g
          style="fill:#d96459;fill-opacity:1;stroke:#d96459;stroke-opacity:1"
          id="g6591"
@@ -5002,10 +5046,10 @@
       </g>
     </g>
     <g
-       id="g12969"
-       transform="translate(12.677054,30.245101)">
+       id="g14488"
+       transform="translate(151.42857,0)">
       <g
-         transform="matrix(0.29686807,0,0,0.29686807,2106.24,290.32283)"
+         transform="matrix(0.29686807,0,0,0.29686807,2118.9171,320.56793)"
          id="g8246">
         <path
            sodipodi:nodetypes="sssssssssssssssssssssssssssssssss"
@@ -5039,7 +5083,7 @@
            sodipodi:nodetypes="csssssssssssc" />
       </g>
       <g
-         transform="matrix(0.67342515,0,0,0.67342515,541.75234,-77.750288)"
+         transform="matrix(0.67342515,0,0,0.67342515,554.42939,-47.505187)"
          id="g8264">
         <path
            style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker8843)"
@@ -5059,7 +5103,7 @@
       </g>
       <g
          id="g8285"
-         transform="matrix(0.67342515,0,0,0.67342515,361.48736,-139.59081)">
+         transform="matrix(0.67342515,0,0,0.67342515,374.16441,-109.34571)">
         <path
            inkscape:connector-curvature="0"
            id="path8287"
@@ -5080,60 +5124,60 @@
       <text
          sodipodi:linespacing="125%"
          id="text8940"
-         y="-282.16864"
-         x="1295.6539"
+         y="-251.92348"
+         x="1308.3309"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40px;line-height:125%;font-family:'Segoe Print';-inkscape-font-specification:'Segoe Print';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
          xml:space="preserve"><tspan
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Segoe Print';-inkscape-font-specification:'Segoe Print'"
-           y="-282.16864"
-           x="1295.6539"
+           y="-251.92348"
+           x="1308.3309"
            id="tspan8942"
            sodipodi:role="line">mean</tspan></text>
       <text
          xml:space="preserve"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40px;line-height:125%;font-family:'Segoe Print';-inkscape-font-specification:'Segoe Print';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-         x="1223.9331"
-         y="-192.67987"
+         x="1236.6101"
+         y="-170.38612"
          id="text8944"
          sodipodi:linespacing="125%"><tspan
            sodipodi:role="line"
            id="tspan8946"
-           x="1223.9331"
-           y="-192.67987"
+           x="1236.6101"
+           y="-170.38612"
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Segoe Print';-inkscape-font-specification:'Segoe Print'">variance</tspan></text>
       <text
          sodipodi:linespacing="125%"
          id="text8948"
-         y="-109.52688"
-         x="1336.0601"
+         y="-98.868309"
+         x="1348.7371"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40px;line-height:125%;font-family:'Segoe Print';-inkscape-font-specification:'Segoe Print';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
          xml:space="preserve"><tspan
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Segoe Print';-inkscape-font-specification:'Segoe Print'"
-           y="-109.52688"
-           x="1336.0601"
+           y="-98.868309"
+           x="1348.7371"
            id="tspan8950"
            sodipodi:role="line">area</tspan></text>
       <text
          xml:space="preserve"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:40px;line-height:125%;font-family:'Segoe Print';-inkscape-font-specification:'Segoe Print';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-         x="1326.9686"
-         y="-46.618969"
+         x="1339.6456"
+         y="-16.373924"
          id="text8952"
          sodipodi:linespacing="125%"><tspan
            sodipodi:role="line"
            id="tspan8954"
-           x="1326.9686"
-           y="-46.618969"
+           x="1339.6456"
+           y="-16.373924"
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:'Segoe Print';-inkscape-font-specification:'Segoe Print'">nucleus area</tspan></text>
       <path
          sodipodi:nodetypes="cc"
          inkscape:connector-curvature="0"
          id="path8962"
-         d="m 1417.216,-305.16086 c 59.2954,-16.4993 78.7377,6.05774 86.6168,20.61428"
+         d="m 1429.8931,-274.91576 c 59.2954,-16.4993 78.7377,6.05774 86.6168,20.61428"
          style="fill:none;fill-rule:evenodd;stroke:#d96459;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker8964-9)" />
       <path
-         style="fill:none;fill-rule:evenodd;stroke:#d96459;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker9909)"
-         d="m 1398.5282,-234.95526 c 39.0923,-28.11605 68.1311,-5.05394 77.0203,6.97722"
+         style="fill:none;fill-rule:evenodd;stroke:#d96459;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker14024)"
+         d="m 1412.6339,-201.85302 c 39.0923,-28.11605 66.7025,-7.91108 75.5917,4.12008"
          id="path9907"
          inkscape:connector-curvature="0"
          sodipodi:nodetypes="cc" />
@@ -5141,17 +5185,17 @@
          sodipodi:nodetypes="cc"
          inkscape:connector-curvature="0"
          id="path10531"
-         d="m 1410.145,-153.1329 c 39.0923,-28.11605 54.9991,-4.04379 72.4746,-28.8832"
-         style="fill:none;fill-rule:evenodd;stroke:#d96459;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker10533)" />
+         d="m 1437.1078,-130.74494 c 39.0923,-28.11605 40.7134,-4.75808 58.1889,-21.02606"
+         style="fill:none;fill-rule:evenodd;stroke:#d96459;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker14256)" />
       <path
          style="fill:none;fill-rule:evenodd;stroke:#d96459;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker10935)"
-         d="m 1491.9674,-95.049125 c 18.8892,-22.560215 23.1793,-28.287455 24.9974,-41.510115"
+         d="m 1504.6445,-64.804024 c 18.8892,-22.560215 23.1793,-28.287455 24.9974,-41.510116"
          id="path10933"
          inkscape:connector-curvature="0"
          sodipodi:nodetypes="cc" />
       <path
          style="fill:none;fill-rule:evenodd;stroke:#d96459;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker11709)"
-         d="m 1547.7691,-356.14387 c 7.1091,20.22104 13.7745,34.24612 9.064,48.61648"
+         d="m 1560.4462,-325.89877 c 7.1091,20.22104 13.7745,34.24612 9.064,48.61648"
          id="path11707"
          inkscape:connector-curvature="0"
          sodipodi:nodetypes="cc" />
@@ -5159,8 +5203,8 @@
          sodipodi:nodetypes="cc"
          inkscape:connector-curvature="0"
          id="path12391"
-         d="m 1680.1856,-293.23336 c -13.5269,16.62689 -15.97,29.00128 -28.8952,37.3323"
-         style="fill:none;fill-rule:evenodd;stroke:#d96459;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker12393)" />
+         d="m 1692.8627,-262.98826 c -13.5269,16.62689 -15.97,29.00128 -28.8952,37.3323"
+         style="fill:none;fill-rule:evenodd;stroke:#d96459;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker13918)" />
     </g>
     <flowRoot
        xml:space="preserve"
@@ -5179,16 +5223,16 @@
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Arial;-inkscape-font-specification:Arial;text-align:justify;text-anchor:start"
          id="flowPara13077" /><flowPara
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Arial;-inkscape-font-specification:Arial;text-align:justify;text-anchor:start"
-         id="flowPara13067">One of the main issues with this task is to segment folded and overlapping cells and find features for cells which vary greatly in morphology, e.g. broken cells and artifacts. These obstacles should be investigated further to increase the accuracy of the program.</flowPara></flowRoot>    <text
+         id="flowPara13067">One of the main difficulties with this task is to segment folded and overlapping cells and find features for cells which vary greatly in morph-ology, e.g. broken cells and artifacts. These obstacles should be investigated further to increase the accuracy of the program.</flowPara></flowRoot>    <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:40px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       x="1750.5883"
+       x="1737.3558"
        y="-1134.4063"
        id="text13085"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan13087"
-         x="1750.5883"
+         x="1737.3558"
          y="-1134.4063"
          style="font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;font-family:Arial;-inkscape-font-specification:'Arial Italic'">Input image to watershed.</tspan></text>
     <text

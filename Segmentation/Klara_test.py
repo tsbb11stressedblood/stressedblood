@@ -10,7 +10,7 @@ import cProfile, pstats, StringIO
 import copy
 
 def get_threshold(hist):
-    ind = np.argmax(hist)
+    ind = 15# np.argmax(hist)
     done = False
     while not done:
         if hist[ind + 1] < hist[ind]:

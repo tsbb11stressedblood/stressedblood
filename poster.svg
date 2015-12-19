@@ -27,9 +27,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.24748737"
-     inkscape:cx="1017.0667"
-     inkscape:cy="1480.1247"
+     inkscape:zoom="0.35"
+     inkscape:cx="942.18378"
+     inkscape:cy="964.61261"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -5219,7 +5219,7 @@
            x="82.832512"
            y="767.68719" /></flowRegion><flowPara
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Arial;-inkscape-font-specification:Arial;text-align:justify;text-anchor:start"
-         id="flowPara13079">The classification result depends greatly on the type and quality of the image processed through the program.</flowPara><flowPara
+         id="flowPara13079">The classification result depends greatly on the type and quality of the image processed through the program. Depending on the quality of the image, an accuracy between 64% and 95% is obtained.</flowPara><flowPara
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Arial;-inkscape-font-specification:Arial;text-align:justify;text-anchor:start"
          id="flowPara13077" /><flowPara
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Arial;-inkscape-font-specification:Arial;text-align:justify;text-anchor:start"

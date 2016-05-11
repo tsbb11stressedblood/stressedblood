@@ -29,7 +29,7 @@ labels_smeared = [3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3]
 #labels1 = [2,2,3,0,1,2,2,2,1,1,1,3,0,2,0,2,3,0,1,1, 0,0,1,1,0,1,0,1,3,3]
 labels1 = [2,2,3,0,1,2,2,1,1,0,0,2,0,2,3,0,1,1,0,0,1,1,0,1,0,1,0,3,2,1]
 labels_1_hard = [2,1,0,0,1,0,2,2,1,2,1,3,2,2,1,1,1,2,2,0,0,2,0,2,0,2,2,2,0,0]
-labels_crap_1 = [3 for i in range(61)]
+labels_crap_1 = [3 for i in range(73)]
 print "alla:", len(labels_crap_1) + len(labels1) + len(labels_1_hard) + len(labels2) + len(labels_smeared)
 #labels_others_1 = [3 for i in range(len(cell_list_others_1))]
 
@@ -66,27 +66,29 @@ for i,filename in enumerate(training_files):
             cell_list.append(cell_list_1_hard_[101])
             cell_list.append(cell_list_1_hard_[102])
             cell_list.append(cell_list_1_hard_[104])
-            #cell_list.append(cell_list_1_hard_[105])
-            #cell_list.append(cell_list_1_hard_[106])
-            #cell_list.append(cell_list_1_hard_[108])
-            #cell_list.append(cell_list_1_hard_[109])
-            #cell_list.append(cell_list_1_hard_[110])
-            #cell_list.append(cell_list_1_hard_[112])
-            #cell_list.append(cell_list_1_hard_[113])
-            #cell_list.append(cell_list_1_hard_[114])
-            #cell_list.append(cell_list_1_hard_[115])
-            #cell_list.append(cell_list_1_hard_[118])
-            #cell_list.append(cell_list_1_hard_[119])
-            #cell_list.append(cell_list_1_hard_[120])
+            cell_list.append(cell_list_1_hard_[105])
+            cell_list.append(cell_list_1_hard_[106])
+            cell_list.append(cell_list_1_hard_[108])
+            cell_list.append(cell_list_1_hard_[109])
+            cell_list.append(cell_list_1_hard_[110])
+            cell_list.append(cell_list_1_hard_[112])
+            cell_list.append(cell_list_1_hard_[113])
+            cell_list.append(cell_list_1_hard_[114])
+            cell_list.append(cell_list_1_hard_[115])
+            cell_list.append(cell_list_1_hard_[118])
+            cell_list.append(cell_list_1_hard_[119])
+            cell_list.append(cell_list_1_hard_[120])
             print "LEEN:", len(cell_list)
 
         elif filename == "crap_1.png":
             cytoplasm_cont, nuclei_mask, removed_cells, exchanged_cells = Klara_test.cell_watershed(testimg)
             cell_list = Klara_test.modify_cell_list(testimg, cytoplasm_cont, nuclei_mask)
             print "HEEEJ", len(cell_list)
+
         elif filename == "only_smeared.png":
             cytoplasm_cont, nuclei_mask, removed_cells, exchanged_cells = Klara_test.cell_watershed(testimg)
             cell_list = Klara_test.modify_cell_list(testimg, cytoplasm_cont, nuclei_mask)
+
         else:
             cell_list = rbc_seg.segmentation(testimg)
             print "other:", len(cell_list)

@@ -23,6 +23,9 @@ import cv2
 from Segmentation import rbc_seg
 from Classification import classer
 import math
+import scipy.misc
+from PIL import Image
+
 
 
 # This class handles the displaying of the results of the classification of the cells classified from the user-
@@ -675,6 +678,9 @@ class InteractionWindow(Canvas):
             for num, rois, bbox_container in self.roi_list:
                 for roi in rois:
                     test = ImageShower(self, roi, "Before segmentation, roi number " + str(num))
+                    #scipy.misc.imsave('testttttttt.png', roi)
+                    im = Image.fromarray(roi)
+                    im.save('../results/before_segmentation_roi_' + str(num) + '.png')
                     total_no_of_rois += 1
             print "Total no of rois to do: " + str(total_no_of_rois)
 
@@ -688,7 +694,8 @@ class InteractionWindow(Canvas):
 
                     # Show a segmented version of the ROI, "intermediate result"
                     test = ImageShower(self, new_roi, "After segmentation, roi number " + str(num))
-
+                    im = Image.fromarray(new_roi)
+                    im.save('../results/after_segmentation_roi_' + str(num) + '.png')
                     # Also make a progress bar
                     counter += 1
                     self.render_status_text((100, 100), "Running segmentation...", float(counter/float(total_no_of_rois)), 100)

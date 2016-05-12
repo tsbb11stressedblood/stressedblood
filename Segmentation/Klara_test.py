@@ -8,6 +8,7 @@ from cell import *
 import cProfile, pstats, StringIO
 
 import copy
+from PIL import Image
 
 def get_threshold(hist):
     ind = 15# np.argmax(hist)
@@ -192,6 +193,16 @@ def cell_watershed(img):
     background[:,:,0] = unknown_mask*255
     background[:,:,1] = unknown_mask*255
     background[:,:,2] = unknown_mask*255
+
+    ###save images!!###
+    im = Image.fromarray(bg_transform)
+    im.save('../results/bg_transform.png')
+
+    im = Image.fromarray(nuclei)
+    im.save('../results/nuclei.png')
+
+    im = Image.fromarray(markers)
+    im.save('../results/watershed_result.png')
 
     # Perform watershed and mark the borders on the image
     markers = cv2.watershed(background, markers)

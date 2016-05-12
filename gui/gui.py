@@ -274,6 +274,7 @@ class InteractionWindow(Canvas):
 
         # Call the super constructor
         Canvas.__init__(self, master)
+        #self.canvas = Canvas(self, master)
 
         # Zoom or roi mode (defaults to roi)
         self.mode = "roi"
@@ -287,6 +288,8 @@ class InteractionWindow(Canvas):
 
         self.image_handle = None    # Used to delete and recreate images
         self.setup_image()
+
+
 
         # Stuff for box selection
         self.init_box_pos = None            # In WINDOW coordinates
@@ -307,6 +310,7 @@ class InteractionWindow(Canvas):
         self.bind('<Button-1>', self.set_init_box_pos)
         self.bind('<ButtonRelease-1>', self.set_box)
         self.bind('<Button-3>', self.zoom_out)
+        self.bind('<Left>', self.move_up)
 
         # DEBUG
         self.counter = 0
@@ -644,6 +648,10 @@ class InteractionWindow(Canvas):
         # We also need to make sure that the ROIs are (visually) transformed to the new zoom level
         self.redraw_ROI()
 
+    def move_up(self, event):
+        print "HEEEEJ"
+        self.move(self.image_handle, 0, 10)
+
     # Right click zooms to previous zoom level
     def zoom_out(self, event):
         if self.zoom_level is not 0:
@@ -863,6 +871,8 @@ class GUI:
                 self.curr_image = InteractionWindow(self.frame, ndpi_file)
                 self.curr_image.grid(row=0, columnspan=4, sticky=W+E+N+S)
 
+            elif file_extension.lower() == '.png':
+                pass
             else:
                 show_error("Only .ndpi-images can be handled!")
         else:

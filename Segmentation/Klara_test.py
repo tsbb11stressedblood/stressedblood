@@ -143,14 +143,15 @@ def cell_watershed(img):
     max_radius = 0
     for c in all_nuclei_cont:
         (x,y), radius = cv2.minEnclosingCircle(c)
-        center = (int(x),int(y))
-        radius = int(radius)
-        if radius > max_radius:
-            max_radius = radius
-        circle_area = 3.14*radius*radius
-        nuclei_area = cv2.contourArea(c)
-        if nuclei_area/circle_area < .6 and nuclei_area > 150:
-            joined_nuclei_cont.append(c)
+        if radius > 0:
+            center = (int(x),int(y))
+            radius = int(radius)
+            if radius > max_radius:
+                max_radius = radius
+            circle_area = 3.14*radius*radius
+            nuclei_area = cv2.contourArea(c)
+            if nuclei_area/circle_area < .6 and nuclei_area > 150:
+                joined_nuclei_cont.append(c)
 
     # Draw contours of joined nuclei
     empty = np.zeros(np.shape(nuclei))

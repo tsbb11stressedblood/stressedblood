@@ -274,7 +274,6 @@ class InteractionWindow(Canvas):
 
         # Call the super constructor
         Canvas.__init__(self, master)
-        #self.canvas = Canvas(self, master)
 
         # Zoom or roi mode (defaults to roi)
         self.mode = "roi"
@@ -310,10 +309,13 @@ class InteractionWindow(Canvas):
         self.bind('<Button-1>', self.set_init_box_pos)
         self.bind('<ButtonRelease-1>', self.set_box)
         self.bind('<Button-3>', self.zoom_out)
-        self.bind('<Left>', self.move_up)
 
         # DEBUG
         self.counter = 0
+
+    def move_up(self, event):
+        self.move(self.image_handle, 10)
+        #self.after(100, self.move_up)
 
     # Handles initial setup of the input image
     def setup_image(self):
@@ -332,8 +334,13 @@ class InteractionWindow(Canvas):
         self.rgba_im = self.rgba_im.resize((self.winfo_width(), self.winfo_height()))
 
         # Use TKs PhotoImage to show the image (needed for selecting ROIs)
-        self.im = itk.PhotoImage(self.rgba_im)
-        self.image_handle = self.create_image(0, 0, image=self.im, anchor=NW)
+        self.im = itk.PhotoImage(self.rgba_im )
+
+        #self.im = PhotoImage(self.im)
+
+        #self.im.zoom(2, 2)
+        #self.image_handle = self.create_image(0, 0, image=self.im, anchor=NW)
+        self.image_handle = self.create_image(0, 0, image=self.im)
 
     # Whenever all ROIs and subROIs need to be redrawn, call this
     def redraw_ROI(self):
@@ -386,6 +393,7 @@ class InteractionWindow(Canvas):
         self.im = itk.PhotoImage(self.rgba_im)
         self.delete(self.image_handle)
         self.create_image(0, 0, image=self.im, anchor=NW)
+        #self.create_image(0, 0, image=self.im)
         self.clear_status_text()
 
     def set_init_box_pos(self, event):
@@ -648,10 +656,6 @@ class InteractionWindow(Canvas):
         # We also need to make sure that the ROIs are (visually) transformed to the new zoom level
         self.redraw_ROI()
 
-    def move_up(self, event):
-        print "HEEEEJ"
-        self.move(self.image_handle, 0, 10)
-
     # Right click zooms to previous zoom level
     def zoom_out(self, event):
         if self.zoom_level is not 0:
@@ -762,8 +766,11 @@ class GUI:
         # First we need a frame, which serves as the basic OS-specific window
         self.frame = Frame(master)
 
+
         # Packing it means that we want to fit it snuggly to the master and to make it visible
         self.frame.pack(fill=BOTH, expand=YES)
+
+        master.bind('<Up>', self.move_up)
 
         # Button handles
         self.load_button = None
@@ -779,6 +786,11 @@ class GUI:
 
         # We need a panel with all the buttons
         self.setup_panel()
+
+    def move_up(self, event):
+        #self.curr_image.move(self.curr_image.image_handle, 10,0)
+        self.curr_image.move_up(event)
+        print "HEEEEEEEEEEEEEEEEEEEEEEEJ"
 
     def setup_panel(self):
         # We want a button where we can load an image
@@ -868,8 +880,34 @@ class GUI:
                 # Remember to delete the old image first
                 if self.curr_image is not None:
                     self.curr_image.destroy()
-                self.curr_image = InteractionWindow(self.frame, ndpi_file)
-                self.curr_image.grid(row=0, columnspan=4, sticky=W+E+N+S)
+
+                self.image_frame = Frame(self.frame, bg="#ff00ff")
+                self.curr_image = InteractionWindow(self.image_frame, ndpi_file)
+
+                self.image_frame.grid(row=0, column=0, columnspan=2, sticky=W+E+N+S)
+                self.curr_image.grid(row=0, column=0, sticky=W+E+N+S)
+
+                #sbar = Scrollbar(self.image_frame)
+                #sbar.pack(side=RIGHT, fill=Y)
+                #sbar.config(command=self.curr_image.yview)
+                #self.config(yscrollcommand=sbar.set)
+
+                #hbar = Scrollbar(self.curr_image, orient=HORIZONTAL)
+                #hbar.pack(side=BOTTOM, fill=X)
+                # hbar.pack()
+                #hbar.grid(row=0, column=0)
+                #hbar.config(command=self.curr_image.xview)
+                #vbar = Scrollbar(self.curr_image, orient=VERTICAL)
+                #vbar.pack(side=RIGHT, fill=Y)
+                #vbar.pack()
+                #vbar.grid(row=0, column=0)
+                #vbar.config(command=self.curr_image.yview)
+
+                #self.curr_image.config(width=300, height=300)
+                #self.curr_image.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
+                #self.curr_image.pack(side=TOP, fill=BOTH)
+                #self.curr_image.pack(side=TOP, fill=BOTH)
+                #self.curr_image.grid(row=0, column=0, columnspan=2, sticky=W+E+N+S)
 
             elif file_extension.lower() == '.png':
                 pass

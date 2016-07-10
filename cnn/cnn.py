@@ -55,17 +55,19 @@ def load_dataset():
         #files = [f for r,d,f in os.walk(folder) if isfile(join(folder, f))]
 
 
-        images = np.zeros((1154*3, 1, 64, 64))
+        images = np.zeros((1154*3, 3, 64, 64))
         labels = []
         i = 0
         result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(folder) for f in filenames if
                   os.path.splitext(f)[1] == '.png']
         for f in result:
                 #img = Image.open(folder + filename, 'r').convert('LA')
-            img = mpimg.imread( f, 'r')[:,:,2]*.5 + mpimg.imread( f, 'r')[:,:,1]*.5
+            #img = mpimg.imread( f, 'r')[:,:,2]*.299 + mpimg.imread( f, 'r')[:,:,1]*.587 + mpimg.imread( f, 'r')[:,:,0]*.114
+            img = mpimg.imread(f, 'r')
+            img = np.transpose(img, axes=(2,1,0))
             print ("imgshape:", img.shape)
-            imga = np.zeros((1, img.shape[0], img.shape[1]), dtype='float32')
-            imga[0,:,:] = img
+            imga = np.zeros((3, img.shape[1], img.shape[2]), dtype='float32')
+            imga[:,:,:] = img
                 #imga = np.transpose(img)
 
                 #imga = np.array( img.getdata(),
@@ -79,8 +81,8 @@ def load_dataset():
 
             #imgaa = resize_image(imga)
 
-            if img.shape[0] < 64 and img.shape[1] < 64:
-                imgaa = np.pad(imga, ((0,0), (0, 64-img.shape[0]), (0, 64-img.shape[1])), 'constant', constant_values=(0,0))
+            if img.shape[1] < 64 and img.shape[2] < 64:
+                imgaa = np.pad(imga, ((0,0), (0, 64-img.shape[1]), (0, 64-img.shape[2])), 'constant', constant_values=(0,0))
             else:
                 #imgaa = imga[:,:,:]
                 imgaa = np.zeros((1,64,64))
@@ -97,7 +99,7 @@ def load_dataset():
                 labels.append(0)
             elif 'green' in f:
                 labels.append(1)
-            else:
+            else: #red
                 labels.append(2)
 
         #images = np.reshape(-1, 1, 128, 128)
@@ -113,12 +115,19 @@ def load_dataset():
     #X_test, y_test = load_images_and_labels('../learning_images/12W/')
 
 
-
-
-
     # We reserve the last n training examples for validation.
 
     X_test, y_test = X_train[900:1100], y_train[900:1100]
+
+
+    #for i in range(200):
+    #    plt.imshow(X_test[i,0,:,:], cmap=plt.cm.gray)
+        # plt.imshow(dataset['train']['X'][0][0], interpolation='nearest', cmap=plt.cm.gray)
+    #    plt.show()
+
+    #print (len(y_test))
+    #y_test = [0 for i in range(200)]
+    #y_test = np.zeros((200,1))
 
     y_train, y_val = y_train[0:800], y_train[800:900]
 
@@ -148,7 +157,7 @@ def build_cnn(input_var=None):
     # and a fully-connected hidden layer in front of the output layer.
 
     # Input layer, as usual:
-    network = lasagne.layers.InputLayer(shape=(None, 1, 64, 64),
+    network = lasagne.layers.InputLayer(shape=(None, 3, 64, 64),
                                         input_var=input_var)
     # This time we do not apply input dropout, as it tends to work less well
     # for convolutional layers.
@@ -219,7 +228,7 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
 # more functions to better separate the code, but it wouldn't make it any
 # easier to read.
 
-def main(model='cnn', num_epochs=5):
+def main(model='cnn', num_epochs=10):
     # Load the dataset
     print("Loading data...")
     X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
@@ -273,6 +282,9 @@ def main(model='cnn', num_epochs=5):
 
     # Compile a second function computing the validation loss and accuracy:
     val_fn = theano.function([input_var, target_var], [test_loss, test_acc], allow_input_downcast=True)
+
+    #get predictions
+    get_preds = theano.function([input_var], test_prediction, allow_input_downcast=True)
 
     # Finally, launch the training loop.
     print("Starting training...")
@@ -332,6 +344,31 @@ def main(model='cnn', num_epochs=5):
     print("  test loss:\t\t\t{:.6f}".format(test_err / test_batches))
     print("  test accuracy:\t\t{:.2f} %".format(
         test_acc / test_batches * 100))
+
+
+
+    test_image = mpimg.imread('../fake_areas/9W/1.png', 'r')/np.float32(256)
+    print ("before:", test_image.shape)
+    test_image = np.transpose(test_image, axes=(2, 1, 0))
+    print("after:", test_image.shape)
+    test_image1 = test_image[:, 330:330+64, 99:99+64]
+    test_image2 = test_image[:, 64+200:128+200, 64+200:128+200]
+
+
+    images = np.zeros((2, 3, 64, 64))
+    images[0, :, :, :] = test_image1[0:3,:,:]
+    images[1, :, :, :] = test_image2[0:3,:,:]
+
+
+    testaa = get_preds(images[0:2,0:3,:,:])
+    print(testaa)
+    #print ("TESTA: ", ['{0:.2}'.format(i) for i in testaa ]  )
+
+    new = np.transpose(images, axes=(0,3,2,1))
+    for i in range(2):
+        plt.imshow(new[i,:,:,:])
+        plt.title("Label: {}".format(testaa[i]))
+        plt.show()
 
 
     #print (inputs)

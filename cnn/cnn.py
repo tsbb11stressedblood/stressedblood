@@ -308,7 +308,7 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
 # more functions to better separate the code, but it wouldn't make it any
 # easier to read.
 
-def main(model='cnn', num_epochs=40):
+def main(model='cnn', num_epochs=10):
     # Load the dataset
     print("Loading data...")
     X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
@@ -439,17 +439,17 @@ def main(model='cnn', num_epochs=40):
     #print("after:", test_image.shape)
 
     if use_64:
-        images = np.zeros((64, 3, 64, 64))
+        images = np.zeros((4096, 3, 64, 64))
     else:
         images = np.zeros((64, 3, 32, 32))
     ii = 0
-    for i in range(8):
-        for j in range(8):
+    for i in range(56):
+        for j in range(56):
             if use_64:
-                images[ii,:,:,:] = test_image[0:3, 64*i:64*i+64, 64*j:64*j+64]
+                #images[ii,:,:,:] = test_image[0:3, 64*i:64*i+64, 64*j:64*j+64]
+                images[ii, :, :, :] = test_image[0:3, 8 * i:8 * i + 64, 8 * j:8 * j + 64]
             else:
                 images[ii, :, :, :] = test_image[0:3, 32 * i:32 * i + 32, 32 * j:32 * j + 32]
-
             ii += 1
 
     #images[0, :, :, :] = test_image1[0:3,:,:]
@@ -457,9 +457,22 @@ def main(model='cnn', num_epochs=40):
 
 
     if use_64:
-        testaa = get_preds(images[0:63,0:3,:,:])
+        testaa = get_preds(images[0:2809,0:3,:,:])
     else:
         testaa = get_preds(images[0:255, 0:3, :, :])
+
+    ii = 0
+    for t in testaa:
+        heat_map[0,8*(ii%56):8*(ii%56)+8,8*int(ii/56):8*int(ii/56)+8] = t[0]
+        heat_map[1, 8 * (ii % 56):8 * (ii % 56) + 8, 8 * int(ii / 56):8 * int(ii / 56) + 8] = t[1]
+        heat_map[2, 8 * (ii % 56):8 * (ii % 56) + 8, 8 * int(ii / 56):8 * int(ii / 56) + 8] = t[2]
+        print(ii)
+        ii += 1
+
+    plt.imshow(np.transpose(heat_map, axes=(2, 1, 0)))
+    #plt.title("Label: {}".format(testaa[i]))
+    plt.show()
+
     print(testaa)
     print(lasagne.__version__)
     #print ("TESTA: ", ['{0:.2}'.format(i) for i in testaa ]  )

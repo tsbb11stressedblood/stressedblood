@@ -21,7 +21,7 @@ import theano
 import theano.tensor as T
 import matplotlib.image as mpimg
 import fnmatch
-
+import scipy
 import lasagne
 from PIL import Image
 
@@ -94,26 +94,25 @@ def load_dataset():
 
             #imgaa = resize_image(imga)
 
-            if img.shape[1] <= 32 or img.shape[2] <= 32:
-                print(f)
-
             if use_64:
-                if imga.shape[1] < 64:
-                    imga = np.pad(imga, ((0, 0), (0, 64 - img.shape[1]), (0, 0)), 'constant',
-                                       constant_values=(0, 0))
+                if img.shape[1] < 64 or img.shape[2] < 64:
+                    if img.shape[1] > img.shape[2]:
+                        factor = 64.0/img.shape[2]+.1
+                    else:
+                        factor = 64.0/img.shape[1]+.1
 
-                if imga.shape[2] < 64:
-                    imga = np.pad(imga, ((0, 0), (0, 0), (0, 64 - img.shape[2])), 'constant',
-                                   constant_values=(0, 0))
+                    imgb = scipy.misc.imresize(imga, factor)
 
-                if imga.shape[1] < 64 and imga.shape[2] < 64:
-                    imga = np.pad(imga, ((0,0), (0, 64-img.shape[1]), (0, 64-img.shape[2])),
-                                  'constant', constant_values=(0,0))
+                    imga = np.transpose(imgb, axes=(2, 1, 0))
+
+                    #print(imgb.shape)
 
                 if imga.shape[1] > 64:
                     imga = imga[:,0:64,:]
                 if imga.shape[2] > 64:
                     imga = imga[:,:,0:64]
+                print(imga.shape)
+
             else: #use 32
                 if imga.shape[1] < 32:
                     imga = np.pad(imga, ((0, 0), (0, 32 - img.shape[1]), (0, 0)), 'constant',
@@ -154,8 +153,8 @@ def load_dataset():
                 labels.append(1)
             elif 'red' in f:
                 labels.append(2)
-            #elif 'pink' in f: #crap
-            #    labels.append(3)
+            elif 'pink' in f: #crap
+                labels.append(3)
             else:
                 print ("SHOULDNT HAPPEN!!!")
 
@@ -166,9 +165,9 @@ def load_dataset():
 
     # We can now download and read the training and test set images and labels.
     #X_train, y_train = load_images_and_labels('../learning_images/9W/2015-10-15 18.17-2/')
-    #X_train, y_train = load_images_and_labels('../learning_images/9W/')
+    #X_train, y_train, num = load_images_and_labels('../learning_images/9W/')
     #X_train, y_train, num = load_images_and_labels('../learning_images/small_test/')
-    X_train, y_train, num = load_images_and_labels('../learning_images/9W_nocrap/')
+    X_train, y_train, num = load_images_and_labels('../learning_images/9W_littlecrap/')
 
     print (y_train)
     #X_test, y_test = load_images_and_labels('../learning_images/9W/2015-10-15 19.02_1/')
@@ -270,7 +269,7 @@ def build_cnn(input_var=None):
 
     network = lasagne.layers.DenseLayer(
             lasagne.layers.dropout(network, p=.5),
-            num_units=3,
+            num_units=4,
             nonlinearity=lasagne.nonlinearities.softmax)
 
     return network
@@ -469,7 +468,7 @@ def main(model='cnn', num_epochs=10):
         print(ii)
         ii += 1
 
-    plt.imshow(np.transpose(heat_map, axes=(2, 1, 0)))
+    plt.imshow(np.transpose(heat_map, axes=(1, 2, 0)))
     #plt.title("Label: {}".format(testaa[i]))
     plt.show()
 
@@ -479,9 +478,10 @@ def main(model='cnn', num_epochs=10):
 
     new = np.transpose(images, axes=(0,3,2,1))
     for i in range(255):
-        plt.imshow(new[i,:,:,:])
-        plt.title("Label: {}".format(testaa[i]))
-        plt.show()
+        if testaa[i][2] > .4:
+            plt.imshow(new[i,:,:,:])
+            plt.title("Label: {}".format(testaa[i]))
+            plt.show()
 
     #print (inputs)
 

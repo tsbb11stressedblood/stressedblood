@@ -260,6 +260,7 @@ def build_cnn(input_var=None):
 
     network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
 
+
     # A fully-connected layer of 256 units with 50% dropout on its inputs:
     network = lasagne.layers.DenseLayer(
             lasagne.layers.dropout(network, p=.5),
@@ -307,7 +308,7 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
 # more functions to better separate the code, but it wouldn't make it any
 # easier to read.
 
-def main(model='cnn', num_epochs=10):
+def main(model='cnn', num_epochs=100):
     # Load the dataset
     print("Loading data...")
     X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
@@ -376,7 +377,7 @@ def main(model='cnn', num_epochs=10):
         train_batches = 0
         start_time = time.time()
 
-        for batch in iterate_minibatches(X_train, y_train, 40, shuffle=False):
+        for batch in iterate_minibatches(X_train, y_train, 128, shuffle=False):
             inputs, targets = batch
             train_err += train_fn(inputs, targets)
             train_batches += 1
@@ -386,7 +387,7 @@ def main(model='cnn', num_epochs=10):
         val_err = 0
         val_acc = 0
         val_batches = 0
-        for batch in iterate_minibatches(X_val, y_val, 40, shuffle=False):
+        for batch in iterate_minibatches(X_val, y_val, 128, shuffle=False):
             inputs, targets = batch
             err, acc = val_fn(inputs, targets)
             val_err += err
@@ -406,7 +407,7 @@ def main(model='cnn', num_epochs=10):
     test_acc = 0
 
     test_batches = 0
-    for batch in iterate_minibatches(X_test, y_test, 30, shuffle=False):
+    for batch in iterate_minibatches(X_test, y_test, 128, shuffle=False):
         inputs, targets = batch
         err, acc = val_fn(inputs, targets)
 
@@ -454,7 +455,6 @@ def main(model='cnn', num_epochs=10):
     #images[0, :, :, :] = test_image1[0:3,:,:]
     #images[1, :, :, :] = test_image2[0:3,:,:]
 
-
     if use_64:
         testaa = get_preds(images[0:2809,0:3,:,:])
     else:
@@ -462,7 +462,7 @@ def main(model='cnn', num_epochs=10):
 
     ii = 0
     for t in testaa:
-        heat_map[0,8*(ii%56):8*(ii%56)+8,8*int(ii/56):8*int(ii/56)+8] = t[0]
+        heat_map[0, 8 * (ii % 56):8 * (ii % 56) + 8, 8 * int(ii / 56):8 * int(ii / 56) + 8] = t[0]
         heat_map[1, 8 * (ii % 56):8 * (ii % 56) + 8, 8 * int(ii / 56):8 * int(ii / 56) + 8] = t[1]
         heat_map[2, 8 * (ii % 56):8 * (ii % 56) + 8, 8 * int(ii / 56):8 * int(ii / 56) + 8] = t[2]
         print(ii)

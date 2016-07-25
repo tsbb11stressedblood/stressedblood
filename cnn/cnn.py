@@ -24,9 +24,9 @@ import fnmatch
 import scipy
 import lasagne
 from PIL import Image
-
+import math
 import lasagne.layers.dnn
-
+from scipy.misc import imresize, imrotate
 
 use_64 = True #else 32
 
@@ -58,18 +58,23 @@ def load_dataset():
         from os import listdir
         from os.path import isfile, join
         #files = [f for r,d,f in os.walk(folder) if isfile(join(folder, f))]
-        num = 0
 
-        if use_64:
-            images = np.zeros((1455*3, 3, 64, 64))
-        else:
-            images = np.zeros((1455 * 3, 3, 32, 32))
         labels = []
         i = 0
         result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(folder) for f in filenames if
                   os.path.splitext(f)[1] == '.png']
+
+        num = len(result)
+
+        rotations = 10
+
+
+        if use_64:
+            images = np.zeros((num * (rotations+1), 3, 64, 64))
+        else:
+            images = np.zeros((num * 2, 3, 32, 32))
+
         for f in result:
-            num += 1
                 #img = Image.open(folder + filename, 'r').convert('LA')
             #img = mpimg.imread( f, 'r')[:,:,2]*.299 + mpimg.imread( f, 'r')[:,:,1]*.587 + mpimg.imread( f, 'r')[:,:,0]*.114
             #img = mpimg.imread(f, 'r')[:, :, 0:1]
@@ -160,10 +165,43 @@ def load_dataset():
 
         #images = np.reshape(-1, 1, 128, 128)
 
-        print("images_shape:", images.shape)
-        return images/np.float32(256), labels, num
+        #print("images_shape:", images.shape)
 
-    # We can now download and read the training and test set images and labels.
+        print("num: ", num)
+        #perturb images?
+        #perturbed_images = images.copy()
+        for i in range(rotations):
+            perturbed_images1 = np.zeros((num, 3, 64, 64))
+            for ii in range(num):
+                perturbed_images1[ii,:,:,:] = np.transpose(perturb(images[ii,:,:,:], 1, (i+1)*180/rotations, 0, 0), axes=(2,1,0))
+
+            images[num*i + num:num*i + num + num, :, :, :] = perturbed_images1
+
+        #perturbed_images2 = np.zeros((num, 3, 64, 64))
+        #for im in perturbed_images2:
+        #    im = perturb(im, 1, 180, 0, 0)
+
+        #images[num*2:num*2 + num, :, :, :] = perturbed_images2
+
+        return images/np.float32(256), labels*rotations, num*rotations
+
+
+    def perturb(img, scale, angle, skew, mirror):
+        img2 = img.copy()
+        if scale is not 1:
+            img2 = imresize(img2, scale)
+        if angle is not 0:
+            img2 = imrotate(img2, angle)
+        if skew is not 0:
+            pass
+        if mirror:
+            img2 = np.fliplr(img2)
+
+        #plt.imshow(img2)
+        #plt.show()
+
+        return img2
+
     #X_train, y_train = load_images_and_labels('../learning_images/9W/2015-10-15 18.17-2/')
     #X_train, y_train, num = load_images_and_labels('../learning_images/9W/')
     #X_train, y_train, num = load_images_and_labels('../learning_images/small_test/')
@@ -221,7 +259,6 @@ def load_dataset():
     #X_test = X_test.reshape((-1, 1, 64, 64))
 
     # We just return all the arrays in order, as expected in main().
-    # (It doesn't matter how we do this as long as we can read them again.)
     return X_train, y_train, X_val, y_val, X_test, y_test
 
 
@@ -308,7 +345,7 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
 # more functions to better separate the code, but it wouldn't make it any
 # easier to read.
 
-def main(model='cnn', num_epochs=100):
+def main(model='cnn', num_epochs=5000):
     # Load the dataset
     print("Loading data...")
     X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
@@ -470,6 +507,10 @@ def main(model='cnn', num_epochs=100):
 
     plt.imshow(np.transpose(heat_map, axes=(1, 2, 0)))
     #plt.title("Label: {}".format(testaa[i]))
+    plt.show()
+
+    plt.imshow(np.transpose(-np.reciprocal(np.log10(heat_map)), axes=(1, 2, 0)))
+    # plt.title("Label: {}".format(testaa[i]))
     plt.show()
 
     print(testaa)

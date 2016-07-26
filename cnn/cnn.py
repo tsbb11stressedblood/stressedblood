@@ -203,9 +203,9 @@ def load_dataset():
         return img2
 
     #X_train, y_train = load_images_and_labels('../learning_images/9W/2015-10-15 18.17-2/')
-    #X_train, y_train, num = load_images_and_labels('../learning_images/9W/')
+    X_train, y_train, num = load_images_and_labels('../learning_images/all_littlecrap/')
     #X_train, y_train, num = load_images_and_labels('../learning_images/small_test/')
-    X_train, y_train, num = load_images_and_labels('../learning_images/9W_littlecrap/')
+    #X_train, y_train, num = load_images_and_labels('../learning_images/9W_littlecrap/')
 
     print (y_train)
     #X_test, y_test = load_images_and_labels('../learning_images/9W/2015-10-15 19.02_1/')
@@ -465,9 +465,9 @@ def main(model='cnn', num_epochs=5000):
 
 
 
-    test_image = mpimg.imread('../fake_areas/9W/1.png', 'r')/np.float32(256.0)
+    #test_image = mpimg.imread('../fake_areas/9W/1.png', 'r')/np.float32(256.0)
     #test_image = mpimg.imread('../nice_areas/9W/2015-10-15 18.06_1.png', 'r') / np.float32(256.0)
-
+    test_image = mpimg.imread('../nice_areas/9W/512x512/2015-10-15 18.06_1.png', 'r') / np.float32(256.0)
 
     heat_map = np.zeros((3,512,512))
 
@@ -502,13 +502,13 @@ def main(model='cnn', num_epochs=5000):
         heat_map[0, 8 * (ii % 56):8 * (ii % 56) + 8, 8 * int(ii / 56):8 * int(ii / 56) + 8] = t[0]
         heat_map[1, 8 * (ii % 56):8 * (ii % 56) + 8, 8 * int(ii / 56):8 * int(ii / 56) + 8] = t[1]
         heat_map[2, 8 * (ii % 56):8 * (ii % 56) + 8, 8 * int(ii / 56):8 * int(ii / 56) + 8] = t[2]
-        print(ii)
+        #print(ii)
         ii += 1
 
     plt.imshow(np.transpose(heat_map, axes=(1, 2, 0)))
     #plt.title("Label: {}".format(testaa[i]))
-    plt.show()
-
+    #plt.show()
+    plt.figure()
     plt.imshow(np.transpose(-np.reciprocal(np.log10(heat_map)), axes=(1, 2, 0)))
     # plt.title("Label: {}".format(testaa[i]))
     plt.show()

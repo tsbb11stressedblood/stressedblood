@@ -17,8 +17,11 @@ import math
 import lasagne.layers.dnn
 from scipy.misc import imresize, imrotate
 from cnn import build_cnn
+from cnn import load_dataset
 
 import matplotlib.pyplot as plt
+from nolearn.lasagne.visualize import *
+
 
 input_var = T.tensor4('inputs')
 target_var = T.ivector('targets')
@@ -68,8 +71,8 @@ with np.load('model.npz') as f:
     lasagne.layers.set_all_param_values(network, param_values)
 
 
-#test_image = mpimg.imread('../nice_areas/9W/512x512/2015-10-13 16.10_2.png', 'r') / np.float32(256.0)
-test_image = mpimg.imread('../fake_areas/9W/1.png', 'r') / np.float32(256.0)
+test_image = mpimg.imread('../nice_areas/9W/512x512/2015-10-15 18.06_2.png', 'r') / np.float32(256.0)
+#test_image = mpimg.imread('../fake_areas/9W/1.png', 'r') / np.float32(256.0)
 
 heat_map = np.zeros((3,512,512))
 
@@ -104,3 +107,47 @@ plt.imshow(np.transpose(-np.reciprocal(np.log10(heat_map)), axes=(1, 2, 0)))
 plt.show()
 
 
+#visualize kernels!
+
+# layers = lasagne.layers.get_all_layers(network)
+# layercounter = 0
+# for l in layers:
+#     if 'Conv2DLayer' in str(type(l)):
+#         f = open('layer' + str(layercounter) + '.weights', 'wb')
+#         weights = l.W.get_value()
+#         weights = weights.reshape(weights.shape[0] * weights.shape[1], weights.shape[2], weights.shape[3])
+#         # weights[0]
+#         for i in range(weights.shape[0]):
+#             wmin = float(weights[i].min())
+#             wmax = float(weights[i].max())
+#             weights[i] *= (255.0 / float(wmax - wmin))
+#             weights[i] += abs(wmin) * (255.0 / float(wmax - wmin))
+#         np.save(f, weights)
+#         f.close()
+#         layercounter += 1
+#
+#
+# with open('layer0.weights', 'rb') as f:
+#     layer0 = np.load(f)
+#
+# fig, ax = plt.subplots(nrows=3, ncols=32, sharex=True, sharey=False)
+# #sorg = fig.add_subplot(3,32,1)
+# for i in xrange(1,97):
+# #s = fig.add_subplot(3,32,i)
+# #s.set_adjustable('box-forced')
+# #s.autoscale(False)
+#     ax[(i-1)/32][(i-1)%32].imshow(layer0[i-1])#,cmap = cm.BLUE,interpolation='bilinear')
+#     ax[(i-1)/32][(i-1)%32].autoscale(True)
+#     ax[(i-1)/32][(i-1)%32].set_ylim([0,5])
+#
+# plt.show()
+
+
+X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
+
+layers = lasagne.layers.get_all_layers(network)
+layercounter = 0
+for l in layers:
+    if 'Conv2DLayer' in str(type(l)):
+        plot_conv_activity(l, X_train[:1], figsize=(5,5))
+        plt.show()

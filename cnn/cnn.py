@@ -159,7 +159,7 @@ def load_dataset():
             elif 'red' in f:
                 labels.append(0)
             elif 'pink' in f: #crap
-                labels.append(2)
+                labels.append(3)
             else:
                 print ("SHOULDNT HAPPEN!!!")
 
@@ -284,13 +284,28 @@ def build_cnn(input_var=None):
             nonlinearity=lasagne.nonlinearities.rectify,
             W=lasagne.init.GlorotUniform())
 
+    # Max-pooling layer of factor 2 in both dimensions:
+    network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
 
-    # Expert note: Lasagne provides alternative convolutional layers that
-    # override Theano's choice of which implementation to use; for details
-    # please see http://lasagne.readthedocs.org/en/latest/user/tutorial.html.
+
+
+###############################
+
+
+    network = lasagne.layers.Conv2DLayer(
+        network, num_filters=32, filter_size=(5, 5),
+        nonlinearity=lasagne.nonlinearities.rectify,
+        W=lasagne.init.GlorotUniform())
+
 
     # Max-pooling layer of factor 2 in both dimensions:
     network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
+
+
+###############################
+
+
+
 
     # Another convolution with 32 5x5 kernels, and another 2x2 pooling:
     network = lasagne.layers.Conv2DLayer(
@@ -347,7 +362,7 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
 # more functions to better separate the code, but it wouldn't make it any
 # easier to read.
 
-def main(model='cnn', num_epochs=200):
+def main(model='cnn', num_epochs=5000):
     # Load the dataset
     print("Loading data...")
     X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()

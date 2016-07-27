@@ -157,9 +157,9 @@ def load_dataset():
             elif 'green' in f:
                 labels.append(1)
             elif 'red' in f:
-                labels.append(2)
+                labels.append(0)
             elif 'pink' in f: #crap
-                labels.append(3)
+                labels.append(2)
             else:
                 print ("SHOULDNT HAPPEN!!!")
 
@@ -283,6 +283,8 @@ def build_cnn(input_var=None):
             network, num_filters=32, filter_size=(5, 5),
             nonlinearity=lasagne.nonlinearities.rectify,
             W=lasagne.init.GlorotUniform())
+
+
     # Expert note: Lasagne provides alternative convolutional layers that
     # override Theano's choice of which implementation to use; for details
     # please see http://lasagne.readthedocs.org/en/latest/user/tutorial.html.
@@ -513,6 +515,15 @@ def main(model='cnn', num_epochs=200):
     # plt.title("Label: {}".format(testaa[i]))
     plt.show()
 
+
+    # Optionally, you could now dump the network weights to a file like this:
+    np.savez('model.npz', *lasagne.layers.get_all_param_values(network))
+    #
+    # And load them again later on like this:
+    # with np.load('model.npz') as f:
+    #     param_values = [f['arr_%d' % i] for i in range(len(f.files))]
+    # lasagne.layers.set_all_param_values(network, param_values)
+
     print(testaa)
     print(lasagne.__version__)
     #print ("TESTA: ", ['{0:.2}'.format(i) for i in testaa ]  )
@@ -526,13 +537,13 @@ def main(model='cnn', num_epochs=200):
 
     #print (inputs)
 
-    # Optionally, you could now dump the network weights to a file like this:
-    np.savez('model.npz', *lasagne.layers.get_all_param_values(network))
-    #
-    # And load them again later on like this:
-    # with np.load('model.npz') as f:
-    #     param_values = [f['arr_%d' % i] for i in range(len(f.files))]
-    # lasagne.layers.set_all_param_values(network, param_values)
+
+
+
+
+
+    layers = lasagne.layers.get_all_layers(network)
+
 
 
 if __name__ == '__main__':

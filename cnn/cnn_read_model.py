@@ -68,7 +68,8 @@ with np.load('model.npz') as f:
     lasagne.layers.set_all_param_values(network, param_values)
 
 
-test_image = mpimg.imread('../nice_areas/9W/512x512/2015-10-15 17.44_1.png', 'r') / np.float32(256.0)
+#test_image = mpimg.imread('../nice_areas/9W/512x512/2015-10-13 14.32_2.png', 'r') / np.float32(256.0)
+test_image = mpimg.imread('../fake_areas/9W/1.png', 'r') / np.float32(256.0)
 
 heat_map = np.zeros((3,512,512))
 

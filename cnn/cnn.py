@@ -24,9 +24,9 @@ import fnmatch
 import scipy
 import lasagne
 from PIL import Image
-
+import math
 import lasagne.layers.dnn
-
+from scipy.misc import imresize, imrotate
 
 use_64 = True #else 32
 
@@ -58,18 +58,23 @@ def load_dataset():
         from os import listdir
         from os.path import isfile, join
         #files = [f for r,d,f in os.walk(folder) if isfile(join(folder, f))]
-        num = 0
 
-        if use_64:
-            images = np.zeros((1455*3, 3, 64, 64))
-        else:
-            images = np.zeros((1455 * 3, 3, 32, 32))
         labels = []
         i = 0
         result = [os.path.join(dp, f) for dp, dn, filenames in os.walk(folder) for f in filenames if
                   os.path.splitext(f)[1] == '.png']
+
+        num = len(result)
+
+        rotations = 10
+
+
+        if use_64:
+            images = np.zeros((num * (rotations+1), 3, 64, 64))
+        else:
+            images = np.zeros((num * 2, 3, 32, 32))
+
         for f in result:
-            num += 1
                 #img = Image.open(folder + filename, 'r').convert('LA')
             #img = mpimg.imread( f, 'r')[:,:,2]*.299 + mpimg.imread( f, 'r')[:,:,1]*.587 + mpimg.imread( f, 'r')[:,:,0]*.114
             #img = mpimg.imread(f, 'r')[:, :, 0:1]
@@ -152,7 +157,7 @@ def load_dataset():
             elif 'green' in f:
                 labels.append(1)
             elif 'red' in f:
-                labels.append(2)
+                labels.append(0)
             elif 'pink' in f: #crap
                 labels.append(3)
             else:
@@ -160,14 +165,47 @@ def load_dataset():
 
         #images = np.reshape(-1, 1, 128, 128)
 
-        print("images_shape:", images.shape)
-        return images/np.float32(256), labels, num
+        #print("images_shape:", images.shape)
 
-    # We can now download and read the training and test set images and labels.
+        print("num: ", num)
+        #perturb images?
+        #perturbed_images = images.copy()
+        for i in range(rotations):
+            perturbed_images1 = np.zeros((num, 3, 64, 64))
+            for ii in range(num):
+                perturbed_images1[ii,:,:,:] = np.transpose(perturb(images[ii,:,:,:], 1, (i+1)*180/rotations, 0, 0), axes=(2,1,0))
+
+            images[num*i + num:num*i + num + num, :, :, :] = perturbed_images1
+
+        #perturbed_images2 = np.zeros((num, 3, 64, 64))
+        #for im in perturbed_images2:
+        #    im = perturb(im, 1, 180, 0, 0)
+
+        #images[num*2:num*2 + num, :, :, :] = perturbed_images2
+
+        return images/np.float32(256), labels*rotations, num*rotations
+
+
+    def perturb(img, scale, angle, skew, mirror):
+        img2 = img.copy()
+        if scale is not 1:
+            img2 = imresize(img2, scale)
+        if angle is not 0:
+            img2 = imrotate(img2, angle)
+        if skew is not 0:
+            pass
+        if mirror:
+            img2 = np.fliplr(img2)
+
+        #plt.imshow(img2)
+        #plt.show()
+
+        return img2
+
     #X_train, y_train = load_images_and_labels('../learning_images/9W/2015-10-15 18.17-2/')
-    #X_train, y_train, num = load_images_and_labels('../learning_images/9W/')
+    X_train, y_train, num = load_images_and_labels('../learning_images/all/')
     #X_train, y_train, num = load_images_and_labels('../learning_images/small_test/')
-    X_train, y_train, num = load_images_and_labels('../learning_images/9W_littlecrap/')
+    #X_train, y_train, num = load_images_and_labels('../learning_images/9W_littlecrap/')
 
     print (y_train)
     #X_test, y_test = load_images_and_labels('../learning_images/9W/2015-10-15 19.02_1/')
@@ -221,7 +259,6 @@ def load_dataset():
     #X_test = X_test.reshape((-1, 1, 64, 64))
 
     # We just return all the arrays in order, as expected in main().
-    # (It doesn't matter how we do this as long as we can read them again.)
     return X_train, y_train, X_val, y_val, X_test, y_test
 
 
@@ -246,12 +283,29 @@ def build_cnn(input_var=None):
             network, num_filters=32, filter_size=(5, 5),
             nonlinearity=lasagne.nonlinearities.rectify,
             W=lasagne.init.GlorotUniform())
-    # Expert note: Lasagne provides alternative convolutional layers that
-    # override Theano's choice of which implementation to use; for details
-    # please see http://lasagne.readthedocs.org/en/latest/user/tutorial.html.
 
     # Max-pooling layer of factor 2 in both dimensions:
     network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
+
+
+
+###############################
+
+
+    network = lasagne.layers.Conv2DLayer(
+        network, num_filters=32, filter_size=(5, 5),
+        nonlinearity=lasagne.nonlinearities.rectify,
+        W=lasagne.init.GlorotUniform())
+
+
+    # Max-pooling layer of factor 2 in both dimensions:
+    network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
+
+
+###############################
+
+
+
 
     # Another convolution with 32 5x5 kernels, and another 2x2 pooling:
     network = lasagne.layers.Conv2DLayer(
@@ -259,6 +313,7 @@ def build_cnn(input_var=None):
             nonlinearity=lasagne.nonlinearities.rectify)
 
     network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
+
 
     # A fully-connected layer of 256 units with 50% dropout on its inputs:
     network = lasagne.layers.DenseLayer(
@@ -307,7 +362,7 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
 # more functions to better separate the code, but it wouldn't make it any
 # easier to read.
 
-def main(model='cnn', num_epochs=10):
+def main(model='cnn', num_epochs=30000):
     # Load the dataset
     print("Loading data...")
     X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
@@ -376,7 +431,7 @@ def main(model='cnn', num_epochs=10):
         train_batches = 0
         start_time = time.time()
 
-        for batch in iterate_minibatches(X_train, y_train, 40, shuffle=False):
+        for batch in iterate_minibatches(X_train, y_train, 128, shuffle=False):
             inputs, targets = batch
             train_err += train_fn(inputs, targets)
             train_batches += 1
@@ -386,7 +441,7 @@ def main(model='cnn', num_epochs=10):
         val_err = 0
         val_acc = 0
         val_batches = 0
-        for batch in iterate_minibatches(X_val, y_val, 40, shuffle=False):
+        for batch in iterate_minibatches(X_val, y_val, 128, shuffle=False):
             inputs, targets = batch
             err, acc = val_fn(inputs, targets)
             val_err += err
@@ -406,7 +461,7 @@ def main(model='cnn', num_epochs=10):
     test_acc = 0
 
     test_batches = 0
-    for batch in iterate_minibatches(X_test, y_test, 30, shuffle=False):
+    for batch in iterate_minibatches(X_test, y_test, 128, shuffle=False):
         inputs, targets = batch
         err, acc = val_fn(inputs, targets)
 
@@ -427,9 +482,9 @@ def main(model='cnn', num_epochs=10):
 
 
 
-    test_image = mpimg.imread('../fake_areas/9W/1.png', 'r')/np.float32(256.0)
+    #test_image = mpimg.imread('../fake_areas/9W/1.png', 'r')/np.float32(256.0)
     #test_image = mpimg.imread('../nice_areas/9W/2015-10-15 18.06_1.png', 'r') / np.float32(256.0)
-
+    test_image = mpimg.imread('../nice_areas/9W/512x512/2015-10-15 18.06_1.png', 'r') / np.float32(256.0)
 
     heat_map = np.zeros((3,512,512))
 
@@ -454,7 +509,6 @@ def main(model='cnn', num_epochs=10):
     #images[0, :, :, :] = test_image1[0:3,:,:]
     #images[1, :, :, :] = test_image2[0:3,:,:]
 
-
     if use_64:
         testaa = get_preds(images[0:2809,0:3,:,:])
     else:
@@ -462,15 +516,28 @@ def main(model='cnn', num_epochs=10):
 
     ii = 0
     for t in testaa:
-        heat_map[0,8*(ii%56):8*(ii%56)+8,8*int(ii/56):8*int(ii/56)+8] = t[0]
+        heat_map[0, 8 * (ii % 56):8 * (ii % 56) + 8, 8 * int(ii / 56):8 * int(ii / 56) + 8] = t[0]
         heat_map[1, 8 * (ii % 56):8 * (ii % 56) + 8, 8 * int(ii / 56):8 * int(ii / 56) + 8] = t[1]
         heat_map[2, 8 * (ii % 56):8 * (ii % 56) + 8, 8 * int(ii / 56):8 * int(ii / 56) + 8] = t[2]
-        print(ii)
+        #print(ii)
         ii += 1
 
     plt.imshow(np.transpose(heat_map, axes=(1, 2, 0)))
     #plt.title("Label: {}".format(testaa[i]))
+    #plt.show()
+    plt.figure()
+    plt.imshow(np.transpose(-np.reciprocal(np.log10(heat_map)), axes=(1, 2, 0)))
+    # plt.title("Label: {}".format(testaa[i]))
     plt.show()
+
+
+    # Optionally, you could now dump the network weights to a file like this:
+    np.savez('model.npz', *lasagne.layers.get_all_param_values(network))
+    #
+    # And load them again later on like this:
+    # with np.load('model.npz') as f:
+    #     param_values = [f['arr_%d' % i] for i in range(len(f.files))]
+    # lasagne.layers.set_all_param_values(network, param_values)
 
     print(testaa)
     print(lasagne.__version__)
@@ -485,13 +552,13 @@ def main(model='cnn', num_epochs=10):
 
     #print (inputs)
 
-    # Optionally, you could now dump the network weights to a file like this:
-    np.savez('model.npz', *lasagne.layers.get_all_param_values(network))
-    #
-    # And load them again later on like this:
-    # with np.load('model.npz') as f:
-    #     param_values = [f['arr_%d' % i] for i in range(len(f.files))]
-    # lasagne.layers.set_all_param_values(network, param_values)
+
+
+
+
+
+    layers = lasagne.layers.get_all_layers(network)
+
 
 
 if __name__ == '__main__':

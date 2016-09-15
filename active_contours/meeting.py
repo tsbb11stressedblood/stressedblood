@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-import medpy.filter
+#import medpy.filter
 def cluster_image(img):
     img_reshape = img.reshape((img.shape[0] * img.shape[1], 1))
     img_reshape = np.float32(img_reshape)

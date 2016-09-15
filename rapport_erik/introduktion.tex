@@ -1,0 +1,27 @@
+\chapter{Introduction}\label{cha:intro}
+
+\section{Background}
+The ratio between Heterophils and Lymphocytes in chickens is a useful measure of their stress level. As of now, this ratio is calculated by hand, a very laborious and time consuming task. This thesis analyses the possibility of automating this process, in conjunction with an interactive graphical user interface for manual correction.\\\\
+The aim is that it will be a usable application for researchers in biology and similar fields, without degrees in engineering or other strictly technical fields.
+
+
+\section{Problem description}
+Color images of blood cells from peripheral blood smears are taken with a digital microscope beforehand, and different types of blood cells are to be segmented and classified using a convolutional neural network (referred to as CNN from here on out). The most important blood cells are heterophils and lymphocytes, other white blood cells such as monocytes and \Warning{OTHERSSS} OTHERS are not important for the task at hand, but it can be beneficial to detect these as well.\\\\
+The images are given in the ndpi format, which is basically a proprietary extension of the TIFF file format, with different zoom levels of the blood smears. This application will only use the ones that are taken with the largest zoom available, in which a white blood cell occupies an area of approximately 50x50 pixels.\\\\
+From the images a ground truth must be established. This is done by manually cropping out the individual cells and saving them as PNG images, with a number in the name corresponding to its class. Since the cells are seldom isolated in the image, it is expected that almost all individual cell images will contain parts of other cells around it. 
+Since the CNN algorithm is much like a black box in terms of insight into the network from the user's perspective, thorough testing must be done with the trained network so as to verify the accuracy and flexibility.
+The CNN network will be trained on a graphics card GPU to significantly increase the speed, since graphics cards are highly optimized to parallel tasks, as well as matrix multiplication. 
+
+
+\section{Limitations}
+There are several limitations to this thesis, the main ones will be mentioned here.
+
+\subsection{Data set}
+There are many large scale images available, but only a few thousand white blood cells are cut out and labeled, since this is a laborious and time consuming activity. The data set also only contain blood smear images from chickens of the age of 9 and 12 weeks, which probably limits the robustness of the application, since the cells vary in size and color during its lifetime.
+
+\subsection{Loss of depth}
+When manually analysing a cell in microscopes, one can focus on different depths of it in case of any uncertainties in determining the type of the cell. Since the cells are essentially photographed at a fixed depth, any information about their thickness will be lost. 
+
+\subsection{Image artefacts}
+Getting a perfect image from a blood smear image is virtually impossible. The concentration of blood cells in the image varies significantly, in some parts the cells may be clumped together in groups of several hundred cells, in other parts the cells are spread very far apart. There are also many damaged cells from the smearing process, and strands of hair and dust is quite common. When analysing the images manually, the most common method is to choose a few regions of interest (here on out referred to as ROIs ) where the amount of artefacts is low, and the concentration of cells is at an acceptable level.
+

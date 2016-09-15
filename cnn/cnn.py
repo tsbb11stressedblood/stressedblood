@@ -25,7 +25,7 @@ import scipy
 import lasagne
 from PIL import Image
 import math
-import lasagne.layers.dnn
+#import lasagne.layers.dnn
 from scipy.misc import imresize, imrotate
 
 use_64 = True #else 32
@@ -288,7 +288,6 @@ def build_cnn(input_var=None):
     network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
 
 
-
 ###############################
 
 
@@ -303,7 +302,6 @@ def build_cnn(input_var=None):
 
 
 ###############################
-
 
 
 

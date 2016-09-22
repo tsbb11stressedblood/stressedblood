@@ -14,7 +14,7 @@ import scipy
 import lasagne
 from PIL import Image
 import math
-import lasagne.layers.dnn
+#import lasagne.layers.dnn
 from scipy.misc import imresize, imrotate
 from cnn import build_cnn
 from cnn import load_dataset
@@ -66,11 +66,9 @@ val_fn = theano.function([input_var, target_var], [test_loss, test_acc], allow_i
 get_preds = theano.function([input_var], test_prediction, allow_input_downcast=True)
 
 
-
 with np.load('model.npz') as f:
     param_values = [f['arr_%d' % i] for i in range(len(f.files))]
     lasagne.layers.set_all_param_values(network, param_values)
-
 
 #test_image = mpimg.imread('../nice_areas/9W/512x512/2015-10-15 18.06_2.png', 'r') / np.float32(256.0)
 #test_image = mpimg.imread('../nice_areas/9W/512x512/2015-10-15 18.06_1.png', 'r') / np.float32(256.0)
@@ -93,6 +91,8 @@ print ("means; all, R, G, B: ", test_image.mean(), test_image[:,:,0].mean(), tes
 print ("means; all, R, G, B: ", test_image.mean(), test_image[:,:,0].mean(), test_image[:,:,1].mean(), test_image[:,:,2].mean())
 
 #test_image = test_image / np.float32(256.0)
+test_image = mpimg.imread('../nice_areas/9W/512x512/2015-10-13 18.02_2.png', 'r') / np.float32(256.0)
+#test_image = mpimg.imread('../fake_areas/9W/1.png', 'r') / np.float32(256.0)
 
 heat_map = np.zeros((3,512,512))
 

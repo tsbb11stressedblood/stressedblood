@@ -18,6 +18,8 @@ import lasagne.layers.dnn
 from scipy.misc import imresize, imrotate
 from cnn import build_cnn
 from cnn import load_dataset
+from sliding_window import get_heatmap
+
 
 import matplotlib.pyplot as plt
 from nolearn.lasagne.visualize import *
@@ -65,14 +67,32 @@ get_preds = theano.function([input_var], test_prediction, allow_input_downcast=T
 
 
 
-
 with np.load('model.npz') as f:
     param_values = [f['arr_%d' % i] for i in range(len(f.files))]
     lasagne.layers.set_all_param_values(network, param_values)
 
 
 #test_image = mpimg.imread('../nice_areas/9W/512x512/2015-10-15 18.06_2.png', 'r') / np.float32(256.0)
-test_image = mpimg.imread('../fake_areas/9W/1.png', 'r') / np.float32(256.0)
+#test_image = mpimg.imread('../nice_areas/9W/512x512/2015-10-15 18.06_1.png', 'r') / np.float32(256.0)
+
+test_image = mpimg.imread('../nice_areas/9W/2015-10-15 18.06_1.png', 'r') / np.float32(256.0)
+
+
+#test_image = mpimg.imread('../fake_areas/9W/1.png', 'r') / np.float32(256.0)
+#test_image = mpimg.imread('../fake_areas/9W/1.png', 'r')
+
+
+print ("means; all, R, G, B: ", test_image.mean(), test_image[:,:,0].mean(), test_image[:,:,1].mean(), test_image[:,:,2].mean())
+
+#test_image[:,:,0] = test_image[:,:,0] - test_image[:,:,0].mean()
+#test_image[:,:,1] = test_image[:,:,1] - test_image[:,:,1].mean()
+#test_image[:,:,2] = test_image[:,:,2] - test_image[:,:,2].mean()
+
+#test_image = test_image - test_image.mean()
+
+print ("means; all, R, G, B: ", test_image.mean(), test_image[:,:,0].mean(), test_image[:,:,1].mean(), test_image[:,:,2].mean())
+
+#test_image = test_image / np.float32(256.0)
 
 heat_map = np.zeros((3,512,512))
 
@@ -90,19 +110,24 @@ for i in range(56):
         images[ii, :, :, :] = test_image[0:3, 8 * i:8 * i + 64, 8 * j:8 * j + 64]
         ii += 1
 
-testaa = get_preds(images[0:2809, 0:3, :, :])
+#testaa = get_preds(images[0:2809, 0:3, :, :])
+#testaa = get_preds(images[0:3136, 0:3, :, :])
+heat_map = get_heatmap(image=test_image, stride=32, func=get_preds)
 
-ii = 0
-for t in testaa:
-    heat_map[0, 8 * (ii % 56):8 * (ii % 56) + 8, 8 * int(ii / 56):8 * int(ii / 56) + 8] = t[0]
-    heat_map[1, 8 * (ii % 56):8 * (ii % 56) + 8, 8 * int(ii / 56):8 * int(ii / 56) + 8] = t[1]
-    heat_map[2, 8 * (ii % 56):8 * (ii % 56) + 8, 8 * int(ii / 56):8 * int(ii / 56) + 8] = t[2]
+#ii = 0
+#for t in testaa:
+#    heat_map[0, 8 * (ii % 56):8 * (ii % 56) + 8, 8 * int(ii / 56):8 * int(ii / 56) + 8] = t[0]
+#    heat_map[1, 8 * (ii % 56):8 * (ii % 56) + 8, 8 * int(ii / 56):8 * int(ii / 56) + 8] = t[1]
+#    heat_map[2, 8 * (ii % 56):8 * (ii % 56) + 8, 8 * int(ii / 56):8 * int(ii / 56) + 8] = t[2]
     #print(ii)
-    ii += 1
+#    ii += 1
 
-plt.imshow(np.transpose(heat_map, axes=(1, 2, 0)))
+
+#plt.imshow(np.transpose(heat_map, axes=(1, 2, 0)))
+plt.imshow(heat_map)
 plt.figure()
-plt.imshow(np.transpose(-np.reciprocal(np.log10(heat_map)), axes=(1, 2, 0)))
+#plt.imshow(np.transpose(-np.reciprocal(np.log10(heat_map)), axes=(1, 2, 0)))
+plt.imshow( -np.reciprocal(np.log10(heat_map)) )
 # plt.title("Label: {}".format(testaa[i]))
 plt.show()
 
@@ -143,11 +168,11 @@ plt.show()
 # plt.show()
 
 
-X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
+#X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
 
-layers = lasagne.layers.get_all_layers(network)
-layercounter = 0
-for l in layers:
-    if 'Conv2DLayer' in str(type(l)):
-        plot_conv_activity(l, X_train[:1], figsize=(5,5))
-        plt.show()
+#layers = lasagne.layers.get_all_layers(network)
+#layercounter = 0
+#for l in layers:
+#    if 'Conv2DLayer' in str(type(l)):
+#        plot_conv_activity(l, X_train[:1], figsize=(5,5))
+#        plt.show()

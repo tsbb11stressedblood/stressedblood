@@ -78,7 +78,16 @@ def load_dataset():
                 #img = Image.open(folder + filename, 'r').convert('LA')
             #img = mpimg.imread( f, 'r')[:,:,2]*.299 + mpimg.imread( f, 'r')[:,:,1]*.587 + mpimg.imread( f, 'r')[:,:,0]*.114
             #img = mpimg.imread(f, 'r')[:, :, 0:1]
-            img = mpimg.imread(f, 'r')
+            img = mpimg.imread(f, 'r') / np.float32(256.0)
+
+
+
+            #subtract mean
+            #img[:,:,0] = img[:,:,0] - img[:,:,0].mean()
+            #img[:, :, 1] = img[:, :, 1] - img[:, :, 1].mean()
+            #img[:, :, 2] = img[:, :, 2] - img[:, :, 2].mean()
+
+            img = img - img.mean()
 
             #img = img[:, :, 0:1]*.05 + img[:, :, 1:2]*.05 + img[:, :, 2:3]*.9
 
@@ -362,7 +371,7 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
 # more functions to better separate the code, but it wouldn't make it any
 # easier to read.
 
-def main(model='cnn', num_epochs=30000):
+def main(model='cnn', num_epochs=500):
     # Load the dataset
     print("Loading data...")
     X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
@@ -423,7 +432,7 @@ def main(model='cnn', num_epochs=30000):
     # Finally, launch the training loop.
     print("Starting training...")
 
-
+    accs = []
     # We iterate over epochs:
     for epoch in range(num_epochs):
         # In each epoch, we do a full pass over the training data:
@@ -453,6 +462,8 @@ def main(model='cnn', num_epochs=30000):
             epoch + 1, num_epochs, time.time() - start_time))
         print("  training loss:\t\t{:.6f}".format(train_err / train_batches))
         print("  validation loss:\t\t{:.6f}".format(val_err / val_batches))
+        acc = val_acc / val_batches * 100
+        accs.append(acc)
         print("  validation accuracy:\t\t{:.2f} %".format(
             val_acc / val_batches * 100))
 
@@ -554,7 +565,9 @@ def main(model='cnn', num_epochs=30000):
 
 
 
-
+    #plot accuracies
+    plt.plot(accs)
+    plt.show()
 
 
     layers = lasagne.layers.get_all_layers(network)

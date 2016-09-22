@@ -91,7 +91,7 @@ print ("means; all, R, G, B: ", test_image.mean(), test_image[:,:,0].mean(), tes
 print ("means; all, R, G, B: ", test_image.mean(), test_image[:,:,0].mean(), test_image[:,:,1].mean(), test_image[:,:,2].mean())
 
 #test_image = test_image / np.float32(256.0)
-test_image = mpimg.imread('../nice_areas/9W/512x512/2015-10-13 18.02_2.png', 'r') / np.float32(256.0)
+#test_image = mpimg.imread('../nice_areas/9W/512x512/2015-10-13 18.02_2.png', 'r') / np.float32(256.0)
 #test_image = mpimg.imread('../fake_areas/9W/1.png', 'r') / np.float32(256.0)
 
 heat_map = np.zeros((3,512,512))
@@ -112,7 +112,7 @@ for i in range(56):
 
 #testaa = get_preds(images[0:2809, 0:3, :, :])
 #testaa = get_preds(images[0:3136, 0:3, :, :])
-heat_map = get_heatmap(image=test_image, stride=32, func=get_preds)
+heat_map = get_heatmap(image=test_image, stride=8, func=get_preds)
 
 #ii = 0
 #for t in testaa:

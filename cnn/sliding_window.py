@@ -7,7 +7,6 @@ import theano.tensor as T
 
 
 
-
 def get_heatmap(image, stride=8, func=None):
 
     width = image.shape[1]
@@ -21,22 +20,32 @@ def get_heatmap(image, stride=8, func=None):
 
     print width, height, heat_map.shape, jumpi, jumpj
 
-    image_parts = np.zeros((  jumpi*jumpj, 3, part_width, part_height))
+    #image_parts = np.zeros((  jumpi*jumpj, 3, part_width, part_height))
+    new_im = np.zeros((1, 3, part_width, part_height))
 
     ii = 0
     for i in range(jumpi):
         for j in range(jumpj):
-            image_parts[ii, :, :, :] = image[0:3, stride*i:stride*i + part_width, stride*j:stride*j + part_height]
+            #image_parts[ii, :, :, :] = image[0:3, stride*i:stride*i + part_width, stride*j:stride*j + part_height]
+
+            new_im[0, :, :, :] = image[0:3, stride*i:stride*i + part_width, stride*j:stride*j + part_height]
+
+
+            res = func(new_im)
+            heat_map[0, stride * (ii % jumpi):stride * (ii % jumpi) + stride, stride * int(ii / jumpj):stride * int(ii / jumpj) + stride] = res[0][0]
+            heat_map[1, stride * (ii % jumpi):stride * (ii % jumpi) + stride, stride * int(ii / jumpj):stride * int(ii / jumpj) + stride] = res[0][1]
+            heat_map[2, stride * (ii % jumpi):stride * (ii % jumpi) + stride, stride * int(ii / jumpj):stride * int(ii / jumpj) + stride] = res[0][2]
+
             ii += 1
 
-    res = func(image_parts[:, 0:3, :, :])
-    ii = 0
-    for r in res:
+    #res = func(image_parts[:, 0:3, :, :])
+    #ii = 0
+    #for r in res:
         #print r
-        heat_map[0, stride * (ii % jumpi):stride * (ii % jumpi) + stride, stride * int(ii / jumpj):stride * int(ii / jumpj) + stride] = r[0]
-        heat_map[1, stride * (ii % jumpi):stride * (ii % jumpi) + stride, stride * int(ii / jumpj):stride * int(ii / jumpj) + stride] = r[1]
-        heat_map[2, stride * (ii % jumpi):stride * (ii % jumpi) + stride, stride * int(ii / jumpj):stride * int(ii / jumpj) + stride] = r[2]
+    #    heat_map[0, stride * (ii % jumpi):stride * (ii % jumpi) + stride, stride * int(ii / jumpj):stride * int(ii / jumpj) + stride] = r[0]
+    #    heat_map[1, stride * (ii % jumpi):stride * (ii % jumpi) + stride, stride * int(ii / jumpj):stride * int(ii / jumpj) + stride] = r[1]
+    #    heat_map[2, stride * (ii % jumpi):stride * (ii % jumpi) + stride, stride * int(ii / jumpj):stride * int(ii / jumpj) + stride] = r[2]
         # print(ii)
-        ii += 1
+    #    ii += 1
 
     return np.transpose(heat_map, axes=(1, 2, 0))

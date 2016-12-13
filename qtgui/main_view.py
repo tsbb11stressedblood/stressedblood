@@ -8,7 +8,17 @@
 
 from PyQt4 import QtCore, QtGui
 
+#from cnn import sliding_window
+from cnn import sliding_window
+from cnn import extract_cells
+#from extract_cells import extract_cells
+
 import matplotlib.image as mpimg
+import numpy as np
+import cv2
+import math
+
+from matplotlib import pyplot as plt
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -26,7 +36,12 @@ except AttributeError:
 
 
 
+#squares = []
+
+
 class Ui_MainWindow(object):
+    def __init__(self):
+        self.ratio = 1.0
 
     def exitEverything(self):
         print "HEHE"
@@ -36,6 +51,9 @@ class Ui_MainWindow(object):
         print "fname:", fname
 
         if '.png' in fname:
+            self.image = cv2.imread(str(fname), 1)
+            self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGBA)
+
             self.imagePixmap = QtGui.QPixmap(fname)
             self.imageLabel = ImageArea(fname)
 
@@ -79,6 +97,7 @@ class Ui_MainWindow(object):
         self.imageLabel.zoomingOut = True
         self.imageLabel.drawingZoom = False
         self.imageLabel.drawingROI = False
+        self.imageLabel.clearingROI = False
 
 
     def uncheckPlusAndMinus(self):
@@ -91,14 +110,20 @@ class Ui_MainWindow(object):
         self.imageLabel.drawingROI = True
         self.imageLabel.drawingZoom = False
         self.imageLabel.zoomingOut = False
+        self.imageLabel.clearingROI = False
 
     def clearAllROI(self):
         self.pushButton_5.setChecked(False)
-        self.imageLabel.squares = []
+        del self.imageLabel.squares[:]
+        #del squares[:]
         self.imageLabel.repaint()
 
     def clearROI(self):
         self.pushButton_4.setChecked(False)
+        self.imageLabel.clearingROI = True
+        self.imageLabel.drawingROI = False
+        self.imageLabel.drawingZoom = False
+        self.imageLabel.zoomingOut = False
         self.uncheckPlusAndMinus()
 
     def resetZoom(self):
@@ -123,6 +148,7 @@ class Ui_MainWindow(object):
 
 
     def openImageView(self):
+        self.pageNum = 0
         print "hmm"
         #window2 = QtGui.QMainWindow()
         #window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -130,6 +156,59 @@ class Ui_MainWindow(object):
         #ui = Ui_SecondWindow()
 
         #ui.setupUi(self.window2)
+
+        #s = squares[0]
+
+        s = self.imageLabel.squares[0]
+
+        #ROI_image = self.image[s[1]:s[1]+s[3], s[0]:s[0]+s[2]]
+
+        #ROI_image = self.image[0:200, 0:200]
+
+        ROI_image = self.image[int(s[1]):int(s[3]), int(s[0]):int(s[2])]
+
+
+
+
+        #self.painter.drawRect(s[0], s[1], (s[2] - s[0]), (s[3] - s[1]))
+
+
+        heat_map = sliding_window.get_heatmap(image=np.transpose(ROI_image/np.float(256.0), axes=(2, 1, 0)), stride=4)
+        #heat_map = sliding_window.get_heatmap(image=ROI_image, stride=8)
+        #heat_map = sliding_window.get_heatmap(image=self.image, stride=4)
+
+        # print(np.max(heat_map))
+        print "heatmap done?", ROI_image.shape
+        plt.figure("untouched heatmap")
+        plt.imshow(heat_map)
+        plt.show()
+
+
+
+        self.red_cells, self.green_cells = extract_cells.extract_cells(ROI_image, heat_map)
+
+        self.totcells = self.red_cells + self.green_cells
+
+        self.ratio = 0.0
+
+        if len(self.green_cells) > 0:
+            self.ratio = float(len(self.red_cells)) / len(self.green_cells)
+
+        self.set_ratio_text()
+
+        self.numcells = len(self.totcells)
+
+
+
+        self.updateLabel()
+
+        for i,c in enumerate(self.totcells):
+            if i < 9:
+                cc = cv2.cvtColor(c, cv2.COLOR_BGRA2RGBA)
+                height, width, channel = cc.shape  # BGR RGB
+                qImg = QtGui.QImage(cc.tostring(), width, height, QtGui.QImage.Format_ARGB32)
+
+                self.images[i].setPixmap(QtGui.QPixmap(qImg))
 
         #self.window2.setEnabled(True)
         self.window2.resize(1024, 768)
@@ -140,10 +219,81 @@ class Ui_MainWindow(object):
         print "YEY"
         self.pushButton_4.setCursor(QtGui.QCursor(2))
 
+    def nextPage(self):
+        if self.pageNum*9 + 9 < self.numcells:
+            self.pageNum += 1
+        self.updateImages()
+        self.updateLabel()
+
+
+    def updateLabel(self):
+        fromm = 9*self.pageNum+1
+        to = 9*self.pageNum+9
+
+        if to > self.numcells:
+            to = self.numcells
+
+        self.label_images.setText(_translate("MainWindow", str(fromm) + " to " + str(to) + " of " +
+                                             str(self.numcells) + " (Page " + str(self.pageNum+1) + " of " + str(
+            int(math.ceil(self.numcells / 9.0))) + ")", None))
+
+
+    def updateImages(self):
+
+        for i in range(9):
+            self.images[i].clear()
+
+        for i, c in enumerate(self.totcells):
+            if i < 9 + 9 * self.pageNum and i >= 9 * self.pageNum and i < self.numcells:
+                cc = cv2.cvtColor(c, cv2.COLOR_BGRA2RGBA)
+                height, width, channel = cc.shape  # BGR RGB
+                qImg = QtGui.QImage(cc.tostring(), width, height, QtGui.QImage.Format_ARGB32)
+
+                self.images[i - 9 * self.pageNum].setPixmap(QtGui.QPixmap(qImg))
+
+
+    def prevPage(self):
+        if self.pageNum > 0:
+            self.pageNum -= 1
+        self.updateImages()
+        self.updateLabel()
+
+    def on_context_0(self, point):
+        self.popMenu[0].exec_(self.images[0].mapToGlobal(point))
+
+    def on_context_1(self, point):
+        self.popMenu[1].exec_(self.images[1].mapToGlobal(point))
+
+    def on_context_2(self, point):
+        self.popMenu[2].exec_(self.images[2].mapToGlobal(point))
+
+    def on_context_3(self, point):
+        self.popMenu[3].exec_(self.images[3].mapToGlobal(point))
+
+    def on_context_4(self, point):
+        self.popMenu[4].exec_(self.images[4].mapToGlobal(point))
+
+    def on_context_5(self, point):
+        self.popMenu[5].exec_(self.images[5].mapToGlobal(point))
+
+    def on_context_6(self, point):
+        self.popMenu[6].exec_(self.images[6].mapToGlobal(point))
+
+    def on_context_7(self, point):
+        self.popMenu[7].exec_(self.images[7].mapToGlobal(point))
+
+    def on_context_8(self, point):
+        self.popMenu[8].exec_(self.images[8].mapToGlobal(point))
+
+    def testtest(self, num):
+        #self.images = []
+        print "SUCCESS!", num
+
     def setupUi(self, MainWindow):
         self.MainWindow = MainWindow
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
         MainWindow.resize(1024, 768)
+        self.numcells = 0
 
         ############################################################### WINDOW 2 ###################################
 
@@ -213,40 +363,97 @@ class Ui_MainWindow(object):
         self.gridLayout = QtGui.QGridLayout()
         self.gridLayout.setSizeConstraint(QtGui.QLayout.SetMaximumSize)
         self.gridLayout.setObjectName(_fromUtf8("gridLayout"))
-        self.image_1 = QtGui.QLabel(self.centralwidget2)
-        self.image_1.setMaximumSize(QtCore.QSize(46, 44))
-        self.image_1.setObjectName(_fromUtf8("image_1"))
-        self.gridLayout.addWidget(self.image_1, 2, 0, 1, 1, QtCore.Qt.AlignHCenter)
-        self.image_3 = QtGui.QLabel(self.centralwidget2)
-        self.image_3.setObjectName(_fromUtf8("image_3"))
-        self.gridLayout.addWidget(self.image_3, 2, 2, 1, 1, QtCore.Qt.AlignHCenter)
-        self.image_6 = QtGui.QLabel(self.centralwidget2)
-        self.image_6.setObjectName(_fromUtf8("image_6"))
-        self.gridLayout.addWidget(self.image_6, 3, 2, 1, 1, QtCore.Qt.AlignHCenter)
-        self.image_8 = QtGui.QLabel(self.centralwidget2)
-        self.image_8.setObjectName(_fromUtf8("image_8"))
-        self.gridLayout.addWidget(self.image_8, 4, 1, 1, 1, QtCore.Qt.AlignHCenter)
-        self.image_9 = QtGui.QLabel(self.centralwidget2)
-        self.image_9.setObjectName(_fromUtf8("image_9"))
-        self.gridLayout.addWidget(self.image_9, 4, 2, 1, 1, QtCore.Qt.AlignHCenter)
-        self.image_2 = QtGui.QLabel(self.centralwidget2)
-        self.image_2.setObjectName(_fromUtf8("image_2"))
-        self.gridLayout.addWidget(self.image_2, 2, 1, 1, 1, QtCore.Qt.AlignHCenter)
-        self.image_4 = QtGui.QLabel(self.centralwidget2)
-        self.image_4.setObjectName(_fromUtf8("image_4"))
-        self.gridLayout.addWidget(self.image_4, 3, 0, 1, 1, QtCore.Qt.AlignHCenter)
-        self.image_5 = QtGui.QLabel(self.centralwidget2)
-        self.image_5.setObjectName(_fromUtf8("image_5"))
-        self.gridLayout.addWidget(self.image_5, 3, 1, 1, 1, QtCore.Qt.AlignHCenter)
-        self.image_7 = QtGui.QLabel(self.centralwidget2)
-        self.image_7.setObjectName(_fromUtf8("image_7"))
-        self.gridLayout.addWidget(self.image_7, 4, 0, 1, 1, QtCore.Qt.AlignHCenter)
+
+        self.images = []
+        self.images.append(QtGui.QLabel(self.centralwidget2))
+        self.images[0].setMaximumSize(QtCore.QSize(46, 44))
+        self.images[0].setObjectName(_fromUtf8("image_1"))
+        self.gridLayout.addWidget(self.images[0], 2, 0, 1, 1, QtCore.Qt.AlignHCenter)
+
+
+
+        #self.tableWidget = QtGui.QTableWidget()
+        #self.tableWidget.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
+
+        #self.tableWidget.show()
+
+
+        #self.images[0]
+
+
+
+        self.images.append(QtGui.QLabel(self.centralwidget2))
+        self.images[1].setObjectName(_fromUtf8("image_2"))
+        self.gridLayout.addWidget(self.images[1], 2, 1, 1, 1, QtCore.Qt.AlignHCenter)
+
+        self.images.append(QtGui.QLabel(self.centralwidget2))
+        self.images[2].setObjectName(_fromUtf8("image_3"))
+        self.gridLayout.addWidget(self.images[2], 2, 2, 1, 1, QtCore.Qt.AlignHCenter)
+
+        self.images.append(QtGui.QLabel(self.centralwidget2))
+        self.images[3].setObjectName(_fromUtf8("image_4"))
+        self.gridLayout.addWidget(self.images[3], 3, 0, 1, 1, QtCore.Qt.AlignHCenter)
+
+        self.images.append(QtGui.QLabel(self.centralwidget2))
+        self.images[4].setObjectName(_fromUtf8("image_5"))
+        self.gridLayout.addWidget(self.images[4], 3, 1, 1, 1, QtCore.Qt.AlignHCenter)
+
+        self.images.append(QtGui.QLabel(self.centralwidget2))
+        self.images[5].setObjectName(_fromUtf8("image_6"))
+        self.gridLayout.addWidget(self.images[5], 3, 2, 1, 1, QtCore.Qt.AlignHCenter)
+
+        self.images.append(QtGui.QLabel(self.centralwidget2))
+        self.images[6].setObjectName(_fromUtf8("image_7"))
+        self.gridLayout.addWidget(self.images[6], 4, 0, 1, 1, QtCore.Qt.AlignHCenter)
+
+        self.images.append(QtGui.QLabel(self.centralwidget2))
+        self.images[7].setObjectName(_fromUtf8("image_8"))
+        self.gridLayout.addWidget(self.images[7], 4, 1, 1, 1, QtCore.Qt.AlignHCenter)
+
+        self.images.append(QtGui.QLabel(self.centralwidget2))
+        self.images[8].setObjectName(_fromUtf8("image_9"))
+        self.gridLayout.addWidget(self.images[8], 4, 2, 1, 1, QtCore.Qt.AlignHCenter)
+
+
+        self.popMenu = []
+        point = QtCore.QPoint()
+
+        for i in range(9):
+            self.images[i].setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+
+            tmp = QtGui.QMenu(self.window2)
+            tmp.addAction(QtGui.QAction('Move to Lymphocytes', self.window2))
+            tmp.addAction(QtGui.QAction('Move to Heterophils', self.window2))
+            tmp.addSeparator()
+            remaction = QtGui.QAction('Remove', self.window2)
+            #remaction.triggered.connect(lambda num='test': self.testtest(num))
+            remaction.connect(remaction, QtCore.SIGNAL('triggered()'), lambda num=i: self.testtest(num))
+            tmp.addAction(remaction)
+
+
+            self.popMenu.append(tmp)
+
+        self.images[0].customContextMenuRequested.connect(self.on_context_0)
+        self.images[1].customContextMenuRequested.connect(self.on_context_1)
+        self.images[2].customContextMenuRequested.connect(self.on_context_2)
+        self.images[3].customContextMenuRequested.connect(self.on_context_3)
+        self.images[4].customContextMenuRequested.connect(self.on_context_4)
+        self.images[5].customContextMenuRequested.connect(self.on_context_5)
+        self.images[6].customContextMenuRequested.connect(self.on_context_6)
+        self.images[7].customContextMenuRequested.connect(self.on_context_7)
+        self.images[8].customContextMenuRequested.connect(self.on_context_8)
+
+
+
+
         self.verticalLayout.addLayout(self.gridLayout)
         self.gridLayout_2.addLayout(self.verticalLayout, 0, 0, 1, 1)
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
         self.pushButton_prev = QtGui.QPushButton(self.centralwidget2)
         self.pushButton_prev.setObjectName(_fromUtf8("pushButton_prev"))
+        self.pushButton_prev.clicked.connect(self.prevPage)
+
         self.horizontalLayout_2.addWidget(self.pushButton_prev)
         self.label_images = QtGui.QLabel(self.centralwidget2)
         self.label_images.setObjectName(_fromUtf8("label_images"))
@@ -256,6 +463,9 @@ class Ui_MainWindow(object):
         # self.horizontalLayout_2.addWidget(self.label_page, QtCore.Qt.AlignVCenter)
         self.pushButton_next = QtGui.QPushButton(self.centralwidget2)
         self.pushButton_next.setObjectName(_fromUtf8("pushButton_next"))
+        self.pushButton_next.clicked.connect(self.nextPage)
+
+
         self.horizontalLayout_2.addWidget(self.pushButton_next)
         self.gridLayout_2.addLayout(self.horizontalLayout_2, 1, 0, 1, 1)
         self.window2.setCentralWidget(self.centralwidget2)
@@ -411,6 +621,11 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+
+    def showCells(self, num):
+        self.comboBox.update()
+        print "hehe, ", num
+
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow", None))
         self.pushButton.setText(_translate("MainWindow", "Open image...", None))
@@ -432,6 +647,7 @@ class Ui_MainWindow(object):
         self.ROI_label.setText(_translate("MainWindow",
                                           "<html><head/><body><p>HL Ratio for selected ROI: <span style=\" font-weight:600;\">1.0</span></p></body></html>",
                                           None))
+
         self.select_ROI_label.setText(_translate("MainWindow", "Select ROI:", None))
         self.comboBox_2.setItemText(0, _translate("MainWindow", "All", None))
         self.comboBox_2.setItemText(1, _translate("MainWindow", "ROI 1", None))
@@ -440,28 +656,51 @@ class Ui_MainWindow(object):
         self.pushButton_4.setText(_translate("MainWindow", "OK", None))
 
         self.label_show.setText(_translate("MainWindow", "Show type of cells:", None))
-        self.comboBox.setItemText(0, _translate("MainWindow", "All", None))
-        self.comboBox.setItemText(1, _translate("MainWindow", "Heterophils", None))
-        self.comboBox.setItemText(2, _translate("MainWindow", "Lymphocytes", None))
-        self.comboBox.setItemText(3, _translate("MainWindow", "Monocytes", None))
-        self.comboBox.setItemText(4, _translate("MainWindow", "Discarded", None))
+
+
+        self.comboBox.addItem("All")
+        self.comboBox.addItem("Heterophils")
+
+        #self.comboBox.addAction(QtGui.QAction('All', self.comboBox))
+        #self.comboBox.addAction(QtGui.QAction('Heterophils', self.comboBox))
+        #self.comboBox.setItemText(0, _translate("MainWindow", "All", None))
+        #self.comboBox.setItemText(1, _translate("MainWindow", "Heterophils", None))
+
+        #self.comboBox.setItemText(2, _translate("MainWindow", "Lymphocytes", None))
+        #self.comboBox.setItemText(3, _translate("MainWindow", "Monocytes", None))
+        #self.comboBox.setItemText(4, _translate("MainWindow", "Discarded", None))
         self.pushButton.setText(_translate("MainWindow", "OK", None))
-        self.image_1.setText(_translate("MainWindow", "TextLabel", None))
-        self.image_3.setText(_translate("MainWindow", "TextLabel", None))
-        self.image_6.setText(_translate("MainWindow", "TextLabel", None))
-        self.image_8.setText(_translate("MainWindow", "TextLabel", None))
-        self.image_9.setText(_translate("MainWindow", "TextLabel", None))
-        self.image_2.setText(_translate("MainWindow", "TextLabel", None))
-        self.image_4.setText(_translate("MainWindow", "TextLabel", None))
-        self.image_5.setText(_translate("MainWindow", "TextLabel", None))
-        self.image_7.setText(_translate("MainWindow", "TextLabel", None))
+        #self.comboBox.currentIndex()
+
+
+        self.pushButton.connect(self.pushButton, QtCore.SIGNAL('clicked()'),
+                                lambda num=self.comboBox.currentText(): self.showCells(num))
+        #self.pushButton.clicked.connect(self.showCells)
+
+
+        self.images[0].setText(_translate("MainWindow", "", None))
+        self.images[1].setText(_translate("MainWindow", "", None))
+        self.images[2].setText(_translate("MainWindow", "", None))
+        self.images[3].setText(_translate("MainWindow", "", None))
+        self.images[4].setText(_translate("MainWindow", "", None))
+        self.images[5].setText(_translate("MainWindow", "", None))
+        self.images[6].setText(_translate("MainWindow", "", None))
+        self.images[7].setText(_translate("MainWindow", "", None))
+        self.images[8].setText(_translate("MainWindow", "", None))
         self.pushButton_prev.setText(_translate("MainWindow", "<-", None))
-        self.label_images.setText(_translate("MainWindow", "1-9 of X (Page 1 of Y)", None))
+
+        self.label_images.setText(_translate("MainWindow", "1-9 of X (Page 1 of " + str(self.numcells) + ")", None))
         # self.label_page.setText(_translate("MainWindow", "Page 1 of Y", None))
         self.pushButton_next.setText(_translate("MainWindow", "->", None))
         self.menuFile.setTitle(_translate("MainWindow", "File", None))
         self.menuSettings.setTitle(_translate("MainWindow", "Settings", None))
         self.actionShow_number_of_cells.setText(_translate("MainWindow", "Show number of cells", None))
+
+
+    def set_ratio_text(self):
+        self.ROI_label.setText(_translate("MainWindow",
+                                              "<html><head/><body><p>HL Ratio for selected ROI: <span style=\" font-weight:600;\">" + str(self.ratio) + "</span></p></body></html>",
+                                              None))
 
 class ImageArea(QtGui.QLabel):
 
@@ -482,6 +721,7 @@ class ImageArea(QtGui.QLabel):
         self.scaleX = 1.0
         self.scaleY = 1.0
         self.drawingROI = False
+        self.clearingROI = False
         self.drawingZoom = False
         self.zoomingOut = False
         self.origWidth = self.width()
@@ -519,13 +759,20 @@ class ImageArea(QtGui.QLabel):
         print "mouse!", QMouseEvent
         self.origX = QMouseEvent.x()
         self.origY = QMouseEvent.y()
+        self.scalePosX = self.origX / self.scaleX
+        self.scalePosY = self.origY / self.scaleX
 
     def mouseReleaseEvent(self, QMouseEvent):
         self.mouseHeldDown = False
         self.x = QMouseEvent.x()
         self.y = QMouseEvent.y()
+        print "mouse release!"
+
+        self.scalePosX = self.origX / self.scaleX
+        self.scalePosY = self.origY / self.scaleX
+
         if self.drawingROI:
-            self.squares.append([self.origX, self.origY, self.x, self.y])
+            self.squares.append([self.origX/self.scaleX, self.origY/self.scaleX, self.x/self.scaleX, self.y/self.scaleX])
 
 
         if self.drawingZoom:
@@ -567,6 +814,24 @@ class ImageArea(QtGui.QLabel):
 
             self.updateGeometry()
             self.repaint()
+
+        elif self.clearingROI:
+            self.squares = [s for s in self.squares if not (self.scalePosX > s[0] and self.scalePosY > s[1]
+                    and self.scalePosX < s[2] and self.scalePosY < s[3])]
+            #self.squares = []
+            print self.squares
+            #print tokeep
+            #self.squares = tokeep
+            self.updateGeometry()
+            self.repaint()
+            #self.clearingROI = False
+
+            #for i, s in enumerate(self.squares):
+            #    if self.scalePosX > s[0] and self.scalePosX < s[1]
+            #        and self.scalePosY > s[3] and self.scalePosY < s[4]:
+            #        del
+
+
 
     def mouseMoveEvent(self, QMouseEvent):
         self.mouseHeldDown = True

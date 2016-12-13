@@ -213,6 +213,7 @@ def load_dataset():
 
     #X_train, y_train = load_images_and_labels('../learning_images/9W/2015-10-15 18.17-2/')
     X_train, y_train, num = load_images_and_labels('../learning_images/all/')
+    #X_train, y_train, num = load_images_and_labels('../learning_images/all_littlecrap/')
     #X_train, y_train, num = load_images_and_labels('../learning_images/small_test/')
     #X_train, y_train, num = load_images_and_labels('../learning_images/9W_littlecrap/')
 
@@ -369,7 +370,7 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
 # more functions to better separate the code, but it wouldn't make it any
 # easier to read.
 
-def main(model='cnn', num_epochs=500):
+def main(model='cnn', num_epochs=8000):
     # Load the dataset
     print("Loading data...")
     X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()

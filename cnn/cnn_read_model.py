@@ -19,6 +19,7 @@ from scipy.misc import imresize, imrotate
 from cnn import build_cnn
 from cnn import load_dataset
 from sliding_window import get_heatmap
+from extract_cells import extract_cells
 
 
 import matplotlib.pyplot as plt
@@ -65,7 +66,6 @@ val_fn = theano.function([input_var, target_var], [test_loss, test_acc], allow_i
     #get predictions
 get_preds = theano.function([input_var], test_prediction, allow_input_downcast=True)
 
-
 with np.load('model.npz') as f:
     param_values = [f['arr_%d' % i] for i in range(len(f.files))]
     lasagne.layers.set_all_param_values(network, param_values)
@@ -73,11 +73,15 @@ with np.load('model.npz') as f:
 #test_image = mpimg.imread('../nice_areas/9W/512x512/2015-10-15 18.06_2.png', 'r') / np.float32(256.0)
 #test_image = mpimg.imread('../nice_areas/9W/512x512/2015-10-15 18.06_1.png', 'r') / np.float32(256.0)
 
-test_image = mpimg.imread('../nice_areas/9W/2015-10-15 18.06_1.png', 'r') / np.float32(256.0)
+#test_image = mpimg.imread('../nice_areas/9W/2015-10-15 18.06_1.png', 'r') / np.float32(256.0)
 
 
-#test_image = mpimg.imread('../fake_areas/9W/1.png', 'r') / np.float32(256.0)
+test_image = mpimg.imread('../fake_areas/9W/1.png', 'r') / np.float32(256.0)
 #test_image = mpimg.imread('../fake_areas/9W/1.png', 'r')
+
+#test_image = test_image / np.float32(256.0)
+#test_image = mpimg.imread('../nice_areas/9W/512x512/2015-10-13 18.02_2.png', 'r') / np.float32(256.0)
+
 
 
 print ("means; all, R, G, B: ", test_image.mean(), test_image[:,:,0].mean(), test_image[:,:,1].mean(), test_image[:,:,2].mean())
@@ -90,29 +94,44 @@ print ("means; all, R, G, B: ", test_image.mean(), test_image[:,:,0].mean(), tes
 
 print ("means; all, R, G, B: ", test_image.mean(), test_image[:,:,0].mean(), test_image[:,:,1].mean(), test_image[:,:,2].mean())
 
-#test_image = test_image / np.float32(256.0)
-#test_image = mpimg.imread('../nice_areas/9W/512x512/2015-10-13 18.02_2.png', 'r') / np.float32(256.0)
-#test_image = mpimg.imread('../fake_areas/9W/1.png', 'r') / np.float32(256.0)
 
 heat_map = np.zeros((3,512,512))
 
     #print ("before:", test_image.shape)
-test_image = np.transpose(test_image, axes=(2, 1, 0))
+#test_image = np.transpose(test_image, axes=(2, 1, 0))
     #print("after:", test_image.shape)
 
-images = np.zeros((4096, 3, 64, 64))
+#images = np.zeros((4096, 3, 64, 64))
 
-ii = 0
+#ii = 0
 
-for i in range(56):
-    for j in range(56):
-        #images[ii,:,:,:] = test_image[0:3, 64*i:64*i+64, 64*j:64*j+64]
-        images[ii, :, :, :] = test_image[0:3, 8 * i:8 * i + 64, 8 * j:8 * j + 64]
-        ii += 1
+#for i in range(56):
+#    for j in range(56):
+#        #images[ii,:,:,:] = test_image[0:3, 64*i:64*i+64, 64*j:64*j+64]
+#        images[ii, :, :, :] = test_image[0:3, 8 * i:8 * i + 64, 8 * j:8 * j + 64]
+#        ii += 1
 
 #testaa = get_preds(images[0:2809, 0:3, :, :])
 #testaa = get_preds(images[0:3136, 0:3, :, :])
-heat_map = get_heatmap(image=test_image, stride=8, func=get_preds)
+
+tt = time.time()
+heat_map = get_heatmap(image=np.transpose(test_image, axes=(2, 1, 0)), stride=4, func=get_preds)
+print("heat map took: ", time.time()-tt)
+
+#print(np.max(heat_map))
+
+red_cells, green_cells = extract_cells(test_image, heat_map)
+
+for c in red_cells:
+    plt.figure()
+    plt.imshow(c)
+    plt.show()
+
+for c in green_cells:
+    plt.figure()
+    plt.imshow(c)
+    plt.show()
+
 
 #ii = 0
 #for t in testaa:
@@ -129,6 +148,10 @@ plt.figure()
 #plt.imshow(np.transpose(-np.reciprocal(np.log10(heat_map)), axes=(1, 2, 0)))
 plt.imshow( -np.reciprocal(np.log10(heat_map)) )
 # plt.title("Label: {}".format(testaa[i]))
+plt.figure()
+plt.imshow(heat_map[:,:,0])
+plt.figure()
+plt.imshow(heat_map[:,:,1])
 plt.show()
 
 

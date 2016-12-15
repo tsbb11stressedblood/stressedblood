@@ -295,4 +295,3 @@ plt.imshow(dist_transform)
 plt.figure()
 plt.imshow(laplacian)
 plt.show()
-#i = i+1

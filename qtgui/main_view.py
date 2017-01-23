@@ -184,8 +184,19 @@ class Ui_MainWindow(object):
         plt.show()
 
 
+        self.red_cells, self.red_cells_confidence, self.green_cells, self.green_cells_confidence =\
+            extract_cells.extract_cells(ROI_image, heat_map)
 
-        self.red_cells, self.green_cells = extract_cells.extract_cells(ROI_image, heat_map)
+
+        self.red_cells_confidence = sorted(self.red_cells_confidence)
+        self.green_cells_confidence = sorted(self.green_cells_confidence)
+
+        print ("red conf,", self.red_cells_confidence)
+        print ("green conf", self.green_cells_confidence)
+
+        #sort after confidence
+        self.red_cells = [x for (y, x) in sorted(zip(self.red_cells_confidence, self.red_cells))]
+        self.green_cells = [x for (y, x) in sorted(zip(self.green_cells_confidence, self.green_cells))]
 
         self.totcells = self.red_cells + self.green_cells
 
@@ -199,21 +210,23 @@ class Ui_MainWindow(object):
         self.numcells = len(self.totcells)
 
 
-
         self.updateLabel()
 
-        for i,c in enumerate(self.totcells):
-            if i < 9:
-                cc = cv2.cvtColor(c, cv2.COLOR_BGRA2RGBA)
-                height, width, channel = cc.shape  # BGR RGB
-                qImg = QtGui.QImage(cc.tostring(), width, height, QtGui.QImage.Format_ARGB32)
+        #for i,c in enumerate(self.totcells):
+        #    if i < 9:
+        #        cc = cv2.cvtColor(c, cv2.COLOR_BGRA2RGBA)
+        #        height, width, channel = cc.shape  # BGR RGB
+        #        qImg = QtGui.QImage(cc.tostring(), width, height, QtGui.QImage.Format_ARGB32)
+        #        self.images[i].setPixmap(QtGui.QPixmap(qImg))
 
-                self.images[i].setPixmap(QtGui.QPixmap(qImg))
+        self.updateImages(self.totcells)
+
 
         #self.window2.setEnabled(True)
         self.window2.resize(1024, 768)
         self.window2.show()
         print "hmmmmm???"
+
 
     def callb(self):
         print "YEY"
@@ -238,18 +251,22 @@ class Ui_MainWindow(object):
             int(math.ceil(self.numcells / 9.0))) + ")", None))
 
 
-    def updateImages(self):
+    def updateImages(self, list):
 
         for i in range(9):
             self.images[i].clear()
 
-        for i, c in enumerate(self.totcells):
-            if i < 9 + 9 * self.pageNum and i >= 9 * self.pageNum and i < self.numcells:
-                cc = cv2.cvtColor(c, cv2.COLOR_BGRA2RGBA)
-                height, width, channel = cc.shape  # BGR RGB
-                qImg = QtGui.QImage(cc.tostring(), width, height, QtGui.QImage.Format_ARGB32)
+        for i, c in enumerate(list):
+            #if i < 9 + 9 * self.pageNum and i >= 9 * self.pageNum and i < self.numcells:
+            cc = cv2.cvtColor(c, cv2.COLOR_BGRA2RGBA)
+            cc = cv2.rectangle(cc, (0, 0), (5, 5), (0, 0, 255, 200), -1)
 
-                self.images[i - 9 * self.pageNum].setPixmap(QtGui.QPixmap(qImg))
+            height, width, channel = cc.shape  # BGR RGB
+            qImg = QtGui.QImage(cc.tostring(), width, height, QtGui.QImage.Format_ARGB32)
+            #qImg = QtGui.QImage(cc.tostring(), height, width, QtGui.QImage.Format_ARGB32)
+
+
+            self.images[i - 9 * self.pageNum].setPixmap(QtGui.QPixmap(qImg))
 
 
     def prevPage(self):
@@ -345,11 +362,11 @@ class Ui_MainWindow(object):
         self.comboBox = QtGui.QComboBox(self.centralwidget2)
         self.comboBox.setEditable(False)
         self.comboBox.setObjectName(_fromUtf8("comboBox"))
-        self.comboBox.addItem(_fromUtf8(""))
-        self.comboBox.addItem(_fromUtf8(""))
-        self.comboBox.addItem(_fromUtf8(""))
-        self.comboBox.addItem(_fromUtf8(""))
-        self.comboBox.addItem(_fromUtf8(""))
+        self.comboBox.addItem(_fromUtf8("All"))
+        self.comboBox.addItem(_fromUtf8("Heterophils"))
+        self.comboBox.addItem(_fromUtf8("Lymphocytes"))
+        #self.comboBox.addItem(_fromUtf8(""))
+        self.comboBox.addItem(_fromUtf8("Discarded"))
         self.horizontalLayout.addWidget(self.comboBox)
         self.pushButton = QtGui.QPushButton(self.centralwidget2)
         self.pushButton.setObjectName(_fromUtf8("pushButton"))
@@ -622,9 +639,26 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
 
-    def showCells(self, num):
-        self.comboBox.update()
-        print "hehe, ", num
+    def showCells(self):
+        #self.comboBox.update()
+        print "hehe, ", self.comboBox.currentText()
+        currtext = self.comboBox.currentText()
+        if currtext == "Heterophils":
+            self.updateImages(self.green_cells)
+        elif currtext == "Lymphocytes":
+            self.updateImages(self.red_cells)
+        else:
+            self.updateImages(self.totcells)
+
+
+    def updateComboBox(self):
+        pass
+        #print "HEHEHEHEHEHEHEHEHE!!!!!!", self.comboBox.currentText()
+        #self.comboBox.update()
+        #self.pushButton.emit(QtCore.SIGNAL('clicked()'))
+        #self.pushButton.connect(self.pushButton, QtCore.SIGNAL('clicked()'),
+        #                        lambda num=self.comboBox.currentText(): self.showCells(num))
+
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow", None))
@@ -657,9 +691,8 @@ class Ui_MainWindow(object):
 
         self.label_show.setText(_translate("MainWindow", "Show type of cells:", None))
 
-
-        self.comboBox.addItem("All")
-        self.comboBox.addItem("Heterophils")
+        #self.comboBox.addItem("All")
+        #self.comboBox.addItem("Heterophils")
 
         #self.comboBox.addAction(QtGui.QAction('All', self.comboBox))
         #self.comboBox.addAction(QtGui.QAction('Heterophils', self.comboBox))
@@ -672,11 +705,16 @@ class Ui_MainWindow(object):
         self.pushButton.setText(_translate("MainWindow", "OK", None))
         #self.comboBox.currentIndex()
 
+        #self.pushButton.connect(self.pushButton, QtCore.SIGNAL('clicked()'),
+        #                        lambda num=self.comboBox.currentText(): self.showCells(num))
 
         self.pushButton.connect(self.pushButton, QtCore.SIGNAL('clicked()'),
-                                lambda num=self.comboBox.currentText(): self.showCells(num))
-        #self.pushButton.clicked.connect(self.showCells)
+                                self.showCells)
 
+        #self.comboBox.blockSignals(False)
+
+        #self.comboBox.connect(self.comboBox, QtCore.SIGNAL('currentIndexChanged(const QString&)'), #also activated()?
+        #                      self.updateComboBox)
 
         self.images[0].setText(_translate("MainWindow", "", None))
         self.images[1].setText(_translate("MainWindow", "", None))

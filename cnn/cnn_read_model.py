@@ -120,7 +120,10 @@ print("heat map took: ", time.time()-tt)
 
 #print(np.max(heat_map))
 
-red_cells, green_cells = extract_cells(test_image, heat_map)
+red_cells, red_cells_confidence, green_cells, green_cells_confidence = extract_cells(test_image, heat_map)
+
+print (red_cells_confidence)
+print (green_cells_confidence)
 
 for c in red_cells:
     plt.figure()

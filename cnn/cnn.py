@@ -17,12 +17,21 @@ import os
 import time
 import cv2
 import numpy as np
-import theano
+
+try:
+    import theano
+except:
+    pass
+
 import theano.tensor as T
 import matplotlib.image as mpimg
 import fnmatch
 import scipy
-import lasagne
+
+try:
+    import lasagne
+except:
+    pass
 from PIL import Image
 import math
 #import lasagne.layers.dnn

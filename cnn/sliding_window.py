@@ -2,10 +2,11 @@ import numpy as np
 try:
     import theano
     import lasagne
+    import theano.tensor as T
 except:
     pass
 from cnn import build_cnn
-import theano.tensor as T
+
 import time
 
 import scipy

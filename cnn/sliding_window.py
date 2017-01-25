@@ -1,6 +1,9 @@
 import numpy as np
-import theano
-import lasagne
+try:
+    import theano
+    import lasagne
+except:
+    pass
 from cnn import build_cnn
 import theano.tensor as T
 import time

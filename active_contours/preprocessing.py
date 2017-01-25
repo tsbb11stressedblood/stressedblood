@@ -72,12 +72,14 @@ def fill_foreground(img):
 def perform_watershed(foreground, nuclei):
     ret, markers = cv2.connectedComponents(nuclei)
     foreground = 1 - foreground
+    markers[markers > 0] +=1
     markers = foreground + markers
     foreground_reshape = np.zeros((foreground.shape[0], foreground.shape[1], 3), dtype=np.uint8)
     foreground_reshape[:,:,0] = 1-foreground
     foreground_reshape[:,:,1] = 1-foreground
     foreground_reshape[:,:,2] = 1-foreground
     markers_watershed = cv2.watershed(foreground_reshape,markers)
+
     return markers_watershed
 
 def remove_objects(img,size):

@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import cPickle as pickle
 from preprocessing import *
 images = load_images_from_folder('../ground_truth')
 split_cells = [11,43,71,72,88,107,128,139,151,152,157,180,208,215,231,239,254,311,329,367,372,399,437,444,470,499,504,
@@ -34,6 +35,8 @@ def check_all_cells(images):
         markers_watershed = perform_watershed(foreground.astype(np.uint8), nuclei.astype(np.uint8))
         img[markers_watershed == -1] = [255,0,0]
         print i
+        plt.figure()
+        plt.imshow(markers_watershed)
         plt.figure()
         plt.imshow(img)
         plt.show()

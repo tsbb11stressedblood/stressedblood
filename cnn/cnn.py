@@ -20,10 +20,11 @@ import numpy as np
 
 try:
     import theano
+    import theano.tensor as T
 except:
     pass
 
-import theano.tensor as T
+
 import matplotlib.image as mpimg
 import fnmatch
 import scipy

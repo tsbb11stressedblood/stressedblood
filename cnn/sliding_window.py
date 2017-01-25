@@ -7,6 +7,66 @@ import time
 
 import scipy
 
+def get_heatmapp(image):
+    print "vafan?????"
+    input_var = T.tensor4('inputs')
+    target_var = T.ivector('targets')
+
+    network = build_cnn(input_var)
+
+    prediction = lasagne.layers.get_output(network)
+
+    loss = lasagne.objectives.categorical_crossentropy(prediction, target_var)
+    loss = loss.mean()
+    # We could add some weight decay as well here, see lasagne.regularization.
+
+    # Create update expressions for training, i.e., how to modify the
+    # parameters at each training step. Here, we'll use Stochastic Gradient
+    # Descent (SGD) with Nesterov momentum, but Lasagne offers plenty more.
+    params = lasagne.layers.get_all_params(network, trainable=True)
+    updates = lasagne.updates.nesterov_momentum(
+        loss, params, learning_rate=0.01, momentum=0.9)
+
+    # Create a loss expression for validation/testing. The crucial difference
+    # here is that we do a deterministic forward pass through the network,
+    # disabling dropout layers.
+    test_prediction = lasagne.layers.get_output(network, deterministic=True)
+    test_loss = lasagne.objectives.categorical_crossentropy(test_prediction,
+                                                            target_var)
+    test_loss = test_loss.mean()
+    # As a bonus, also create an expression for the classification accuracy:
+    test_acc = T.mean(T.eq(T.argmax(test_prediction, axis=1), target_var),
+                      dtype=theano.config.floatX)
+
+    # Compile a function performing a training step on a mini-batch (by giving
+    # the updates dictionary) and returning the corresponding training loss:
+    train_fn = theano.function([input_var, target_var], loss, updates=updates, allow_input_downcast=True)
+
+    # Compile a second function computing the validation loss and accuracy:
+    val_fn = theano.function([input_var, target_var], [test_loss, test_acc], allow_input_downcast=True)
+
+    # get predictions
+    get_preds = theano.function([input_var], test_prediction, allow_input_downcast=True)
+
+    with np.load('../cnn/model.npz') as f:
+        param_values = [f['arr_%d' % i] for i in range(len(f.files))]
+        lasagne.layers.set_all_param_values(network, param_values)
+
+    print "vafan??", image.shape, np.max(image)
+
+    width = image.shape[1]
+    height = image.shape[2]
+
+    new_im = np.zeros((1, 3, width, height))
+
+    new_im[0,:,:,:] = image[0:3,:,:]
+
+    res = get_preds(new_im)
+
+    print res
+
+    return res
+
 def get_heatmap(image, stride=8, func=None):
     print "vafan?????"
     input_var = T.tensor4('inputs')

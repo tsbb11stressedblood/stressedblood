@@ -35,10 +35,9 @@ def extract_cells(orig_image, heat_map_image):
 
     #tmp = img_green.astype(np.float)
 
+    #filter things
     img_green = ((img_green.astype(np.float)-img_red.astype(np.float)*2)>0)*img_green
     print ("dtype:", img_green.dtype)
-
-
 
     plt.figure('red dilated and blurred heatmap')
     plt.imshow(img_red)

@@ -47,7 +47,8 @@ class Ui_MainWindow(object):
         print "HEHE"
 
     def showDialog(self):
-        fname = QtGui.QFileDialog.getOpenFileName(MainWindow, 'Open image...', '')
+        fname = QtGui.QFileDialog.getOpenFileName(self.MainWindow, 'Open image...', '')
+        #fname = QtGui.QFileDialog.getOpenFileName(self, 'Open image...', '')
         print "fname:", fname
 
         if '.png' in fname:
@@ -173,7 +174,8 @@ class Ui_MainWindow(object):
         #self.painter.drawRect(s[0], s[1], (s[2] - s[0]), (s[3] - s[1]))
 
 
-        heat_map = sliding_window.get_heatmap(image=np.transpose(ROI_image/np.float(256.0), axes=(2, 1, 0)), stride=4)
+        #heat_map = sliding_window.get_heatmap(image=np.transpose(ROI_image/np.float(256.0), axes=(2, 1, 0)), stride=4)
+        heat_map = sliding_window.get_heatmapp(image=np.transpose(ROI_image / np.float(256.0), axes=(2, 1, 0)))
         #heat_map = sliding_window.get_heatmap(image=ROI_image, stride=8)
         #heat_map = sliding_window.get_heatmap(image=self.image, stride=4)
 
@@ -186,7 +188,6 @@ class Ui_MainWindow(object):
 
         self.red_cells, self.red_cells_confidence, self.green_cells, self.green_cells_confidence =\
             extract_cells.extract_cells(ROI_image, heat_map)
-
 
         self.red_cells_confidence = sorted(self.red_cells_confidence)
         self.green_cells_confidence = sorted(self.green_cells_confidence)
@@ -306,7 +307,7 @@ class Ui_MainWindow(object):
         #self.images = []
         print "SUCCESS!", num
 
-    def setupUi(self, MainWindow):
+    def setupUi(self, MainWindow, runCallback):
         self.MainWindow = MainWindow
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
         MainWindow.resize(1024, 768)
@@ -396,7 +397,6 @@ class Ui_MainWindow(object):
 
 
         #self.images[0]
-
 
 
         self.images.append(QtGui.QLabel(self.centralwidget2))
@@ -602,9 +602,18 @@ class Ui_MainWindow(object):
         self.verticalLayout.addLayout(self.horizontalLayout)
         spacerItem = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.verticalLayout.addItem(spacerItem)
+
         self.pushButton_3 = QtGui.QPushButton(self.centralwidget)
         self.pushButton_3.setObjectName(_fromUtf8("pushButton_3"))
-        self.pushButton_3.clicked.connect(self.openImageView)
+        if runCallback:
+            self.pushButton_3.clicked.connect(runCallback)
+        else:
+            self.pushButton_3.clicked.connect(self.openImageView)
+        #if external:
+        #    self.pushButton_3.clicked.connect(self.returnROIs)
+        #else:
+        #    self.pushButton_3.clicked.connect(self.openImageView)
+
 
         self.verticalLayout.addWidget(self.pushButton_3)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -637,6 +646,11 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+
+    def returnROIs(self):
+        #print self.imageLabel.squares
+        return self.imageLabel.squares
 
 
     def showCells(self):
@@ -892,14 +906,13 @@ class MyWindow(QtGui.QMainWindow):
     def createWin(self):
         self.win2.show()
 
-
 if __name__ == "__main__":
     import sys
     app = QtGui.QApplication(sys.argv)
     #app.setOverrideCursor(QtGui.QCursor(2))
     MainWindow = QtGui.QMainWindow()
     ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
+    ui.setupUi(MainWindow, None)
     MainWindow.show()
     sys.exit(app.exec_())
 

@@ -3,8 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import cPickle as pickle
+from cell import Cell
 from preprocessing import *
-images = load_images_from_folder('../ground_truth')
+images,filenames = load_images_and_name_from_folder('../ground_truth')
+#images = load_images_from_folder('../nice_areas/9W/')
 split_cells = [11,43,71,72,88,107,128,139,151,152,157,180,208,215,231,239,254,311,329,367,372,399,437,444,470,499,504,
                519,525,530,551,570,575,590,611,622,646,659,666,694,695,704,763,785,795,798,805,818,827,836,858,867,
                907,929,955,971,975,1019,1024,1028,1046,1060,1120,1131,1143,1144,1157,1177,1189,1192,1216,1217,1234,1235,
@@ -64,5 +66,24 @@ def check_split_cells(images, split_cells):
         plt.figure()
         plt.imshow(img)
         plt.show()
+
+def save_cells(images, filenames, list):
+    training_cells = []
+    for image_index,contour_index in enumerate(list):
+        img = images[image_index]
+        img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+        img_filtered = filter_image(img)
+        res, values = cluster_image_two(img_filtered)
+        foreground, nuclei = separate_image(img_filtered, values)
+        nuclei = remove_edges_from_nuclei(nuclei)
+        foreground = fill_foreground(foreground)
+        markers_watershed = perform_watershed(foreground.astype(np.uint8), nuclei.astype(np.uint8))
+        markers_watershed[markers_watershed != contour_index] = 0
+        markers_watershed[markers_watershed == contour_index] = 1
+        contour = cv2.findContours(markers_watershed.astype(np.uint8), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+
+        cell = Cell(filenames[image_index],contour)
+        training_cells.append(cell)
+    return training_cells
 
 check_all_cells(images)

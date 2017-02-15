@@ -14,6 +14,19 @@ def load_images_from_folder(folder):
             images.append(img)
     return images
 
+def load_images_and_name_from_folder(folder):
+    """
+    Loads an image from folder. Returns loaded images in an array.
+    """
+    images = []
+    filenames = []
+    for filename in os.listdir(folder):
+        img = cv2.imread(os.path.join(folder,filename))
+        if img is not None:
+            images.append(img)
+            filenames.append(os.path.join(folder,filename))
+    return images, filenames
+
 def filter_image(img, itr=10, temp=7, search=21):
     """
     Converts image to cielab. Filters the L-channel with means denoising. Returns the filtered image.

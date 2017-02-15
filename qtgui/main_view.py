@@ -6,6 +6,11 @@
 #
 # WARNING! All changes made in this file will be lost!
 
+
+import imp
+print imp.find_module("cv2")
+#import openslide
+
 from PyQt4 import QtCore, QtGui
 
 #from cnn import sliding_window
@@ -36,6 +41,8 @@ except AttributeError:
 
 
 
+
+
 #squares = []
 
 
@@ -51,7 +58,7 @@ class Ui_MainWindow(object):
         #fname = QtGui.QFileDialog.getOpenFileName(self, 'Open image...', '')
         print "fname:", fname
 
-        if '.png' in fname:
+        if '.png' in fname or '.tif' in fname:
             self.image = cv2.imread(str(fname), 1)
             self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGBA)
 
@@ -73,6 +80,7 @@ class Ui_MainWindow(object):
             #self.scrollArea.verticalScrollBar().setValue(200)
 
             #self.imageLabel.resize(4000, 4000)
+
 
     def checkPlus(self):
         self.toolButton_5.setChecked(False)
@@ -168,26 +176,50 @@ class Ui_MainWindow(object):
 
         ROI_image = self.image[int(s[1]):int(s[3]), int(s[0]):int(s[2])]
 
+        print "roi image shape:", ROI_image.shape
 
+        w = ROI_image.shape[0]
+        h = ROI_image.shape[1]
 
+        numx = 1
+        numy = 1
+
+        if w > 512:
+            numx = w/512 + 1
+        if h > 512:
+            numy = h/512 + 1
+
+        print "numx numy:", numx, numy
 
         #self.painter.drawRect(s[0], s[1], (s[2] - s[0]), (s[3] - s[1]))
 
-
         #heat_map = sliding_window.get_heatmap(image=np.transpose(ROI_image/np.float(256.0), axes=(2, 1, 0)), stride=4)
-        heat_map = sliding_window.get_heatmapp(image=np.transpose(ROI_image / np.float(256.0), axes=(2, 1, 0)))
-        #heat_map = sliding_window.get_heatmap(image=ROI_image, stride=8)
-        #heat_map = sliding_window.get_heatmap(image=self.image, stride=4)
 
-        # print(np.max(heat_map))
-        print "heatmap done?", ROI_image.shape
-        plt.figure("untouched heatmap")
-        plt.imshow(heat_map)
+        stitched_heatmap = np.zeros((57 * numx, 57 * numy, 4))
+
+        for i in range(numx):
+            for j in range(numy):
+                heat_map = sliding_window.get_heatmapp(image=np.transpose(ROI_image[i*512:i*512+512, j*512:j*512+512, :] / np.float(256.0), axes=(2, 1, 0)))
+
+                stitched_heatmap[i*57:i*57+57, j*57:j*57+57, :] = heat_map
+
+                #heat_map = sliding_window.get_heatmap(image=ROI_image, stride=8)
+                #heat_map = sliding_window.get_heatmap(image=self.image, stride=4)
+
+                # print(np.max(heat_map))
+                print "heatmap done?", ROI_image.shape
+                #plt.figure("untouched heatmap")
+
+        plt.figure()
+        plt.imshow(stitched_heatmap[:,:,0:3])
+
         plt.show()
 
 
+
+
         self.red_cells, self.red_cells_confidence, self.green_cells, self.green_cells_confidence =\
-            extract_cells.extract_cells(ROI_image, heat_map)
+            extract_cells.extract_cells(ROI_image, stitched_heatmap*256.0)
 
         self.red_cells_confidence = sorted(self.red_cells_confidence)
         self.green_cells_confidence = sorted(self.green_cells_confidence)

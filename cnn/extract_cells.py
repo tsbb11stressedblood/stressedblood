@@ -30,8 +30,10 @@ def extract_cells(orig_image, heat_map_image):
     #image = np.uint8(heat_map_image*255.0)
 
 
+    print "extract cells heat map image shape:", heat_map_image.shape
     img_red = preprocessing(heat_map_image[:,:,0])
     img_green = preprocessing(heat_map_image[:,:,1])
+
 
     #tmp = img_green.astype(np.float)
 
@@ -46,6 +48,8 @@ def extract_cells(orig_image, heat_map_image):
     #plt.figure('heatmap again?')
     #plt.imshow(image)
     plt.show()
+
+    print "imgred: ", img_red.shape
 
     ret, thresh = cv2.threshold(img_red, 40, 255, 0)
 

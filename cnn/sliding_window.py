@@ -86,13 +86,15 @@ def get_heatmapp(image):
 
     print "imtransp shape:", imtransp.shape
 
-    imtransp2 = np.ones((512, 512, 4))
+    #imtransp2 = np.ones((512, 512, 4))
+    imtransp2 = np.ones((568, 568, 4))
 
     imtransp2[0:imtransp.shape[0], 0:imtransp.shape[1], 0:4] = imtransp
 
-    width = 512
-    height = 512
-
+    #width = 512
+    width = 568
+    #height = 512
+    height = 568
 
     images = feature_extraction.image.extract_patches(imtransp2, (64,64,3), extraction_step=8).reshape(-1, 64, 64, 3)
 
@@ -125,10 +127,19 @@ def get_heatmapp(image):
     #plt.show()
 
     #res = get_preds(images.reshape((-1, 3, 64, 64)))
-    res = get_preds(images[:, :, :, :])
+    res1 = get_preds(images[0:2048, :, :, :])
+    res2 = get_preds(images[2048:4096, :, :, :])
+
+    #res = res1 + res2
+    res = np.concatenate((res1, res2))
+
+    print res1
+    print len(res1)
+    print res1.shape
 
     print res
     print len(res)
+    print res.shape
 
     resnumpy = np.zeros( (len(res), 4) )
     resnumpy[:] = res[:]

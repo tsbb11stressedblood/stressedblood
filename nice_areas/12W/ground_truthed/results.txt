@@ -1,0 +1,45 @@
+
+
+File			true positive heterophils	false positive heterophils	missed heterophils	true positive lymphocytes	false positive lymphocytes	missed lymphocytes	total # of cells	# of heterophils	# of lymphocytes	
+2016-01-23 12.07_1	14				1				4			7				7				0			25			17			8
+precision heterophils:	14/(14 + 1) = 0.933
+recall heterophils:	14/(14+4) = 0.777
+
+precision lymphocytes:	7/(7+7) = 0.5
+recall lymphocytes:	7/7 = 1.0
+
+F score heterophils:	2*.933*.777/(.933+.777)=.848
+F score lymphocytes:	2*1*.5/(1+.5) = .667
+mean:			.758 = 75.8%
+
+
+2016-01-23 12.07_2	17				0				1			6				3				0			24			16			8
+precision heterophils:	17/(17 + 0) = 1.0
+recall heterophils:	17/(17+1) = 0.944
+
+precision lymphocytes:	6/(6+3) = 0.667
+recall lymphocytes:	6/6 = 1.0
+
+F score heterophils:	2*1*.944/(1+.944) = .971
+F score lymphocytes:	2*1*.667/(1+.667) = .800
+mean:			0.886 = 88.6%
+
+
+2016-01-24 00.45_1	4				0				1			7				4				0			12			5			7
+precision heterophils:	4/(4+0) = 1.00
+recall heterophils:	4/(4+1) = .800
+
+precision lymphocytes:	7/(7+4) = .636
+recall lymphocytes:	7/7	= 1.00
+
+F score heterophils:	2*1*.8/(1+.8) = .889
+F score lymphocytes:	2*1*.636/(1+.636) = .778
+mean:			.834 = 83.4%
+
+
+
+
+
+precision: tp/(tp+fp)
+recall:    tp/(tp+fn)
+fn = missed

@@ -1,0 +1,53 @@
+\begin{thebibliography}{5}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Bohls et~al.(2006)Bohls, Smith, Ferro, Silvy, Li, and
+  Collisson]{Bohls2006843}
+Ryan~L. Bohls, Roger Smith, Pam~J. Ferro, Nova~J. Silvy, Zhongxia Li, and
+  Ellen~W. Collisson.
+\newblock The use of flow cytometry to discriminate avian lymphocytes from
+  contaminating thrombocytes.
+\newblock \emph{Developmental \& Comparative Immunology}, 30\penalty0
+  (9):\penalty0 843 -- 850, 2006.
+\newblock ISSN 0145-305X.
+\newblock \doi{http://doi.org/10.1016/j.dci.2005.10.008}.
+\newblock URL
+  \url{http://www.sciencedirect.com/science/article/pii/S0145305X05002132}.
+
+\bibitem[Hamghalam and Ayatollahi(2009)]{5190593}
+M.~Hamghalam and A.~Ayatollahi.
+\newblock Automatic counting of leukocytes in giemsa-stained images of
+  peripheral blood smear.
+\newblock In \emph{2009 International Conference on Digital Image Processing},
+  pages 13--16, March 2009.
+\newblock \doi{10.1109/ICDIP.2009.9}.
+
+\bibitem[Hiremath et~al.(2010)Hiremath, Bannigidad, and
+  Geeta]{hiremath2010automated}
+PS~Hiremath, Parashuram Bannigidad, and Sai Geeta.
+\newblock Automated identification and classification of white blood cells
+  (leukocytes) in digital microscopic images.
+\newblock \emph{IJCA special issue on “recent trends in image processing and
+  pattern recognition” RTIPPR}, pages 59--63, 2010.
+
+\bibitem[Laki(1972)]{NYAS:NYAS297}
+K.~Laki.
+\newblock Our ancient heritage in blood clotting and some of its consequences.
+\newblock \emph{Annals of the New York Academy of Sciences}, 202\penalty0
+  (1):\penalty0 297--307, 1972.
+\newblock ISSN 1749-6632.
+\newblock \doi{10.1111/j.1749-6632.1972.tb16342.x}.
+\newblock URL \url{http://dx.doi.org/10.1111/j.1749-6632.1972.tb16342.x}.
+
+\bibitem[W.~B.~Gross(1983)]{hlratio}
+H.~S.~Siegel W.~B.~Gross.
+\newblock Evaluation of the heterophil/lymphocyte ratio as a measure of stress
+  in chickens.
+\newblock \emph{American Association of Avian Pathologists}, 27\penalty0
+  (4):\penalty0 972--979, 1983.
+
+\end{thebibliography}

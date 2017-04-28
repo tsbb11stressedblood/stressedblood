@@ -3,7 +3,30 @@
 %This is the chapter where the results are shown?
 
 \section{Overview}\label{sec:research:history}
-HEJ
+The results show that it is beneficial to use this method as opposed to doing it manually. It is not perfect, but with human intervention a lot of time can be saved.
+
+\begin{center}
+\begin{tabular}{ l | c | c | c | r }
+  Age in weeks & Number of cells & Precision & Recall & F score \\
+  \hline
+  9 & 119 & 84.6\% & 83.0\% & 83.8\% \\
+  12 & 121 & 79.6\% & 81.1\% & 80.3\% \\
+  \hline  
+\end{tabular}
+\end{center}
+
+\section{Calculation of accuracy}\label{sec:research:history}
+The accuracy is calculated as precision, recall and F score. Precision and recall are given as:
+\begin{align*}
+\text{Precision} = \frac{tp}{tp + fp}\\
+\text{Recall} = \frac{tp}{tp + fn}\\
+\end{align*}
+
+where $fp$ and $tp$ and $fn$ stand for false positive, true positive and false negative respectively,
+and F score is the harmonic mean of these measures, i.e.:
+\begin{align*}
+F = 2 \cdot \frac{\text{precision} \cdot \text{recall}}{\text{precision} + \text{recall}}
+\end{align*}
 
 %\section{Framtiden}
 

@@ -2,7 +2,8 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import cell.py as cell
+import cPickle as pickle
+from cell import Cell
 
 def extract_shape_features(cell):
     # Shape features
@@ -23,3 +24,6 @@ def extract_shape_features(cell):
 def extract_statistical_features(cell):
     statistical_feature_vector = []
     return statistical_feature_vector
+
+with open('training_cells.pickle', 'rb') as f:
+    training_cells = pickle.load(f)

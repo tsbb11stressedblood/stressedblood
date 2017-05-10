@@ -67,10 +67,9 @@ def check_split_cells(images, split_cells):
         plt.imshow(img)
         plt.show()
 
-def save_cells(images, filenames, list):
+def save_cells(images):
     training_cells = []
-    for image_index,contour_index in enumerate(list):
-        img = images[image_index]
+    for i,img in enumerate(images):
         img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
         img_filtered = filter_image(img)
         res, values = cluster_image_two(img_filtered)
@@ -78,12 +77,13 @@ def save_cells(images, filenames, list):
         nuclei = remove_edges_from_nuclei(nuclei)
         foreground = fill_foreground(foreground)
         markers_watershed = perform_watershed(foreground.astype(np.uint8), nuclei.astype(np.uint8))
-        markers_watershed[markers_watershed != contour_index] = 0
-        markers_watershed[markers_watershed == contour_index] = 1
+        value = markers_watershed[75,75]
+        markers_watershed[markers_watershed != value] = 0
+        markers_watershed[markers_watershed == value] = 1
         contour = cv2.findContours(markers_watershed.astype(np.uint8), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+        cell = Cell(img,contour,markers_watershed)
+        training_cells.append(value)
+    with open('training_cells.pickle', 'wb') as f:
+        pickle.dump(training_cells, f)
 
-        cell = Cell(filenames[image_index],contour)
-        training_cells.append(cell)
-    return training_cells
-
-check_all_cells(images)
+save_cells(images)

@@ -1,7 +1,7 @@
 \chapter{Introduction}\label{cha:intro}
 
 \section{Background}
-The ratio between Heterophils and Lymphocytes in chickens is a useful measure of their stress level \cite{hlratio}. As of now, this ratio is calculated by hand, a very laborious and time consuming task. This thesis analyses the possibility of automating this process, completely or partially, in conjunction with an interactive graphical user interface for manual correction.\\\\
+The ratio between Heterophils and Lymphocytes in chickens is a useful measure of their stress level \cite{hlratio}. As of now this ratio is calculated by hand, by using a digital slide scanner and counting the cells in the resulting image. This is a very laborious and time consuming task. This thesis analyses the possibility of automating this process, completely or partially, in conjunction with an interactive graphical user interface for manual correction.\\\\
 The goal is that it will be a usable application for researchers in biology and similar fields, without degrees in engineering or other strictly technical fields.
 
 \section{Biological background}
@@ -14,7 +14,7 @@ Heterophils are a type of granulocyte that occurs in most avian species. Granulo
 
 \begin{figure}[h!]
     \centering
-    \includegraphics{heterophils.png}
+    \includegraphics{heterophils_.png}
     \caption{Heterophils from a 9 week old chicken.}
     \label{fig:heterophil}
 \end{figure}
@@ -23,7 +23,7 @@ Heterophils are a type of granulocyte that occurs in most avian species. Granulo
 Lymphocytes are smaller leukocytes with a large nucleus. They are sometimes confused with platelets, which are often smaller and darker than the lymphocytes. Platelets are also commonly referred to as thrombocytes and their function is to stop bleeding and clotting injured blood vessels \cite{NYAS:NYAS297}.
 \begin{figure}[h!]
     \centering
-    \includegraphics{lymphocytes.png}
+    \includegraphics{lymphocytes_.png}
     \caption{Lymphocytes from a 9 week old chicken.}
     \label{fig:heterophil}
 \end{figure}
@@ -45,7 +45,7 @@ The accuracy is calculated as precision, recall and F score. More on this in the
 There are several limitations to this thesis, the main ones will be mentioned here.
 
 \subsection{Data set}
-There are hundreds of images available, where each image is in the order of $10^10$ pixels. However, since labelling is time consuming only a few thousand white blood cells have been labelled in these images. In this thesis, around 10-20 of the available images have been used. The data set only contain blood smear images from chickens of the age of 9 and 12 weeks, which probably limits the robustness of the application, since the cells vary in size and shape during the chickens lifetimes.\\
+There are hundreds of images available, where each image is in the order of $10^{10}$ pixels. However, since labelling is time consuming only a few thousand white blood cells have been labelled in these images. In this thesis, around 10-20 of the available images have been used. The data set only contain blood smear images from chickens of the age of 9 and 12 weeks, which probably limits the robustness of the application, since the cells vary in size and shape during the chickens lifetimes.\\
 The color and quality of the blood smear images can vary when scanning and/or staining them, so to keep the algorithm as unbiased as possible to specific images, the cut out learning images are taken in equal amounts from the selected part of the available images.
 
 \subsection{Loss of depth}
@@ -68,7 +68,7 @@ The problem of counting leukocytes in human blood smears is largely solved\cite{
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=\textwidth]{comparison_marked}
+    \includegraphics[width=\textwidth]{comparison_marked_}
     \caption{Comparison of human (to the left) and avian (to the right) blood smears. The unmarked cells in both images are red blood cells. The blue in the left image is a neutrophil, the red, green and pink in the right are lymphocytes,  heterophils, and various damaged red blood cells respectively.}
     \label{fig:comparison}
 \end{figure}

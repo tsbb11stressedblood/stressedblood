@@ -1,4 +1,4 @@
-\begin{thebibliography}{5}
+\begin{thebibliography}{6}
 \providecommand{\natexlab}[1]{#1}
 \providecommand{\url}[1]{\texttt{#1}}
 \expandafter\ifx\csname urlstyle\endcsname\relax
@@ -42,6 +42,19 @@ K.~Laki.
 \newblock ISSN 1749-6632.
 \newblock \doi{10.1111/j.1749-6632.1972.tb16342.x}.
 \newblock URL \url{http://dx.doi.org/10.1111/j.1749-6632.1972.tb16342.x}.
+
+\bibitem[Seliger et~al.(2012)Seliger, Schaerer, Kohn, Pendl, Weigend, Kaspers,
+  and Härtle]{Seliger201286}
+Christian Seliger, Beatrice Schaerer, Marina Kohn, Helene Pendl, Steffen
+  Weigend, Bernd Kaspers, and Sonja Härtle.
+\newblock A rapid high-precision flow cytometry based technique for total white
+  blood cell counting in chickens.
+\newblock \emph{Veterinary Immunology and Immunopathology}, 145\penalty0
+  (1–2):\penalty0 86 -- 99, 2012.
+\newblock ISSN 0165-2427.
+\newblock \doi{https://doi.org/10.1016/j.vetimm.2011.10.010}.
+\newblock URL
+  \url{http://www.sciencedirect.com/science/article/pii/S016524271100417X}.
 
 \bibitem[W.~B.~Gross(1983)]{hlratio}
 H.~S.~Siegel W.~B.~Gross.

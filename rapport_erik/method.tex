@@ -1,8 +1,16 @@
 \chapter{Method}\label{cha:intro}
 
 \section{Data gathering}\label{sec:research:history}
+The GNU Image Manipulation Program, or GIMP, is used for extracting images of cells for training the neural network. However, the blood smear images are too large to handle, so before extracting these cell images the blood smear image is split into smaller files with a size of 2048 by 2048 pixels. Some of these images are chosen in accordance with the method described in 1.5.3. These smaller images are then opened in The GIMP, where a new layer is added, and squares of different colors representing the different cell types are drawn on top of the cells. When all white blood cells have been covered with a square of the corresponding color, the layer with the squares is saved as a PNG image. A simple python script then reads both of these images, and uses the coordinates of the squares to cut out the cells from the cell image and saves them as a sequence of PNG images with the naming convention celltype\_number.png, e.g. lymphocyte\_1.png, lymphocyte\_2.png, ..., lymphocyte\_n.png.
+
 \section{Implementation}\label{sec:research:history}
+
 \subsection{Neural network structure}\label{sec:research:history}
-\subsection{Programming language}\label{sec:research:history}
+
+
+\subsection{Framework}\label{sec:research:history}
+The implementation is done in Theano and Lasagne for the Convolutional Neural Network in Python, with additional libraries simplifying and greatly reducing computation time, most notably NumPy for efficient array computations. 
+
 \subsection{Preprocessing}\label{sec:research:history}
+
 \section{Evaluation}\label{sec:research:history}

@@ -1,3 +1,4 @@
+
 	\documentclass[
   utf8,%     More capable input encoding than latin-1.
   % parskip,%  For vertical whitespace between paragraphs.  This comes down to more than just using parskip.sty, so it's better to use this class option.
@@ -12,6 +13,7 @@
 ]{rtthesis}
 
 \usepackage{mythesis}
+\usepackage{epstopdf}
 
 \begin{document}
 \selectlanguage{english}
@@ -46,7 +48,9 @@
 \clearemptydoublepage
 \backmatter
 
+
 \bibliography{IEEEfull,myrefs}
+
 
 \printindex
 

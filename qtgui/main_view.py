@@ -3,8 +3,10 @@
 # Form implementation generated from reading ui file 'main_view.ui'
 #
 # Created by: PyQt4 UI code generator 4.11.4
-#
-# WARNING! All changes made in this file will be lost!
+
+#import imp
+#print imp.find_module("cv2")
+#import openslide
 
 from PyQt4 import QtCore, QtGui
 
@@ -17,6 +19,9 @@ import matplotlib.image as mpimg
 import numpy as np
 import cv2
 import math
+from scipy.misc import imresize
+import scipy
+import scipy.ndimage
 
 from matplotlib import pyplot as plt
 
@@ -36,6 +41,8 @@ except AttributeError:
 
 
 
+
+
 #squares = []
 
 
@@ -51,7 +58,7 @@ class Ui_MainWindow(object):
         #fname = QtGui.QFileDialog.getOpenFileName(self, 'Open image...', '')
         print "fname:", fname
 
-        if '.png' in fname:
+        if '.png' in fname or '.tif' in fname:
             self.image = cv2.imread(str(fname), 1)
             self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGBA)
 
@@ -73,6 +80,7 @@ class Ui_MainWindow(object):
             #self.scrollArea.verticalScrollBar().setValue(200)
 
             #self.imageLabel.resize(4000, 4000)
+
 
     def checkPlus(self):
         self.toolButton_5.setChecked(False)
@@ -150,6 +158,7 @@ class Ui_MainWindow(object):
 
     def openImageView(self):
         self.pageNum = 0
+        self.numPages = 0
         print "hmm"
         #window2 = QtGui.QMainWindow()
         #window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -168,26 +177,74 @@ class Ui_MainWindow(object):
 
         ROI_image = self.image[int(s[1]):int(s[3]), int(s[0]):int(s[2])]
 
+        print "roi image shape:", ROI_image.shape
 
+        w = ROI_image.shape[0]
+        h = ROI_image.shape[1]
 
+        numx = 1
+        numy = 1
+
+        if w > 512:
+            numx = w/512 + 1
+        if h > 512:
+            numy = h/512 + 1
+
+        print "numx numy:", numx, numy
 
         #self.painter.drawRect(s[0], s[1], (s[2] - s[0]), (s[3] - s[1]))
 
-
         #heat_map = sliding_window.get_heatmap(image=np.transpose(ROI_image/np.float(256.0), axes=(2, 1, 0)), stride=4)
-        heat_map = sliding_window.get_heatmapp(image=np.transpose(ROI_image / np.float(256.0), axes=(2, 1, 0)))
-        #heat_map = sliding_window.get_heatmap(image=ROI_image, stride=8)
-        #heat_map = sliding_window.get_heatmap(image=self.image, stride=4)
 
-        # print(np.max(heat_map))
-        print "heatmap done?", ROI_image.shape
-        plt.figure("untouched heatmap")
-        plt.imshow(heat_map)
+        stitched_heatmap = np.zeros((64 * numx, 64 * numy, 4))
+
+        for i in range(numx):
+            for j in range(numy):
+                heat_map = sliding_window.get_heatmapp(image=np.transpose(ROI_image[i*512:i*512+512, j*512:j*512+512, :] / np.float(256.0), axes=(2, 1, 0)))
+
+                stitched_heatmap[i*64:i*64+64, j*64:j*64+64, :] = heat_map
+
+                #heat_map = sliding_window.get_heatmap(image=ROI_image, stride=8)
+                #heat_map = sliding_window.get_heatmap(image=self.image, stride=4)
+
+                # print(np.max(heat_map))
+                print "heatmap done?", ROI_image.shape
+                #plt.figure("untouched heatmap")
+
+        plt.figure('stitched heatmap')
+        plt.imshow(stitched_heatmap[:,:,0:3])
+
+
+        #scaled_heatmap = imresize(stitched_heatmap, 10.0)
+        #scaled_heatmap = imresize(stitched_heatmap*255.0, 900)
+        #scaled_heatmap = scipy.ndimage.interpolation.zoom(stitched_heatmap, 9.0)
+        scaled_heatmap = cv2.resize(stitched_heatmap*255.0, (int(stitched_heatmap.shape[1]*8), int(stitched_heatmap.shape[0]*8)))
+
+        #non = lambda s: s if s < 0 else None
+        #mom = lambda s: max(0, s)
+        #shifted = np.zeros_like(scaled_heatmap)
+        #shifted[mom(32):non(32), mom(32):non(32)] = scaled_heatmap[mom(-32):non(-32), mom(-32):non(-32)]
+
+        #plt.figure('offset stitched and scaled heatmap')
+        #plt.imshow(shifted[:, :, 0:3])
+
+        plt.figure('resized heatmap')
+        plt.imshow(np.uint8(scaled_heatmap[:, :, 0:3]))
+        plt.show()
+
+        print "scaled heatmap: ", scaled_heatmap.shape
+        print "orig image: ", ROI_image.shape
+
+        scaled_and_cropped_heatmap = np.zeros_like(ROI_image)
+        scaled_and_cropped_heatmap = scaled_heatmap[0:ROI_image.shape[0], 0:ROI_image.shape[1], :]
+
+        plt.figure('scaled, resized and cropped heatmap')
+        plt.imshow(np.uint8(scaled_and_cropped_heatmap[:, :, 0:3]))
         plt.show()
 
 
         self.red_cells, self.red_cells_confidence, self.green_cells, self.green_cells_confidence =\
-            extract_cells.extract_cells(ROI_image, heat_map)
+            extract_cells.extract_cells(ROI_image, scaled_and_cropped_heatmap)
 
         self.red_cells_confidence = sorted(self.red_cells_confidence)
         self.green_cells_confidence = sorted(self.green_cells_confidence)
@@ -203,13 +260,13 @@ class Ui_MainWindow(object):
 
         self.ratio = 0.0
 
-        if len(self.green_cells) > 0:
-            self.ratio = float(len(self.red_cells)) / len(self.green_cells)
+        if len(self.red_cells) > 0:
+            self.ratio = float(len(self.green_cells)) / len(self.red_cells)
 
         self.set_ratio_text()
 
         self.numcells = len(self.totcells)
-
+        self.numPages = int(math.ceil(self.numcells / 9.0))
 
         self.updateLabel()
 
@@ -234,23 +291,51 @@ class Ui_MainWindow(object):
         self.pushButton_4.setCursor(QtGui.QCursor(2))
 
     def nextPage(self):
-        if self.pageNum*9 + 9 < self.numcells:
+        currtext = self.comboBox.currentText()
+        if currtext == "Heterophils":
+            numcells = len(self.green_cells)
+        elif currtext == "Lymphocytes":
+            numcells = len(self.red_cells)
+        else:
+            numcells = self.numcells
+
+        if self.pageNum*9 + 9 < numcells:
             self.pageNum += 1
-        self.updateImages()
+        self.updateAllImages()
         self.updateLabel()
+
+    def updateAllImages(self):
+        currtext = self.comboBox.currentText()
+        if currtext == "Heterophils":
+            self.updateImages(self.green_cells)
+        elif currtext == "Lymphocytes":
+            self.updateImages(self.red_cells)
+        else:
+            self.updateImages(self.totcells)
 
 
     def updateLabel(self):
+        currtext = self.comboBox.currentText()
+        if currtext == "Heterophils":
+            numPages = int(math.ceil(len(self.green_cells) / 9.0))
+            numcells = len(self.green_cells)
+        elif currtext == "Lymphocytes":
+            numPages = int(math.ceil(len(self.red_cells) / 9.0))
+            numcells = len(self.red_cells)
+        else:
+            numcells = len(self.totcells)
+            numPages = int(math.ceil(len(self.totcells) / 9.0))
+
+
         fromm = 9*self.pageNum+1
         to = 9*self.pageNum+9
 
-        if to > self.numcells:
-            to = self.numcells
+        if to > numcells:
+            to = numcells
 
         self.label_images.setText(_translate("MainWindow", str(fromm) + " to " + str(to) + " of " +
-                                             str(self.numcells) + " (Page " + str(self.pageNum+1) + " of " + str(
-            int(math.ceil(self.numcells / 9.0))) + ")", None))
-
+                                             str(numcells) + " (Page " + str(self.pageNum+1) + " of " +
+                                             str(numPages) + ")", None))
 
     def updateImages(self, list):
 
@@ -266,14 +351,17 @@ class Ui_MainWindow(object):
             qImg = QtGui.QImage(cc.tostring(), width, height, QtGui.QImage.Format_ARGB32)
             #qImg = QtGui.QImage(cc.tostring(), height, width, QtGui.QImage.Format_ARGB32)
 
+            print "i:", i
+            print "pageNum", self.pageNum
 
-            self.images[i - 9 * self.pageNum].setPixmap(QtGui.QPixmap(qImg))
+            if i-9*self.pageNum < 9 and i-9*self.pageNum >= 0:
+                self.images[i - 9 * self.pageNum].setPixmap(QtGui.QPixmap(qImg))
 
 
     def prevPage(self):
         if self.pageNum > 0:
             self.pageNum -= 1
-        self.updateImages()
+        self.updateAllImages()
         self.updateLabel()
 
     def on_context_0(self, point):
@@ -663,6 +751,8 @@ class Ui_MainWindow(object):
             self.updateImages(self.red_cells)
         else:
             self.updateImages(self.totcells)
+        self.updateLabel()
+        self.pageNum = 0
 
 
     def updateComboBox(self):
@@ -890,6 +980,7 @@ class ImageArea(QtGui.QLabel):
         self.x = QMouseEvent.x()
         self.y = QMouseEvent.y()
         self.repaint()
+        print(self.origX-self.x, self.origY-self.y)
 
     def resizeEvent(self, *args, **kwargs):
         pass

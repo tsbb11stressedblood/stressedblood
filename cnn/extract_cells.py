@@ -30,8 +30,10 @@ def extract_cells(orig_image, heat_map_image):
     #image = np.uint8(heat_map_image*255.0)
 
 
+    print "extract cells heat map image shape:", heat_map_image.shape
     img_red = preprocessing(heat_map_image[:,:,0])
     img_green = preprocessing(heat_map_image[:,:,1])
+
 
     #tmp = img_green.astype(np.float)
 
@@ -43,11 +45,15 @@ def extract_cells(orig_image, heat_map_image):
     plt.imshow(img_red)
     plt.figure('green dilated and blurred heatmap')
     plt.imshow(img_green)
+    plt.figure('ROI Image')
+    plt.imshow(orig_image)
     #plt.figure('heatmap again?')
     #plt.imshow(image)
     plt.show()
 
-    ret, thresh = cv2.threshold(img_red, 40, 255, 0)
+    print "imgred: ", img_red.shape
+
+    ret, thresh = cv2.threshold(img_red.astype(np.uint8), 40, 255, 0)
 
     plt.figure('red thresholded')
     plt.imshow(thresh)
@@ -72,10 +78,11 @@ def extract_cells(orig_image, heat_map_image):
 
     plt.figure('contours for red')
     plt.imshow(im2)
+    cv2.imwrite('lymphocytes.png', im2)
     plt.show()
 
     #GREEN
-    ret, thresh = cv2.threshold(img_green, 200, 255, 0)
+    ret, thresh = cv2.threshold(img_green.astype(np.uint8), 200, 255, 0)
 
     plt.figure('green thresholded')
     plt.imshow(thresh)
@@ -87,6 +94,7 @@ def extract_cells(orig_image, heat_map_image):
 
     plt.figure('contours for green')
     plt.imshow(im2)
+    cv2.imwrite('heterophils.png',im2)
     plt.show()
 
     for c in contours:

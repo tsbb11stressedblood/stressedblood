@@ -8,8 +8,13 @@ except:
 from cnn import build_cnn
 
 import time
+import math
 
 import scipy
+
+from matplotlib import pyplot as plt
+
+from sklearn import feature_extraction
 
 def get_heatmapp(image):
     print "vafan?????"
@@ -61,15 +66,125 @@ def get_heatmapp(image):
     width = image.shape[1]
     height = image.shape[2]
 
-    new_im = np.zeros((1, 3, width, height))
+    #new_im[0,:,:,:] = image[0:3,:,:]
 
-    new_im[0,:,:,:] = image[0:3,:,:]
+    #print image.shape
+    #power2width = math.ceil(math.log(image.shape[1], 2))
+    #power2height = math.ceil(math.log(image.shape[2], 2))
 
-    res = get_preds(new_im)
+    #neww = math.pow(2, power2width)
+    #newh = math.pow(2, power2height)
+
+    #new_im = np.zeros((3, neww, newh))
+
+    #new_im[0:3, 0:width, 0:height] = image[0:3, :, :]
+
+    #new_im = np.reshape(new_im, 3, 64, 64, (neww*newh/(64*64), 3) ).swapaxes(2,3)
+    #new_im = np.reshape(new_im, (3, -1, 16, 16)).swapaxes(1, 2).reshape((3,-1,16,16)).swapaxes(0,1)
+
+    imtransp = np.transpose(image, axes=(2, 1, 0))
+
+    print "imtransp shape:", imtransp.shape
+
+    #imtransp2 = np.ones((512, 512, 4))
+    imtransp2 = np.ones((568, 568, 4))
+
+    imtransp2[0:imtransp.shape[0], 0:imtransp.shape[1], 0:4] = imtransp
+
+    #width = 512
+    width = 568
+    #height = 512
+    height = 568
+
+    images = feature_extraction.image.extract_patches(imtransp2, (64,64,3), extraction_step=8).reshape(-1, 64, 64, 3)
+
+    #testim = np.transpose(new_im[1, :, :, :], axes=(2, 1, 0))
+    #testim = new_im[1, :, :, :]
+
+    #print "newim:", new_im.shape
+    print "images:", images.shape
+
+    #plt.figure("TEST")
+    #plt.imshow(images[0])
+    #plt.figure()
+    #plt.imshow(images[0][1])
+    #plt.figure()
+    #plt.imshow(images[0][2])
+    #plt.figure()
+    #plt.imshow(images[0][3])
+    #plt.show()
+
+    images = np.transpose(images, axes=(0, 3, 2, 1))
+    #images = np.transpose(images, axes=(0, 1, 2, 5, 4, 3))
+
+    #newimages = np.zeros((images.shape[0], 3, images.shape[2], images.shape[3]))
+    #newimages[:,:,:,:] = images[:,0:3,:,:]
+
+    print "new dim:", images.shape
+
+    #plt.figure("TEST...")
+    #plt.imshow(np.transpose(images[0][0], axes=(2, 1, 0)))
+    #plt.show()
+
+    #res = get_preds(images.reshape((-1, 3, 64, 64)))
+    res1 = get_preds(images[0:2048, :, :, :])
+    res2 = get_preds(images[2048:4096, :, :, :])
+
+    #res = res1 + res2
+    res = np.concatenate((res1, res2))
+
+    print res1
+    print len(res1)
+    print res1.shape
 
     print res
+    print len(res)
+    print res.shape
 
-    return res
+    resnumpy = np.zeros( (len(res), 4) )
+    resnumpy[:] = res[:]
+
+    #image width
+    iw = width
+
+    #kernel width
+    kw = 64
+
+    #stride
+    stride = 8
+
+    nx = iw/float(kw)
+
+    kx = kw/stride
+
+    numx = math.floor(nx + (nx-1)*(kx-1))
+
+    # image height
+    ih = height
+
+    # kernel width
+    kw = 64
+
+    # stride
+    stride = 8
+
+    ny = ih / float(kw)
+
+    ky = kw / stride
+
+    numy = math.floor(ny + (ny - 1) * (ky - 1))
+
+    print "resnumpy, numx, numy:", resnumpy.shape, numx, numy
+
+    resnumpy = resnumpy.reshape((numx, numy, 4))
+
+    #plt.figure("TEST2")
+    #plt.imshow(resnumpy[0,:,:,0:3])
+    #plt.show()
+    #print resnumpy.shape
+
+    #return resnumpy[0,:,:,0:3]
+    return resnumpy
 
 def get_heatmap(image, stride=8, func=None):
     print "vafan?????"

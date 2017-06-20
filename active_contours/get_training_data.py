@@ -86,4 +86,25 @@ def save_cells(images):
     with open('training_cells.pickle', 'wb') as f:
         pickle.dump(training_cells, f)
 
-check_all_cells(images)
+def training_data_red_cells(images, filenames):
+    for i,img in enumerate(images):
+        img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+        img_filtered = filter_image(img)
+        res, values = cluster_image_two(img_filtered)
+        foreground, nuclei = separate_image(img_filtered, values)
+        nuclei = remove_edges_from_nuclei(nuclei)
+        foreground = fill_foreground(foreground)
+        markers_watershed = perform_watershed(foreground.astype(np.uint8), nuclei.astype(np.uint8))
+        img[markers_watershed == -1] = [255,0,0]
+        print i
+        print filenames[i]
+        plt.figure()
+        plt.imshow(markers_watershed)
+        plt.figure()
+        plt.imshow(img)
+        plt.show()
+
+filenames, images = zip(*sorted(zip(filenames, images)))
+training_data_red_cells(images, filenames)
+
+#check_all_cells(images)

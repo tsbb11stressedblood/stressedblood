@@ -86,4 +86,4 @@ def save_cells(images):
     with open('training_cells.pickle', 'wb') as f:
         pickle.dump(training_cells, f)
 
-save_cells(images)
+check_all_cells(images)

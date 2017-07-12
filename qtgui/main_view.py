@@ -345,7 +345,7 @@ class Ui_MainWindow(object):
         for i, c in enumerate(list):
             #if i < 9 + 9 * self.pageNum and i >= 9 * self.pageNum and i < self.numcells:
             cc = cv2.cvtColor(c, cv2.COLOR_BGRA2RGBA)
-            cc = cv2.rectangle(cc, (0, 0), (5, 5), (0, 0, 255, 200), -1)
+            #cc = cv2.rectangle(cc, (0, 0), (5, 5), (0, 0, 255, 200), -1)
 
             height, width, channel = cc.shape  # BGR RGB
             qImg = QtGui.QImage(cc.tostring(), width, height, QtGui.QImage.Format_ARGB32)
@@ -765,7 +765,7 @@ class Ui_MainWindow(object):
 
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow", None))
+        MainWindow.setWindowTitle(_translate("Select ROI(s)", "Select ROI(s)", None))
         self.pushButton.setText(_translate("MainWindow", "Open image...", None))
         self.toolButton_6.setText(_translate("MainWindow", "+", None))
         self.toolButton_5.setText(_translate("MainWindow", "-", None))
@@ -781,7 +781,7 @@ class Ui_MainWindow(object):
         self.actionAbout.setText(_translate("MainWindow", "About...", None))
 
     def retranslateUi2(self, MainWindow):
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow", None))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Results", None))
         self.ROI_label.setText(_translate("MainWindow",
                                           "<html><head/><body><p>HL Ratio for selected ROI: <span style=\" font-weight:600;\">1.0</span></p></body></html>",
                                           None))

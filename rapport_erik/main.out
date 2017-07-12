@@ -25,17 +25,24 @@
 \BOOKMARK [2][-]{subsection.2.1.4}{2.1.4 Dropout}{section.2.1}% 25
 \BOOKMARK [1][-]{section.2.2}{2.2 Problem outline}{chapter.2}% 26
 \BOOKMARK [0][]{chapter.3}{3 Method}{}% 27
-\BOOKMARK [1][-]{section.3.1}{3.1 Data gathering}{chapter.3}% 28
-\BOOKMARK [1][-]{section.3.2}{3.2 Implementation}{chapter.3}% 29
-\BOOKMARK [2][-]{subsection.3.2.1}{3.2.1 Neural network structure}{section.3.2}% 30
-\BOOKMARK [2][-]{subsection.3.2.2}{3.2.2 Framework}{section.3.2}% 31
-\BOOKMARK [2][-]{subsection.3.2.3}{3.2.3 Preprocessing}{section.3.2}% 32
-\BOOKMARK [1][-]{section.3.3}{3.3 Evaluation}{chapter.3}% 33
-\BOOKMARK [0][]{chapter.4}{4 Results}{}% 34
-\BOOKMARK [1][-]{section.4.1}{4.1 Overview}{chapter.4}% 35
-\BOOKMARK [1][-]{section.4.2}{4.2 Calculation of accuracy}{chapter.4}% 36
-\BOOKMARK [0][]{chapter.5}{5 Conclusion}{}% 37
-\BOOKMARK [1][-]{section.5.1}{5.1 Conclusion}{chapter.5}% 38
-\BOOKMARK [1][-]{section.5.2}{5.2 Future Work}{chapter.5}% 39
-\BOOKMARK [2][-]{subsection.5.2.1}{5.2.1 Data gathering}{section.5.2}% 40
-\BOOKMARK [0][]{chapter*.16}{Bibliography}{}% 41
+\BOOKMARK [1][-]{section.3.1}{3.1 Data sets}{chapter.3}% 28
+\BOOKMARK [1][-]{section.3.2}{3.2 Detection and segmentation}{chapter.3}% 29
+\BOOKMARK [2][-]{subsection.3.2.1}{3.2.1 Image preprocessing}{section.3.2}% 30
+\BOOKMARK [2][-]{subsection.3.2.2}{3.2.2 Heatmap}{section.3.2}% 31
+\BOOKMARK [1][-]{section.3.3}{3.3 Data gathering}{chapter.3}% 32
+\BOOKMARK [1][-]{section.3.4}{3.4 Implementation}{chapter.3}% 33
+\BOOKMARK [2][-]{subsection.3.4.1}{3.4.1 Neural network structure}{section.3.4}% 34
+\BOOKMARK [2][-]{subsection.3.4.2}{3.4.2 Framework}{section.3.4}% 35
+\BOOKMARK [2][-]{subsection.3.4.3}{3.4.3 Preprocessing}{section.3.4}% 36
+\BOOKMARK [1][-]{section.3.5}{3.5 Graphical User Interface}{chapter.3}% 37
+\BOOKMARK [2][-]{subsection.3.5.1}{3.5.1 Design}{section.3.5}% 38
+\BOOKMARK [2][-]{subsection.3.5.2}{3.5.2 Implementation}{section.3.5}% 39
+\BOOKMARK [1][-]{section.3.6}{3.6 Evaluation}{chapter.3}% 40
+\BOOKMARK [0][]{chapter.4}{4 Results}{}% 41
+\BOOKMARK [1][-]{section.4.1}{4.1 Overview}{chapter.4}% 42
+\BOOKMARK [1][-]{section.4.2}{4.2 Calculation of accuracy}{chapter.4}% 43
+\BOOKMARK [0][]{chapter.5}{5 Conclusion}{}% 44
+\BOOKMARK [1][-]{section.5.1}{5.1 Conclusion}{chapter.5}% 45
+\BOOKMARK [1][-]{section.5.2}{5.2 Future Work}{chapter.5}% 46
+\BOOKMARK [2][-]{subsection.5.2.1}{5.2.1 Data gathering}{section.5.2}% 47
+\BOOKMARK [0][]{chapter*.19}{Bibliography}{}% 48

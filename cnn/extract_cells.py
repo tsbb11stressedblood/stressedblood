@@ -43,10 +43,20 @@ def extract_cells(orig_image, heat_map_image):
 
     plt.figure('red dilated and blurred heatmap')
     plt.imshow(img_red)
-    plt.figure('green dilated and blurred heatmap')
+    #cv2.imwrite('red_dilated_and_blurred_heatmap.png', img_red)
+    plt.imsave(arr=img_red, fname='red_dilated_and_blurred_heatmap.png')
+
+    fig = plt.figure('green dilated and blurred heatmap')
+    #cv2.imwrite('green_dilated_and_blurred_heatmap.png', img_green)
     plt.imshow(img_green)
-    plt.figure('ROI Image')
+    #fig.savefig('green_dilated_and_blurred_heatmap.png', bbox_inches='tight', pad_inches=0)
+    plt.imsave(arr=img_green, fname='green_dilated_and_blurred_heatmap.png')
+
+    fig = plt.figure('ROI Image')
     plt.imshow(orig_image)
+    #cv2.imwrite('ROI_image.png', orig_image)
+    #fig.savefig('ROI_image.png', bbox_inches='tight', pad_inches=0)
+    plt.imsave(arr=orig_image, fname='ROI_image.png')
     #plt.figure('heatmap again?')
     #plt.imshow(image)
     plt.show()
@@ -58,6 +68,7 @@ def extract_cells(orig_image, heat_map_image):
     plt.figure('red thresholded')
     plt.imshow(thresh)
     plt.show()
+    plt.imsave(arr=thresh, fname='red_thresholded.png')
 
     im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -66,8 +77,10 @@ def extract_cells(orig_image, heat_map_image):
 
     for c in contours:
         x,y,w,h = cv2.boundingRect(c)
-        im = orig_image[y+32-p:y+h+32+p, x+32-p:x+w+32+p]
-        imgr = img_red[y + 32 - p:y + h + 32 + p, x + 32 - p:x + w + 32 + p]
+        #im = orig_image[y+32-p:y+h+32+p, x+32-p:x+w+32+p]
+        #imgr = img_red[y + 32 - p:y + h + 32 + p, x + 32 - p:x + w + 32 + p]
+        im = orig_image[y-p:y+h+p, x-p:x+w+p]
+        imgr = img_red[y - p:y + h + p, x - p:x + w  + p]
         if im.shape[0] * im.shape[1] > 400:
             cell_images_red.append(im)
             #im[im == 0] = np.nan
@@ -76,9 +89,12 @@ def extract_cells(orig_image, heat_map_image):
             #cell_images_red.append(orig_image[x - p:x + w + p, y - p:y + h + p])
             #cv2.rectangle(im2, (x,y), (x+w, y+h), (255,255,255), 2)
 
-    plt.figure('contours for red')
+    fig = plt.figure('contours for red')
     plt.imshow(im2)
-    cv2.imwrite('lymphocytes.png', im2)
+    #cv2.imwrite('contours_for_red.png', im2)
+    #fig.savefig('contours_for_red.png', bbox_inches='tight', pad_inches=0)
+    plt.imsave(arr=im2, fname='contours_for_red.png')
+
     plt.show()
 
     #GREEN
@@ -87,20 +103,25 @@ def extract_cells(orig_image, heat_map_image):
     plt.figure('green thresholded')
     plt.imshow(thresh)
     plt.show()
+    plt.imsave(arr=thresh, fname='green_thresholded.png')
 
     im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     cv2.drawContours(im2, contours, -1, (255, 255, 255), 4)
 
-    plt.figure('contours for green')
+    fig = plt.figure('contours for green')
     plt.imshow(im2)
-    cv2.imwrite('heterophils.png',im2)
+    #cv2.imwrite('contours_for_green.png',im2)
+    #fig.savefig('contours_for_green.png', bbox_inches='tight', pad_inches=0)
+    plt.imsave(arr=im2, fname='contours_for_green.png')
     plt.show()
 
     for c in contours:
         x, y, w, h = cv2.boundingRect(c)
-        im = orig_image[y+32-p:y + h+32+p, x+32-p:x + w+32+p]
-        imgg = img_green[y+32-p:y + h+32+p, x+32-p:x + w+32+p]
+        #im = orig_image[y+32-p:y + h+32+p, x+32-p:x + w+32+p]
+        #imgg = img_green[y+32-p:y + h+32+p, x+32-p:x + w+32+p]
+        im = orig_image[y-p:y + h+p, x-p:x + w+p]
+        imgg = img_green[y-p:y + h+p, x-p:x + w+p]
         if im.shape[0]*im.shape[1] > 800:
             cell_images_green.append(im)
             #im[im==0] = np.nan

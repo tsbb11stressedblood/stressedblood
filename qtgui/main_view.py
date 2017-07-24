@@ -15,6 +15,8 @@ from cnn import sliding_window
 from cnn import extract_cells
 #from extract_cells import extract_cells
 
+from scipy.ndimage.interpolation import shift
+
 import matplotlib.image as mpimg
 import numpy as np
 import cv2
@@ -211,6 +213,12 @@ class Ui_MainWindow(object):
                 print "heatmap done?", ROI_image.shape
                 #plt.figure("untouched heatmap")
 
+
+        stitched_heatmap2 = stitched_heatmap.copy()
+        stitched_heatmap = np.zeros_like(stitched_heatmap2)
+        stitched_heatmap[4:stitched_heatmap.shape[0], 4:stitched_heatmap.shape[1]] \
+            = stitched_heatmap2[0:stitched_heatmap2.shape[0]-4, 0:stitched_heatmap2.shape[1]-4]
+
         plt.figure('stitched heatmap')
         plt.imshow(stitched_heatmap[:,:,0:3])
 
@@ -238,10 +246,27 @@ class Ui_MainWindow(object):
         scaled_and_cropped_heatmap = np.zeros_like(ROI_image)
         scaled_and_cropped_heatmap = scaled_heatmap[0:ROI_image.shape[0], 0:ROI_image.shape[1], :]
 
-        plt.figure('scaled, resized and cropped heatmap')
-        plt.imshow(np.uint8(scaled_and_cropped_heatmap[:, :, 0:3]))
-        plt.show()
+        #scaled_and_cropped_heatmap_2 = np.zeros_like(scaled_and_cropped_heatmap)
+        #scaled_and_cropped_heatmap_2[30:scaled_and_cropped_heatmap.shape[0], 30:scaled_and_cropped_heatmap.shape[1]] \
+        #    = scaled_and_cropped_heatmap[0:scaled_and_cropped_heatmap.shape[0]-30, 0:scaled_and_cropped_heatmap.shape[1]-30]
 
+
+
+        #scaled_and_cropped_heatmap_2 = np.pad(scaled_and_cropped_heatmap.copy(), 32, 'constant')
+        #scaled_and_cropped_heatmap_2[:][:][0] = np.pad(scaled_and_cropped_heatmap[:][:][0], 32, 'constant')
+        #scaled_and_cropped_heatmap_2[:][:][1] = np.pad(scaled_and_cropped_heatmap[:][:][1], 32, 'constant')
+        #scaled_and_cropped_heatmap_2[:][:][2] = np.pad(scaled_and_cropped_heatmap[:][:][2], 32, 'constant')
+        #scaled_and_cropped_heatmap_2[:][:][0] = shift(scaled_and_cropped_heatmap_2[:][:][0], 32*8)
+        #scaled_and_cropped_heatmap_2[:][:][1] = shift(scaled_and_cropped_heatmap_2[:][:][1], 32*8)
+        #scaled_and_cropped_heatmap_2[:][:][2] = shift(scaled_and_cropped_heatmap_2[:][:][2], 32*8)
+        #scaled_and_cropped_heatmap_2 = shift(scaled_and_cropped_heatmap_2, 32)
+
+        fig = plt.figure('scaled, resized and cropped heatmap')
+        plt.imshow( np.uint8(scaled_and_cropped_heatmap[:, :, 0:3]) )
+        plt.show()
+        #cv2.imwrite('scaled_resized_and_cropped_heatmap.png', np.uint8(scaled_and_cropped_heatmap[:, :, 0:3]))
+        #fig.savefig('scaled_resized_and_cropped_heatmap.png', bbox_inches='tight', pad_inches=0)
+        plt.imsave(arr=np.uint8(scaled_and_cropped_heatmap[:, :, 0:3]), fname='scaled_resized_and_cropped_heatmap.png')
 
         self.red_cells, self.red_cells_confidence, self.green_cells, self.green_cells_confidence =\
             extract_cells.extract_cells(ROI_image, scaled_and_cropped_heatmap)
@@ -255,6 +280,25 @@ class Ui_MainWindow(object):
         #sort after confidence
         self.red_cells = [x for (y, x) in sorted(zip(self.red_cells_confidence, self.red_cells))]
         self.green_cells = [x for (y, x) in sorted(zip(self.green_cells_confidence, self.green_cells))]
+
+
+        #plot all cells
+        for i,c in enumerate(self.red_cells):
+            fig = plt.figure()
+            plt.imshow(c)
+            #cv2.imwrite('lymphocytes' + i + '.png', c)
+            #fig.savefig('lymphocytes' + str(i) + '.png', bbox_inches='tight', pad_inches=0)
+            plt.imsave(arr=c, fname='lymphocytes' + str(i) + '.png')
+        plt.show()
+
+        for i,c in enumerate(self.green_cells):
+            plt.figure()
+            plt.imshow(c)
+            #cv2.imwrite('heterophils' + i + '.png', c)
+            #fig.savefig('heterophils' + str(i) + '.png', bbox_inches='tight', pad_inches=0)
+            plt.imsave(arr=c, fname='heterophils' + str(i) + '.png')
+        plt.show()
+
 
         self.totcells = self.red_cells + self.green_cells
 

@@ -1,7 +1,7 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (MiKTeX 2.9) (preloaded format=pdflatex 2016.2.8)  12 JUL 2017 14:37
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (MiKTeX 2.9) (preloaded format=pdflatex 2016.2.8)  19 JUL 2017 19:11
 entering extended mode
-**C:/Users/kl/skola/exjobb/stressedblood/rapport_erik/main.tex
-(C:/Users/kl/skola/exjobb/stressedblood/rapport_erik/main.tex
+**./main.tex
+(main.tex
 LaTeX2e <2015/10/01> patch level 2
 Babel <3.9n> and hyphenation patterns for 69 languages loaded.
 (rtthesis.cls
@@ -1307,12 +1307,6 @@ LaTeX Warning: Label `sec:research:history' multiply defined.
 
 LaTeX Warning: Label `sec:research:history' multiply defined.
 
-
-LaTeX Warning: Label `fig:select_rois' multiply defined.
-
-
-LaTeX Warning: Label `fig:select_rois' multiply defined.
-
 ) (resultat.aux
 
 LaTeX Warning: Label `sec:research:history' multiply defined.
@@ -2147,58 +2141,120 @@ LaTeX Warning: `!h' float specifier changed to `!ht'.
 
  (method.tex
 Chapter 3.
+[9
+
+
+
+] <fig/roi_image.png, id=394, 157.5486pt x 122.1363pt>
+File: fig/roi_image.png Graphic file (type png)
+
+<use fig/roi_image.png>
+Package pdftex.def Info: fig/roi_image.png used on input line 22.
+(pdftex.def)             Requested size: 167.16037pt x 129.58871pt.
+
+<fig/scaled_resized_and_cropped_heatmap.png, id=395, 157.5486pt x 122.1363pt>
+File: fig/scaled_resized_and_cropped_heatmap.png Graphic file (type png)
+
+<use fig/scaled_resized_and_cropped_heatmap.png>
+Package pdftex.def Info: fig/scaled_resized_and_cropped_heatmap.png used on inp
+ut line 22.
+(pdftex.def)             Requested size: 167.16037pt x 129.58871pt.
+
+<fig/green_dilated_and_blurred_heatmap.png, id=396, 157.5486pt x 122.1363pt>
+File: fig/green_dilated_and_blurred_heatmap.png Graphic file (type png)
+
+<use fig/green_dilated_and_blurred_heatmap.png>
+Package pdftex.def Info: fig/green_dilated_and_blurred_heatmap.png used on inpu
+t line 29.
+(pdftex.def)             Requested size: 106.69891pt x 82.71613pt.
+
+<fig/green_thresholded.png, id=397, 157.5486pt x 122.1363pt>
+File: fig/green_thresholded.png Graphic file (type png)
+
+<use fig/green_thresholded.png>
+Package pdftex.def Info: fig/green_thresholded.png used on input line 29.
+(pdftex.def)             Requested size: 106.69891pt x 82.71613pt.
+
+<fig/contours_for_green.png, id=398, 157.5486pt x 122.1363pt>
+File: fig/contours_for_green.png Graphic file (type png)
+
+<use fig/contours_for_green.png>
+Package pdftex.def Info: fig/contours_for_green.png used on input line 29.
+(pdftex.def)             Requested size: 106.69891pt x 82.71613pt.
+
+<fig/red_dilated_and_blurred_heatmap.png, id=399, 157.5486pt x 122.1363pt>
+File: fig/red_dilated_and_blurred_heatmap.png Graphic file (type png)
+
+<use fig/red_dilated_and_blurred_heatmap.png>
+Package pdftex.def Info: fig/red_dilated_and_blurred_heatmap.png used on input 
+line 36.
+(pdftex.def)             Requested size: 106.69891pt x 82.71613pt.
+
+<fig/red_thresholded.png, id=400, 157.5486pt x 122.1363pt>
+File: fig/red_thresholded.png Graphic file (type png)
+
+<use fig/red_thresholded.png>
+Package pdftex.def Info: fig/red_thresholded.png used on input line 36.
+(pdftex.def)             Requested size: 106.69891pt x 82.71613pt.
+
+<fig/contours_for_red.png, id=401, 157.5486pt x 122.1363pt>
+File: fig/contours_for_red.png Graphic file (type png)
+
+<use fig/contours_for_red.png>
+Package pdftex.def Info: fig/contours_for_red.png used on input line 36.
+(pdftex.def)             Requested size: 106.69891pt x 82.71613pt.
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [9
-
-
-
-]
-<fig/../fig/select_rois2.png, id=393, 1028.34187pt x 560.0925pt>
+ [10]
+[11 <./fig/roi_image.png> <./fig/scaled_resized_and_cropped_heatmap.png> <./fig
+/green_dilated_and_blurred_heatmap.png> <./fig/green_thresholded.png> <./fig/co
+ntours_for_green.png> <./fig/red_dilated_and_blurred_heatmap.png> <./fig/red_th
+resholded.png> <./fig/contours_for_red.png>]
+<fig/../fig/select_rois2.png, id=423, 1028.34187pt x 560.0925pt>
 File: fig/../fig/select_rois2.png Graphic file (type png)
 
 <use fig/../fig/select_rois2.png>
-Package pdftex.def Info: fig/../fig/select_rois2.png used on input line 32.
+Package pdftex.def Info: fig/../fig/select_rois2.png used on input line 61.
 (pdftex.def)             Requested size: 355.65944pt x 193.71071pt.
 
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
-<fig/../fig/results.png, id=394, 1028.34187pt x 560.0925pt>
+<fig/../fig/results.png, id=424, 1028.34187pt x 560.0925pt>
 File: fig/../fig/results.png Graphic file (type png)
 
 <use fig/../fig/results.png>
-Package pdftex.def Info: fig/../fig/results.png used on input line 39.
+Package pdftex.def Info: fig/../fig/results.png used on input line 68.
 (pdftex.def)             Requested size: 355.65944pt x 193.71071pt.
 
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
-<fig/../fig/moveto.png, id=395, 174.6525pt x 128.73094pt>
+<fig/../fig/moveto.png, id=425, 174.6525pt x 128.73094pt>
 File: fig/../fig/moveto.png Graphic file (type png)
 
 <use fig/../fig/moveto.png>
-Package pdftex.def Info: fig/../fig/moveto.png used on input line 46.
+Package pdftex.def Info: fig/../fig/moveto.png used on input line 75.
 (pdftex.def)             Requested size: 174.65207pt x 128.7306pt.
 
 
 LaTeX Warning: `!h' float specifier changed to `!ht'.
 
-) [10] [11 <./fig/../fig/select_rois2.png> <./fig/../fig/results.png>] [12 <./f
-ig/../fig/moveto.png>]
+[12]) [13 <./fig/../fig/select_rois2.png> <./fig/../fig/results.png>] [14 <./fi
+g/../fig/moveto.png>]
 \openout2 = `resultat.aux'.
 
  (resultat.tex
 Chapter 4.
-) [13
+) [15
 
 
 
 ]
 \openout2 = `avrundning.aux'.
 
- (avrundning.tex [14
+ (avrundning.tex [16
 
 
 
@@ -2215,7 +2271,7 @@ Overfull \hbox (2.73201pt too wide) in paragraph at lines 4--6
 thod from be-ing widely
  []
 
-) [15] [16
+) [17] [18
 
 
 ] (main.bbl (main.brf)
@@ -2229,7 +2285,7 @@ File: t1pcr.fd 2001/06/04 font definitions for T1/pcr.
 ))
 No file main.ind.
 Package atveryend Info: Empty hook `BeforeClearDocument' on input line 56.
-[17
+[19
 
 
 ]
@@ -2239,10 +2295,15 @@ Package atveryend Info: Empty hook `AfterLastShipout' on input line 56.
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 56.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 56.
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: 0E2F8B716290D5E0F5AEF6E930D7B64D;3217.
-Package rerunfilecheck Info: File `main.brf' has not changed.
-(rerunfilecheck)             Checksum: 9B69FB5B029FD78283C761DD54A03D5E;318.
+(rerunfilecheck)             Checksum: 2ADD69699895E993BB8F53ED0C599DA0;3217.
 
+
+Package rerunfilecheck Warning: File `main.brf' has changed.
+(rerunfilecheck)                Rerun to get bibliographical references right.
+
+Package rerunfilecheck Info: Checksums for `main.brf':
+(rerunfilecheck)             Before: D41D8CD98F00B204E9800998ECF8427E;0
+(rerunfilecheck)             After:  58A14671844894019634B18038B83E82;318.
 
 LaTeX Warning: There were multiply-defined labels.
 
@@ -2250,13 +2311,13 @@ Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 56.
  )
 (\end occurred when \ifx on line 18 was incomplete) 
 Here is how much of TeX's memory you used:
- 13523 strings out of 493634
- 194682 string characters out of 3141324
- 306895 words of memory out of 3000000
- 16352 multiletter control sequences out of 15000+200000
- 188087 words of font info for 144 fonts, out of 3000000 for 9000
+ 13573 strings out of 493634
+ 195983 string characters out of 3141324
+ 307493 words of memory out of 3000000
+ 16387 multiletter control sequences out of 15000+200000
+ 199286 words of font info for 148 fonts, out of 3000000 for 9000
  1025 hyphenation exceptions out of 8191
- 45i,12n,49p,1092b,554s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 45i,12n,51p,1042b,554s stack positions out of 5000i,500n,10000p,200000b,50000s
 {C:/Program Files (x86)/MiKT
 eX 2.9/fonts/enc/dvips/fontname/8r.enc}{C:/Program Files (x86)/MiKTeX 2.9/fonts
 /enc/dvips/kpfonts/kpfonts-expert.enc}{C:/Program Files (x86)/MiKTeX 2.9/fonts/
@@ -2274,9 +2335,9 @@ iles (x86)/MiKTeX 2.9/fonts/type1/public/kpfonts/jkpsy.pfb><C:/Program Files (x
 86)/MiKTeX 2.9/fonts/type1/urw/courier/ucrr8a.pfb><C:/Program Files (x86)/MiKTe
 X 2.9/fonts/type1/urw/helvetic/uhvb8a.pfb><C:/Program Files (x86)/MiKTeX 2.9/fo
 nts/type1/urw/helvetic/uhvr8a.pfb>
-Output written on main.pdf (29 pages, 3745193 bytes).
+Output written on main.pdf (31 pages, 3855486 bytes).
 PDF statistics:
- 518 PDF objects out of 1000 (max. 8388607)
- 101 named destinations out of 1000 (max. 500000)
- 18867 words of extra memory for PDF output out of 20736 (max. 10000000)
+ 544 PDF objects out of 1000 (max. 8388607)
+ 107 named destinations out of 1000 (max. 500000)
+ 18907 words of extra memory for PDF output out of 20736 (max. 10000000)
 

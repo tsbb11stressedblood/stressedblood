@@ -104,7 +104,7 @@ def training_data_red_cells(images, filenames):
         plt.imshow(img)
         plt.show()
 
-filenames, images = zip(*sorted(zip(filenames, images)))
-training_data_red_cells(images, filenames)
+#filenames, images = zip(*sorted(zip(filenames, images)))
+#training_data_red_cells(images, filenames)
 
 #check_all_cells(images)

@@ -3,16 +3,16 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 def kappa(I):
-    ux, uy = np.gradient(I);
-    normDu = np.sqrt(ux*ux + uy*uy + 1e-10);
+    ux, uy = np.gradient(I)
+    normDu = np.sqrt(ux*ux + uy*uy + 1e-10)
 
-    Nx = ux / normDu;
-    Ny = uy / normDu;
-    nxx, _ = np.gradient(Nx);
-    _, nyy = np.gradient(Ny);
-    k = nxx + nyy;
+    Nx = ux / normDu
+    Ny = uy / normDu
+    nxx, _ = np.gradient(Nx)
+    _, nyy = np.gradient(Ny)
+    k = nxx + nyy
 
-    return k
+    return k/np.max(np.max(np.abs(k)))
     #I = cv2.cvtColor(I, cv2.COLOR_BGR2GRAY)
     #P = np.pad(I, 1, 'constant')
     #m,n = np.shape(I)

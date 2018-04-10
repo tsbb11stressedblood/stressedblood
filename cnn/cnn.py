@@ -33,10 +33,10 @@ try:
     import lasagne
 except:
     pass
-from PIL import Image
+#from PIL import Image
 import math
 #import lasagne.layers.dnn
-from scipy.misc import imresize, imrotate
+#from scipy.misc import imresize, imrotate
 
 use_64 = True #else 32
 
@@ -299,14 +299,18 @@ def build_cnn(input_var=None):
     # Convolutional layer with 32 kernels of size 5x5. Strided and padded
     # convolutions are supported as well; see the docstring.
 
+    print(network.output_shape)
+
     network = lasagne.layers.Conv2DLayer(
             network, num_filters=32, filter_size=(5, 5),
             nonlinearity=lasagne.nonlinearities.rectify,
             W=lasagne.init.GlorotUniform())
 
+
     # Max-pooling layer of factor 2 in both dimensions:
     network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
 
+    print("maxpool", network.output_shape)
 
 ###############################
 
@@ -317,9 +321,10 @@ def build_cnn(input_var=None):
         W=lasagne.init.GlorotUniform())
 
 
+
     # Max-pooling layer of factor 2 in both dimensions:
     network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
-
+    print("maxpool", network.output_shape)
 
 ###############################
 
@@ -330,8 +335,11 @@ def build_cnn(input_var=None):
             network, num_filters=32, filter_size=(5, 5),
             nonlinearity=lasagne.nonlinearities.rectify)
 
+
+
     network = lasagne.layers.MaxPool2DLayer(network, pool_size=(2, 2))
 
+    print("maxpool", network.output_shape)
 
     # A fully-connected layer of 256 units with 50% dropout on its inputs:
     network = lasagne.layers.DenseLayer(
@@ -339,11 +347,14 @@ def build_cnn(input_var=None):
             num_units=256,
             nonlinearity=lasagne.nonlinearities.rectify)
 
+    print(network.output_shape)
 
     network = lasagne.layers.DenseLayer(
             lasagne.layers.dropout(network, p=.5),
             num_units=4,
             nonlinearity=lasagne.nonlinearities.softmax)
+
+    print(network.output_shape)
 
     return network
 
@@ -383,7 +394,7 @@ def iterate_minibatches(inputs, targets, batchsize, shuffle=False):
 def main(model='cnn', num_epochs=8000):
     # Load the dataset
     print("Loading data...")
-    X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
+    #X_train, y_train, X_val, y_val, X_test, y_test = load_dataset()
 
     #dataset = {
     #    'train': {'X': X_train, 'y': y_train},

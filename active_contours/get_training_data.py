@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import cPickle as pickle
+import _pickle as pickle
 from cell import Cell
 from preprocessing import *
 images,filenames = load_images_and_name_from_folder('../ground_truth')
@@ -36,7 +36,7 @@ def check_all_cells(images):
         foreground = fill_foreground(foreground)
         markers_watershed = perform_watershed(foreground.astype(np.uint8), nuclei.astype(np.uint8))
         img[markers_watershed == -1] = [255,0,0]
-        print i
+        print (i)
         plt.figure()
         plt.imshow(markers_watershed)
         plt.figure()
@@ -62,7 +62,7 @@ def check_split_cells(images, split_cells):
         #plt.imshow(nuclei)
         markers_watershed = perform_watershed(foreground.astype(np.uint8), nuclei.astype(np.uint8))
         img[markers_watershed == -1] = [255,0,0]
-        print nr
+        print(nr)
         plt.figure()
         plt.imshow(img)
         plt.show()
@@ -96,15 +96,15 @@ def training_data_red_cells(images, filenames):
         foreground = fill_foreground(foreground)
         markers_watershed = perform_watershed(foreground.astype(np.uint8), nuclei.astype(np.uint8))
         img[markers_watershed == -1] = [255,0,0]
-        print i
-        print filenames[i]
+        print (i)
+        print (filenames[i])
         plt.figure()
         plt.imshow(markers_watershed)
         plt.figure()
         plt.imshow(img)
         plt.show()
 
-#filenames, images = zip(*sorted(zip(filenames, images)))
+filenames, images = zip(*sorted(zip(filenames, images)))
 #training_data_red_cells(images, filenames)
 
-#check_all_cells(images)
+check_all_cells(images)

@@ -44,6 +44,34 @@ The GNU Image Manipulation Program, or GIMP, is used for extracting images of ce
 \section{Implementation}\label{sec:research:history}
 
 \subsection{Neural network structure}\label{sec:research:history}
+The neural network consists of a number of layers in the following order:
+
+\begin{enumerate}  
+\item An RGB input layer of 64 by 64 pixels
+\item A convolutional layer with 32 filters, 5 by 5 pixels in size.
+\item A max pooling layer of stride 2 in both x and y.
+\item A convolutional layer with 32 filters, 5 by 5 pixels in size.
+\item A max pooling layer of stride 2 in both x and y.
+\item A convolutional layer with 32 filters, 5 by 5 pixels in size.
+\item A max pooling layer of stride 2 in both x and y.
+\item A fully connected layer of 256 units, with 50\% dropout.
+\item A fully connected layer of 3 units, with 50\% dropout.
+\end{enumerate}
+
+All layers except the last use the Rectified Linear Unit (ReLU) as an activation function, which has been shown to perform better than for example sigmoid activation functions CITATION HERE.
+The ReLU is defined as $\phi(x) =  max(0,x)$.
+The last layer uses a softmax activation function, which gives a differentiable approximation of the non-differentiable ReLU function. It is defined as
+$\phi(x)_j = \frac{e^{x_j}}{\sum_{k=1}^{K}{e^{x_k}}}$
+
+The structure of the neural network is shown in Figure \ref{fig:nnstructure}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{../fig/nnstructure.png}
+    \caption{Neural network structure.}
+    \label{fig:nnstructure}
+\end{figure}
+
 
 \subsection{Framework}\label{sec:research:history}
 The implementation is done in Theano and Lasagne for the Convolutional Neural Network in Python, with additional libraries simplifying and greatly reducing computation time, most notably NumPy for efficient array computations. 
